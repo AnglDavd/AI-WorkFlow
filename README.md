@@ -12,6 +12,7 @@ Developing with AI agents can be challenging due to their stateless nature and t
 -   **Promoting Continuous Improvement:** Integrating a feedback loop for identifying and addressing technical debt.
 -   **Being Agent-Agnostic:** Designed to work with any capable LLM agent (Gemini, Claude, GPT-4, etc.).
 
+<<<<<<< HEAD
 ## The Core Workflow: A 4-Step Lifecycle
 
 The framework operates as a continuous loop, guiding your AI agent through distinct phases:
@@ -29,6 +30,34 @@ Each phase is driven by a dedicated Markdown file, acting as a detailed prompt f
 
 To use this framework for a new project, simply clone this repository and run the `setup.sh` script. It will handle all the initial configuration for you.
 
+=======
+### Recommended Tools for Optimal AI Interaction
+
+For the best experience and to maximize the AI agent's effectiveness, we highly recommend using a Multi-Context Processing (MCP) tool. These tools help manage the large context windows required for the AI to understand the entire project, multiple files, and long conversations.
+
+-   **Context7 (Recommended):** A powerful tool designed specifically for managing and providing context to LLMs. It allows you to easily feed multiple files, previous conversations, and specific instructions to your AI agent.
+-   **Other Context Management Tools:** Explore other tools that allow you to load and manage large amounts of text/code for your LLM.
+
+---
+
+## The Core Workflow: A 4-Step Lifecycle
+
+The framework operates as a continuous loop, guiding your AI agent through distinct phases:
+
+1.  **Strategy & Architecture (The "WHAT" and "WHY")**
+2.  **Planning (The "HOW")**
+3.  **Execution (The "BUILD")**
+4.  **Feedback & Refactoring (The "IMPROVE")**
+
+Each phase is driven by a dedicated Markdown file, acting as a detailed prompt for your AI agent.
+
+---
+
+## Getting Started: Your One-Step Project Setup
+
+To use this framework for a new project, simply clone this repository and run the `setup.sh` script. It will handle all the initial configuration for you.
+
+>>>>>>> d1a46c3 (feat: Add AI knowledge base and MCP tool)
 ### Step 1: Clone the Framework Repository
 
 Open your terminal and run:

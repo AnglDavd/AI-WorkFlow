@@ -12,6 +12,7 @@ Before starting work, ensure the following conditions are met:
 ## Core Principles
 - **One Sub-task at a Time:** Do not start the next sub-task until you receive explicit approval from the user.
 - **Zero Secrets in Code (CRITICAL):** Never write secrets (API keys, passwords, tokens) directly in code. Use environment variables via a `.env` file, and ensure `.env` is listed in `.gitignore`.
+- **Utilize Project Knowledge Base:** Regularly consult and update `.ai_workflow/_ai_knowledge.md` for common patterns, project-specific conventions, and recurring issues/resolutions.
 
 ---
 
