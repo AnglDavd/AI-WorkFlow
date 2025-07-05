@@ -4,8 +4,11 @@ node_modules
 .DS_Store
 
 # Ignore Python artifacts
-__pycache__/
-*.pyc
+# Generated files
+/PRPs/generated/
+
+# Environment variables
+.env
 
 # Ignore the Gemini workflow files themselves
 # It's recommended to keep this so the framework definition doesn't clutter your project's repository.

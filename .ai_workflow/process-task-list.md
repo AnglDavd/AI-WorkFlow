@@ -33,7 +33,7 @@ Immediately after completing a sub-task, follow these steps in order:
 2.  **Await Approval:** Wait for the user's go-ahead.
 3.  **Upon Approval:**
     a. **Mark as Completed:** Change the sub-task's status from `[ ]` to `[x]`.
-    b. **Run Relevant Tests:** Execute unit or integration tests directly related to the changes.
+    b. **Run Relevant Tests:** Execute unit or integration tests directly related to the changes. **To find the correct command, consult the project-specific stack guide (e.g., `CLAUDE-NODE.md`) identified in the PRD.**
     c. **If Tests Fail:** Immediately trigger the **Error Handling Protocol (Section 2)**.
     d. **If Tests Pass:**
         i.  **Stage Changes:** `git add .`

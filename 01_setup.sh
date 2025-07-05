@@ -50,7 +50,6 @@ mkdir "$PROJECT_NAME"
 # Move all framework files into the new project directory
 mv Project_Manager/* "$PROJECT_NAME/"
 mv Project_Manager/.gitignore "$PROJECT_NAME/"
-mv Project_Manager/.ai_workflow "$PROJECT_NAME/"
 
 # Enter the new project directory
 cd "$PROJECT_NAME"

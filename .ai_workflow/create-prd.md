@@ -132,6 +132,39 @@ Adapt these questions based on project context, industry, and complexity. **Alwa
   - d) API security requirements
   - e) Audit and logging requirements
 
+## All Needed Context
+
+This section ensures the AI agent has all the necessary information to understand the project's environment, existing code, and external resources.
+
+### Documentation & References (list all context needed to implement the feature)
+
+```yaml
+# MUST READ - Include these in your context window
+- url: [Official API docs URL]
+  why: [Specific sections/methods you'll need]
+
+- file: [path/to/example.py]
+  why: [Pattern to follow, gotchas to avoid]
+
+- doc: [Library documentation URL]
+  section: [Specific section about common pitfalls]
+  critical: [Key insight that prevents common errors]
+
+- docfile: [path/to/project_specific_doc.md]
+  why: [docs that the user has pasted in to the project]
+```
+
+### Known Gotchas of our Codebase & Library Quirks
+
+This section highlights any critical information, common pitfalls, or specific behaviors of the existing codebase or libraries that the AI should be aware of to avoid common errors or anti-patterns.
+
+```python
+# CRITICAL: [Library name] requires [specific setup]
+# Example: FastAPI requires async functions for endpoints
+# Example: This ORM doesn't support batch inserts over 1000 records
+# Example: We use pydantic v2 and
+```
+
 ### Implementation & Resource Planning
 - **Timeline Expectations:** "What's the expected timeline and key milestones?"
   - a) < 2 weeks (quick feature)
@@ -223,6 +256,12 @@ Adapt these questions based on project context, industry, and complexity. **Alwa
 
 8. **Technology Stack & Architecture Definition**
 *Guide the user to define a robust and scalable technology stack.*
+- **Agent Selection:** "Which AI agent will be primarily used for the implementation?"
+  - a) Claude
+  - b) Gemini
+  - c) OpenAI
+  - d) DeepSeek
+  - e) Other/Agnostic
 - **Integration:** "Does this project need to integrate with any existing systems, databases, or APIs? If yes, please specify."
 - **Project Archetype:** "What is the primary archetype of this project?" (Full-Stack, Backend, Frontend)
 - ...(resto de la sección de tecnología)... 
