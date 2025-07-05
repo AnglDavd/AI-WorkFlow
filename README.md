@@ -41,6 +41,8 @@ Each phase is driven by a dedicated Markdown file, acting as a detailed prompt f
 
 Each Markdown file in the workflow directory serves a specific purpose and guides the AI agent through a particular phase of development:
 
+-   **`.ai_workflow/GLOBAL_AI_RULES.md`**: This file contains the **overarching rules and behavioral guidelines** that the AI agent must adhere to in ALL interactions and phases of the development workflow. It ensures consistent behavior, communication style, and adherence to general best practices.
+
 -   **`.ai_workflow/_project.md`**: The central dashboard for your project. It tracks the project's status and links to the current PRD and Task List. This is where you'll typically start when resuming work on a project. 📊
 
 -   **`.ai_workflow/create-prd.md`**: Guides the AI agent to act as a **Senior Technical Product Manager** and **Solution Architect**. It helps define the project's vision, goals, functional and non-functional requirements, data model, technology stack, and UI/UX design system. It's designed to extract all necessary information to create a comprehensive Product Requirements Document (PRD). 💡

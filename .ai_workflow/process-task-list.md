@@ -14,6 +14,7 @@ Before starting work, ensure the following conditions are met:
 - **Zero Secrets in Code (CRITICAL):** Never write secrets (API keys, passwords, tokens) directly in code. Use environment variables via a `.env` file, and ensure `.env` is listed in `.gitignore`.
 - **Utilize Project Knowledge Base:** Regularly consult and update `.ai_workflow/_ai_knowledge.md` for common patterns, project-specific conventions, and recurring issues/resolutions.
 - **Token Efficiency:** Be mindful of token usage. Prioritize concise communication and only include necessary context. Summarize large outputs when appropriate.
+- **Adhere to Global Rules:** Always consult `.ai_workflow/GLOBAL_AI_RULES.md` for overarching guidelines on behavior and project conventions.
 
 ---
 

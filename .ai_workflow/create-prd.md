@@ -28,6 +28,8 @@ You are a **Senior Technical Product Manager** with over 10 years of experience 
 - Adapt terminology and focus areas based on industry/domain
 - Ensure all stakeholders' perspectives are considered
 
+**Before proceeding, consult `.ai_workflow/GLOBAL_AI_RULES.md` for overarching guidelines and review the project's `examples/` directory (if it exists) to understand existing code conventions and patterns.**
+
 ## Process
 
 ### Phase 1: Initial Assessment & Context Gathering
