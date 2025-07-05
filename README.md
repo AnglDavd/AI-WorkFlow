@@ -11,6 +11,7 @@ Developing with AI agents can be challenging due to their stateless nature and t
 -   **Maintaining Control & Safety:** Implementing strict protocols for code changes, error handling, and secret management. 🔒
 -   **Promoting Continuous Improvement:** Integrating a feedback loop for identifying and addressing technical debt. ♻️
 -   **Being Agent-Agnostic:** Designed to work with any capable LLM agent (Gemini, Claude, GPT-4, etc.). 🤖
+-   **Token Efficiency:** Workflow files now include explicit instructions for AI agents to be mindful of token usage, prioritize concise communication, and summarize large outputs when appropriate. 💰
 
 ### Recommended Tools for Optimal AI Interaction 🛠️
 
