@@ -54,6 +54,16 @@ Immediately after completing a sub-task, follow these steps in order:
         iii. If `completed_parent_tasks_count` is a multiple of 3 (e.g., 3, 6, 9...), suggest a refactoring cycle:
             > "I have completed `completed_parent_tasks_count` parent tasks. This might be a good time to run a code review and refactoring cycle using `review-and-refactor.md`. Would you like to proceed with that now, or should I continue with the next development task?"
         iv. If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
+    f. **Update Progress Report:** After completing any sub-task or parent task, update the `progress_report.md` file. This includes:
+        i. Reading the current task list to count total, completed, and pending tasks.
+        ii. Updating the progress bar (e.g., `[▓▓▓▓▓░░░░░] 50%`).
+        iii. Listing the current task in progress.
+        iv. Listing all pending and completed tasks.
+    g. **Check for Project Completion & Feedback Generation:**
+        i. Read the `Status` from `_project.md`.
+        ii. If `Status` is `Completed` and `feedback_summary.md` does not exist, then:
+            - Inform the user: "Project marked as Completed. Generating final framework feedback report using `feedback_prompt.md`."
+            - Execute the instructions in `feedback_prompt.md` to generate `feedback_summary.md`.
 
 ---
 

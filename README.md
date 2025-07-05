@@ -263,6 +263,64 @@ Once the framework files are integrated and the AI has context, you follow the s
 
 ---
 
+### Phase 4: Feedback & Refactoring (The "IMPROVE") ✨
+
+**Goal:** Continuously improve the codebase by identifying and addressing technical debt and anti-patterns.
+
+**File:** `.ai_workflow/review-and-refactor.md`
+
+**How to Use:**
+
+1.  **Initiate Review:** Once a significant feature or module is complete, tell your AI agent:
+    > "Please use `.ai_workflow/review-and-refactor.md` to analyze the codebase (or a specific module like `src/auth/`) for refactoring opportunities." 🗣️
+    *The AI agent will also proactively suggest a refactoring cycle after a set number of completed tasks, as defined in `process-task-list.md`.*
+2.  **AI as Architect:** The AI, acting as a Senior Software Architect, will analyze the code for:
+    -   Complexity and readability issues. 📏
+    -   Violations of SOLID principles. 📐
+    -   Code duplication. 👯
+    -   Performance bottlenecks. ⚡
+3.  **Report & Propose:** The AI will generate a structured report of its findings and propose concrete refactoring tasks. 📄
+4.  **Approve Refactoring:** You can then approve these refactoring tasks, and the AI will add them to your main task list (`tasks-my-feature.md`) for future implementation. ✅
+
+**What You Achieve:** A codebase that actively fights technical debt, remains clean, maintainable, and performs optimally over time. 🏆
+
+---
+
+## Project Reporting & Feedback 📊
+
+This framework automatically generates reports to help you track progress and provide valuable feedback for the framework's continuous improvement.
+
+### Progress Report (`progress_report.md`) 📈
+
+This file, located in your project's root, is automatically updated by the AI agent after every sub-task completion. It provides a real-time overview of your project's development status.
+
+**Contents:**
+-   A visual progress bar (with emojis! 🎉).
+-   Total, completed, and pending task counts.
+-   Details of the current task in progress.
+-   A comprehensive list of all tasks (pending and completed).
+
+**How to View:**
+-   You can simply open `progress_report.md` in any Markdown viewer (like VS Code's built-in preview).
+-   For a more interactive web-based visualization, you can use online Markdown to HTML converters or simple local scripts (e.g., a basic Python script using `markdown` and `webbrowser` libraries).
+
+### Framework Feedback Summary (`feedback_summary.md`) 🗣️
+
+This file is generated automatically by the AI agent when you mark your project's status as `Completed` in `_project.md`. It's crucial for the continuous improvement of this framework.
+
+**Contents:**
+-   The AI agent's self-reflection on its experience using the framework for your project (strengths, challenges, suggestions).
+-   A structured section for *your* qualitative feedback (overall satisfaction, clarity, effectiveness, missing features, general comments).
+
+**How to Submit Your Feedback:**
+
+Your feedback is invaluable! Please consider sharing the content of your `feedback_summary.md` file (or the file itself) with the framework maintainers via:
+
+-   **Twitter:** Mention @angldavd
+-   **GitHub:** Open an issue or a pull request in the repository: https://github.com/AnglDavd/AI-WorkFlow
+
+---
+
 ## Contributing 🤝
 
 Contributions are welcome! If you have ideas for improving the framework, please open an issue or submit a pull request.
