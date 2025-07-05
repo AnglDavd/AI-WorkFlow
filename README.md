@@ -186,6 +186,83 @@ Now that your project is configured, you can start guiding your AI agent through
 
 ---
 
+## Adding New Features to Existing Projects 🧩
+
+This framework is not just for starting projects from scratch! It's also incredibly powerful for adding new features to an existing codebase. The core workflow remains the same, but with a few key adaptations.
+
+### Why Use This Framework for Existing Projects?
+
+-   **Structured Feature Development:** Ensures new features are well-defined, planned, and implemented following best practices.
+-   **Seamless Integration:** Helps the AI understand and work within your existing project's conventions and architecture.
+-   **Controlled Changes:** Maintains the safety and quality of your established codebase.
+
+### Key Differences from Starting a New Project
+
+-   **No `setup.sh`:** You **do not** run `setup.sh`. This script is only for initializing new repositories.
+-   **Existing Codebase:** Your project already has code, dependencies, and a Git history.
+-   **Context is King:** Providing the AI with context about your existing project is crucial.
+
+### Step-by-Step Guide for Existing Projects
+
+#### Step 1: Integrate the Framework Files 📂
+
+1.  **Copy the Workflow Folder:** Copy the entire `.ai_workflow/` folder from a fresh clone of this repository into the root of your existing project.
+    ```bash
+    # Example (assuming you cloned this repo to ~/ai-dev-framework)
+    cp -r ~/ai-dev-framework/.ai_workflow/ /path/to/your/existing-project/
+    ```
+2.  **Update `.gitignore`:** Add the `.ai_workflow/` folder to your existing project's `.gitignore` file. This prevents the framework's internal files from being committed to your project's main repository.
+    ```gitignore
+    # .gitignore (in your existing project)
+    
+    # ... other existing ignores ...
+    
+    # AI Workflow Framework files
+    .ai_workflow/
+    ```
+3.  **Optional: Copy `_project.md`:** If you want to use the central dashboard, copy `_project.md` to your project's root and update its links.
+
+#### Step 2: Provide Initial Context to Your AI Agent 🧠
+
+Before starting Phase 1 for your new feature, give your AI agent an overview of your existing project. This is vital for junior developers, as it helps the AI understand the environment.
+
+> "I want to add a new feature to an existing project. Here's some context about it:
+> -   **Project Name:** [Your Project Name]
+> -   **Main Goal:** [Briefly describe what the project does]
+> -   **Primary Technology Stack:** [e.g., React, Node.js, Express, PostgreSQL]
+> -   **Key Directories:** [e.g., `src/`, `backend/`, `frontend/`, `database/`]
+> -   **Coding Conventions:** [e.g., ESLint rules, Prettier, TypeScript, specific naming conventions]
+> -   **Existing Database:** [e.g., PostgreSQL, MongoDB, no database]
+> -   **Existing APIs:** [e.g., REST, GraphQL, internal, external]
+> 
+> Now, let's define the new feature using `.ai_workflow/create-prd.md`."
+
+#### Step 3: Adapt the Workflow Phases for a New Feature 🔄
+
+Once the framework files are integrated and the AI has context, you follow the same 4-phase workflow, but with a feature-specific focus:
+
+-   **Phase 1: Strategy & Architecture (`create-prd.md`)**
+    -   **Focus:** Define the **WHAT** and **WHY** for the *new feature only*. The PRD will be much shorter and focused.
+    -   **Tech Stack:** When asked about the technology stack, emphasize how the new feature will integrate with or extend the *existing* stack. Only propose new technologies if the feature absolutely requires them.
+    -   **Data Model:** Define only the new data entities or changes to existing ones required by the feature.
+
+-   **Phase 2: Planning (`generate-tasks.md`)**
+    -   **Focus:** Generate tasks specifically for implementing the *new feature*. 
+    -   **Setup Tasks:** Tasks related to environment setup (e.g., `npx create-next-app`) will likely be skipped or adapted to installing new feature-specific dependencies.
+    -   **Scaffolding:** The AI will generate basic code for new UI components or data models relevant to the feature, fitting them into your existing project structure.
+
+-   **Phase 3: Execution (`process-task-list.md`)**
+    -   **Focus:** Implement the feature's tasks. This phase is largely identical to new project development.
+    -   **Context:** The AI will use its tools to read existing files as needed to ensure the new code integrates seamlessly.
+
+-   **Phase 4: Feedback & Refactoring (`review-and-refactor.md`)**
+    -   **Focus:** Review the *newly added code* for the feature, or a specific module it touches. You can instruct the AI to limit its review scope.
+    -   **Proactive Reminders:** The automated refactoring reminders will still function, prompting you to review the code quality of the new feature.
+
+**What You Achieve:** A new feature seamlessly integrated into your existing project, developed with the same high standards and structured approach as a greenfield project. ✅
+
+---
+
 ## Contributing 🤝
 
 Contributions are welcome! If you have ideas for improving the framework, please open an issue or submit a pull request.
