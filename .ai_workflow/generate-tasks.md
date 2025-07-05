@@ -109,12 +109,23 @@ You are a **Senior Technical Lead** with expertise in translating product requir
 
 ### 2.0 Core Development [Complexity: L]
 - [ ] 2.1 Implement User entity and authentication endpoints. `Depends on: 1.4` - *Fulfills: FR-1*
+    - **Generate basic model/schema file** for User entity based on PRD Data Model.
 - [ ] 2.2 Implement Product entity CRUD endpoints. `Depends on: 1.4` - *Fulfills: FR-2*
+    - **Generate basic model/schema file** for Product entity based on PRD Data Model.
 
 ### 3.0 UI/UX Setup & Component Scaffolding [Complexity: M]
-- [ ] 3.1 Setup theme file or initialize ShadCN/UI. `Depends on: 1.1`
-- [ ] 3.2 Create base layout component. `Depends on: 3.1`
-- [ ] 3.3 Scaffold basic UI components (Button, Input, Card). `Depends on: 3.1`
+*Tasks below are based on the UI/UX approach selected in the PRD.*
+
+**IF `Opinionated Default (ShadCN/UI)` was selected:**
+- [ ] 3.1 Initialize Next.js project: Set up a new Next.js application with TypeScript and Tailwind CSS.
+- [ ] 3.2 Initialize ShadCN/UI: Run `npx shadcn-ui@latest init` and configure the default theme.
+- [ ] 3.3 Add core components: Use the ShadCN/UI CLI to add essential components like `button`, `card`, `input`, and `dialog`.
+- [ ] 3.4 Create a basic app layout: Develop a `components/layout.tsx` that uses the installed components to create the main page structure (e.g., header, main content, footer).
+
+**IF `Custom Fine-Grained Definition` was selected:**
+- [ ] 3.1 Setup theme file: Create `styles/theme.js` (or `.css`, `.scss`) with all design tokens (colors, fonts, spacing, border-radius) from the PRD.
+- [ ] 3.2 Create base layout component: Develop a `components/Layout.js` that implements the main container and grid structure.
+- [ ] 3.3 Scaffold basic UI components: Create placeholder files for `Button.js`, `Input.js`, and `Card.js` that import and use the defined design tokens. **For each, generate a basic functional component with minimal styling based on the PRD's design tokens.**
 
 ### 4.0 Testing & Quality [Complexity: L]
 - [ ] 4.1 Write unit tests for User authentication logic, covering edge cases defined in PRD. `Depends on: 2.1`
