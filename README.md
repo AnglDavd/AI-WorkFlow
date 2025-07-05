@@ -10,6 +10,7 @@ Developing with AI agents can be challenging due to their stateless nature and t
 -   **Ensuring Best Practices:** Enforcing industry-standard methodologies for PRD creation, task planning, code execution, and quality assurance. ✅
 -   **Maintaining Control & Safety:** Implementing strict protocols for code changes, error handling, and secret management. 🔒
 -   **Promoting Continuous Improvement:** Integrating a feedback loop for identifying and addressing technical debt. ♻️
+-   **Automated Refactoring Reminders:** The AI agent will proactively suggest code review and refactoring cycles after a set number of completed tasks, ensuring continuous quality improvement. 🔔
 -   **Being Agent-Agnostic:** Designed to work with any capable LLM agent (Gemini, Claude, GPT-4, etc.). 🤖
 -   **Token Efficiency:** Workflow files now include explicit instructions for AI agents to be mindful of token usage, prioritize concise communication, and summarize large outputs when appropriate. 💰
 
@@ -169,6 +170,7 @@ Now that your project is configured, you can start guiding your AI agent through
 
 1.  **Initiate Review:** Once a significant feature or module is complete, tell your AI agent:
     > "Please use `.ai_workflow/review-and-refactor.md` to analyze the codebase (or a specific module like `src/auth/`) for refactoring opportunities." 🗣️
+    *The AI agent will also proactively suggest a refactoring cycle after a set number of completed tasks, as defined in `process-task-list.md`.*
 2.  **AI as Architect:** The AI, acting as a Senior Software Architect, will analyze the code for:
     -   Complexity and readability issues. 📏
     -   Violations of SOLID principles. 📐
