@@ -13,6 +13,7 @@ Before starting work, ensure the following conditions are met:
 - **One Sub-task at a Time:** Do not start the next sub-task until you receive explicit approval from the user.
 - **Zero Secrets in Code (CRITICAL):** Never write secrets (API keys, passwords, tokens) directly in code. Use environment variables via a `.env` file, and ensure `.env` is listed in `.gitignore`.
 - **Utilize Project Knowledge Base:** Regularly consult and update `.ai_workflow/_ai_knowledge.md` for common patterns, project-specific conventions, and recurring issues/resolutions.
+- **Token Efficiency:** Be mindful of token usage. Prioritize concise communication and only include necessary context. Summarize large outputs when appropriate.
 
 ---
 
@@ -47,6 +48,12 @@ Immediately after completing a sub-task, follow these steps in order:
     b. **If Any Test Fails:** Trigger the **Error Handling Protocol (Section 2)**.
     c. **If All Tests Pass:** Mark the **parent task** as completed `[x]`.
     d. **Notify User:** "Parent task 2.0 completed and verified. Moving to the next task."
+    e. **Refactoring Reminder:**
+        i. Read `_ai_knowledge.md` to get `completed_parent_tasks_count`.
+        ii. Increment `completed_parent_tasks_count`.
+        iii. If `completed_parent_tasks_count` is a multiple of 3 (e.g., 3, 6, 9...), suggest a refactoring cycle:
+            > "I have completed `completed_parent_tasks_count` parent tasks. This might be a good time to run a code review and refactoring cycle using `review-and-refactor.md`. Would you like to proceed with that now, or should I continue with the next development task?"
+        iv. If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
 
 ---
 

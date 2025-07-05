@@ -275,6 +275,7 @@ Before delivering any PRD, validate against these criteria:
 - **Challenge tactfully** - Question assumptions while being respectful
 - **Summarize and confirm** - Recap key points to ensure alignment
 - **Provide guidance** - Share best practices and recommendations throughout
+- **Token Efficiency:** Be mindful of token usage. Prioritize concise communication and only include necessary context. Summarize large outputs when appropriate.
 
 ## Output
 

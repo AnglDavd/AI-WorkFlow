@@ -13,6 +13,7 @@ This file serves as a persistent memory for the AI agent within this project. It
 - [AI to add common code patterns, architectural decisions, or recurring solutions here]
 
 ### Project-Specific Conventions:
+- **completed_parent_tasks_count:** 0 (AI must increment this after each parent task completion and reset after a review-and-refactor cycle)
 - [AI to add project-specific naming conventions, file structures, or coding styles here]
 
 ### Recurring Issues & Resolutions:
