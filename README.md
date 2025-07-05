@@ -16,10 +16,13 @@ Developing with AI agents can be challenging due to their stateless nature and t
 
 ### Recommended Tools for Optimal AI Interaction 🛠️
 
-For the best experience and to maximize the AI agent's effectiveness, we highly recommend using a Multi-Context Processing (MCP) tool. These tools help manage the large context windows required for the AI to understand the entire project, multiple files, and long conversations.
+For the best experience and to maximize the AI agent's effectiveness, we highly recommend using Multi-Context Processing (MCP) tools and strategies. These help manage the large context windows required for the AI to understand the entire project, multiple files, and long conversations.
 
 -   **Context7 (Recommended):** A powerful tool designed specifically for managing and providing context to LLMs. It allows you to easily feed multiple files, previous conversations, and specific instructions to your AI agent. 🧠
--   **Other Context Management Tools:** Explore other tools that allow you to load and manage large amounts of text/code for your LLM. 📚
+-   **GitMCP.io:** Consider using services like GitMCP.io to convert your entire Git repository into an MCP-friendly format, making it easier for LLMs to consume the codebase context. 📦
+-   **Local Context Management Tools:** Explore other open-source or commercial tools that allow you to load and manage large amounts of text/code for your LLM locally. Examples include custom scripts, specialized IDE extensions, or dedicated context managers. 💻
+-   **Strategic File Selection:** When interacting with your AI, explicitly guide it to read only the most relevant files for the current task. Avoid sending the entire codebase unless absolutely necessary (e.g., during a full refactoring review). 🎯
+-   **Summarization Techniques:** Instruct your AI to summarize large code blocks, logs, or documentation before sending them back to you or processing them further, to save tokens. 📝
 
 ---
 
