@@ -1,0 +1,12 @@
+# Common ignores
+node_modules
+.env
+.DS_Store
+
+# Ignore Python artifacts
+__pycache__/
+*.pyc
+
+# Ignore the Gemini workflow files themselves
+# It's recommended to keep this so the framework definition doesn't clutter your project's repository.
+.gemini_workflow/
