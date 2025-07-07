@@ -1,95 +1,53 @@
-# AI-Assisted Development Framework
+# 🚀 AI-Assisted Development Framework 🚀
 
-This project provides a simplified, shell-script-based framework for AI-assisted software development.
-It leverages Large Language Model (LLM) CLIs and Markdown files to guide the entire development workflow, from Product Requirements Definition (PRD) to code implementation.
+Welcome to the AI-Assisted Development Framework! This project provides a structured approach to building software with the help of advanced AI agents. It's designed to streamline your development workflow from ideation to code implementation and continuous improvement.
 
-## Project Structure
+## ✨ Key Features
 
-```
-your-project/
-|-- 01_setup.sh            # Initial project setup script (run once)
-|-- 02_create_prp.sh       # Script to generate PRDs and PRPs
-|-- README.md              # This file
-|-- .ai_workflow/          # Core framework assets and LLM instructions
-|   |-- commands/          # LLM commands (e.g., code review, git operations)
-|   |   |-- claude/
-|   |   |-- gemini/
-|   |   `-- openai/
-|   |-- PRPs/              # Product Requirement Prompts (PRPs) and related assets
-|   |   |-- templates/     # PRP templates (e.g., prp_base.md, prp_planning.md)
-|   |   |-- scripts/       # PRP runner script (prp_runner.sh)
-|   |   |-- ai_docs/       # AI documentation and context for LLMs
-|   |   |-- generated/     # Generated PRDs and PRPs
-|   |   `-- completed/     # Completed PRPs
-|   |-- claude_md_files/   # Framework-specific CLAUDE.md examples
-|   |-- CLAUDE.md          # Project-specific guidelines for LLMs
-|   |-- README_framework.md # Original README from the framework assets
-|   |-- _ai_knowledge.md   # LLM's persistent knowledge base
-|   |-- _project.md        # Project status and key documents for LLMs
-|   |-- create-prd.md      # LLM instructions for creating PRDs
-|   |-- generate-tasks.md  # LLM instructions for generating task lists
-|   |-- process-task-list.md # LLM instructions for executing tasks
-|   |-- review-and-refactor.md # LLM instructions for code review and refactoring
-|   |-- feedback_prompt.md # LLM instructions for generating feedback
-|   |-- progress_report.md # LLM instructions for generating progress reports
-|   `-- GLOBAL_AI_RULES.md # Global rules for LLM behavior
-|-- 03_run_prp.sh          # Script to execute PRPs
-`-- (your source code and tests will reside here)
+-   **Unified Workflow:** A single `manager.sh` script to orchestrate all AI-assisted development tasks.
+-   **Model-Agnostic Prompts:** Prompts designed to work effectively with various AI models (e.g., Gemini, Claude, OpenAI).
+-   **Structured PRD & PRP Creation:** Tools to generate detailed Product Requirements Documents (PRDs) and Product Requirement Prompts (PRPs).
+-   **Automated Task Execution:** AI agents can execute granular tasks, write code, and perform validations.
+-   **Continuous Quality:** Integrated commands for code review, refactoring, and Git operations.
+-   **Clear Guidance:** Comprehensive documentation (`.ai_workflow/FRAMEWORK_GUIDE.md`) to guide you through every step.
+
+## 🛠️ Available Commands
+
+The `manager.sh` script is your primary interface with the framework. Use these commands to orchestrate your AI-assisted development workflows:
+
+| Command             | Description                                                                 |
+| :------------------ | :-------------------------------------------------------------------------- |
+| `setup`             | 🚀 Interactively sets up a new project from the framework.                  |
+| `new-prd`           | 💡 Guides you to create a new Product Requirements Document (PRD).          |
+| `new-prp`           | 📝 Creates a new Product Requirement Prompt (PRP) from a description.       |
+| `run`               | ⚙️ Executes a PRP using a specified AI agent.                               |
+| `help`              | ❓ Shows the help message with available commands.                          |
+
+For detailed usage of each command and a deeper dive into the framework's workflows, refer to the `FRAMEWORK_GUIDE.md`.
+
+## 🚀 Getting Started
+
+To set up a new project using this framework, run the setup command:
+
+```bash
+./manager.sh setup
 ```
 
-## Getting Started
+This command will guide you through creating a new project directory, moving the framework files, and initializing a new Git repository.
 
-1.  **Initial Setup**: Run the `01_setup.sh` script once to set up your project structure.
+## 📚 Documentation
 
-    ```bash
-    ./01_setup.sh
-    ```
+-   **`.ai_workflow/FRAMEWORK_GUIDE.md`**: The main guide explaining the framework's philosophy, workflows, and component usage.
+-   **`.ai_workflow/AGENT_GUIDE.md`**: Guidelines and best practices for AI agents working within this repository.
 
-    *This script will prompt you for a project name and then move all framework assets into the new project directory. It will then self-destruct.* 
+## 🤝 Contributing
 
-2.  **Generate a PRD (Product Requirements Document)**: Use `02_create_prp.sh` to have an LLM generate a high-level PRD for your feature.
+We welcome contributions to improve this framework! Please refer to the `FRAMEWORK_GUIDE.md` for insights into the project's structure and principles before contributing.
 
-    ```bash
-    ./02_create_prp.sh
-    ```
+## 📄 License
 
-    *This script will prompt you for a feature description and the LLM CLI to use. It will generate a PRD based on the `.ai_workflow/PRPs/templates/prp_planning.md` template and save it in `.ai_workflow/PRPs/generated/`.*
-
-3.  **Generate an Implementation PRP**: Once you have a PRD, use `02_create_prp.sh` again to generate a detailed Implementation PRP.
-
-    ```bash
-    ./02_create_prp.sh
-    ```
-
-    *This time, you'll guide the LLM to use the `.ai_workflow/PRPs/templates/prp_base.md` template, incorporating details from your PRD to create actionable development tasks.*
-
-4.  **Execute the Implementation PRP**: Use the `03_run_prp.sh` script to have an LLM implement the tasks defined in your PRP.
-
-    ```bash
-    ./03_run_prp.sh --prp [your-prp-name] --model [llm-cli] --interactive
-    ```
-
-    *Replace `[your-prp-name]` with the name of your generated PRP (e.g., `my-feature-prp`) and `[llm-cli]` with your LLM CLI (e.g., `claude`, `gemini`). The `--interactive` flag allows for a conversational execution.* 
-
-## Key Concepts
-
--   **PRD (Product Requirements Document)**: A high-level document defining *what* to build and *why*. Generated using `prp_planning.md`.
--   **PRP (Product Requirement Prompt)**: A detailed implementation document defining *how* to build a feature. Generated using `prp_base.md`.
--   **LLM CLI**: Command-line interface for your chosen Large Language Model (e.g., Claude, Gemini, OpenAI).
--   **`.ai_workflow/`**: The central directory containing all framework assets, LLM instructions, templates, and scripts.
-
-## Customization
-
--   **LLM Commands**: Add new `.md` prompt files to `.ai_workflow/commands/` to create custom LLM commands.
--   **PRP Templates**: Modify existing templates or add new ones in `.ai_workflow/PRPs/templates/`."
--   **AI Documentation**: Add project-specific documentation and context for LLMs in `.ai_workflow/PRPs/ai_docs/`.
-
-## Support
-
-If you find value in this project, please consider supporting the original creator:
-
-https://github.com/AnglDavd/AI-WorkFlow
+This project is licensed under the MIT License.
 
 ---
 
-Remember: This framework aims for one-pass implementation success through comprehensive context and clear guidance for LLMs.
+_Happy AI-Assisted Coding!_ ✨
