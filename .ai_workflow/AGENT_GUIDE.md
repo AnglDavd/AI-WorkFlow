@@ -54,14 +54,14 @@ The commands are stored in `.ai_workflow/commands/`. They are designed to be exe
 - `prime-core` - Prime the AI with project context.
 - `review-staged-unstaged` - Review git changes using the PRP methodology.
 
-## Critical Success Patterns
-
-### The PRP Methodology
+## Core Principles
 
 1.  **Context is King**: Include ALL necessary documentation, examples, and caveats.
 2.  **Validation Loops**: Provide executable tests/lints the AI can run and fix.
 3.  **Information Dense**: Use keywords and patterns from the codebase.
 4.  **Progressive Success**: Start simple, validate, then enhance.
+5.  **Resilient Testing**: When tests fail, attempt initial diagnosis and auto-correction before escalating. Do not halt development unless explicitly instructed or all recovery options are exhausted.
+6.  **Privacy & Data Handling**: When generating external output (e.g., GitHub issues, reports), ensure that **NO project-specific code, sensitive data, or private information is ever included**. All external communication must strictly adhere to framework-related feedback only.
 
 ### PRP Structure Requirements
 

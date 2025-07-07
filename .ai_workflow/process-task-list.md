@@ -49,12 +49,16 @@ Immediately after completing a sub-task, follow these steps in order:
     b. **If Any Test Fails:** Trigger the **Error Handling Protocol (Section 2)**.
     c. **If All Tests Pass:** Mark the **parent task** as completed `[x]`.
     d. **Notify User:** "Parent task 2.0 completed and verified. Moving to the next task."
-    e. **Refactoring Reminder:**
+    e. **Post-Completion Suggestions:**
         i. Read `_ai_knowledge.md` to get `completed_parent_tasks_count`.
         ii. Increment `completed_parent_tasks_count`.
-        iii. If `completed_parent_tasks_count` is a multiple of 3 (e.g., 3, 6, 9...), suggest a refactoring cycle:
+        iii. **Refactoring Cycle Suggestion:** If `completed_parent_tasks_count` is a multiple of 3 (e.g., 3, 6, 9...), suggest a refactoring cycle:
             > "I have completed `completed_parent_tasks_count` parent tasks. This might be a good time to run a code review and refactoring cycle using `review-and-refactor.md`. Would you like to proceed with that now, or should I continue with the next development task?"
-        iv. If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
+            If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
+        iv. **Framework Feedback Suggestion:** Regardless of the refactoring cycle, always offer the user to provide feedback on the framework itself:
+            > "Would you like to provide feedback on the framework's performance or suggest improvements? I can help generate a GitHub issue for the main repository. This issue will ONLY contain feedback related to the framework, NOT your project's code or sensitive data."
+            If the user agrees, instruct the user to provide general feedback (e.g., "The prompt for task X was unclear", "The validation step was slow"). Then, generate a prompt for the `FRAMEWORK_ASSISTANT` to create the `gh issue create` command with this general feedback.
+
     f. **Update Progress Report:** After completing any sub-task or parent task, update the `progress_report.md` file. This includes:
         i. Reading the current task list to count total, completed, and pending tasks.
         ii. Updating the progress bar (e.g., `[▓▓▓▓▓░░░░░] 50%`).
@@ -70,12 +74,33 @@ Immediately after completing a sub-task, follow these steps in order:
 
 ## 2. Error & Failure Protocol
 
-### 2.1. Test Failure
+### 2.1. Test Failure Protocol (Resilient)
 If any test (unit or full suite) fails:
-1.  **Stop immediately.**
-2.  **Revert Changes:** `git reset --hard HEAD` to maintain a stable codebase.
-3.  **Report the Error:** Inform the user, including the test output log.
-4.  **Await new instructions.**
+1.  **Diagnose the Failure:**
+    -   Analyze the test output log for error messages, stack traces, and hints.
+    -   Identify the type of failure (e.g., syntax error, assertion failure, dependency issue, integration problem).
+2.  **Attempt Auto-Correction (Limited):**
+    -   **Attempt 1 (Syntax/Linting):** If the error suggests a syntax or linting issue, try running the project's linter/formatter (`ruff check --fix`, `npm run lint --fix`) on the modified files.
+    -   **Attempt 2 (Dependency/Setup):** If the error suggests a missing dependency or environment issue, try running the project's dependency installation command (`uv sync`, `npm install`).
+    -   **Re-run Tests:** After each auto-correction attempt, re-run the relevant tests. If they pass, proceed to step 3.
+3.  **Escalate Intelligently (If Auto-Correction Fails):**
+    -   If tests still fail after auto-correction attempts, do NOT stop immediately.
+    -   **Report the Error:** Inform the user about the test failure, including:
+        -   The original error message and relevant parts of the log.
+        -   What auto-correction attempts were made and why they failed.
+        -   Your current hypothesis about the root cause.
+    -   **Offer Options to User:** Present clear options for how to proceed:
+        -   "a) Provide more context or a specific debugging hint to help me fix it."
+        -   "b) Create a new debugging task in `PRPs/checklist.md` for this issue, revert the current changes, and proceed with the next main task."
+        -   "c) Revert the current changes and stop development at this point."
+    -   **Await User Decision:** Wait for the user's explicit instruction.
+    -   **If User Chooses (b):**
+        -   **Create Debug Task:** Generate a new task in `PRPs/checklist.md` with a clear description of the bug, its symptoms, and the failed test output.
+        -   **Revert Changes:** `git reset --hard HEAD` to maintain a stable codebase.
+        -   **Proceed:** Continue with the next main task in the `PRPs/checklist.md`.
+    -   **If User Chooses (c):**
+        -   **Revert Changes:** `git reset --hard HEAD`.
+        -   **Stop.****
 
 ### 2.2. Setup & Configuration Failure
 If any environment setup command fails (e.g., `npm install`, `docker-compose up`):

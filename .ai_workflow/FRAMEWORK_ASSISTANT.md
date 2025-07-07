@@ -45,6 +45,37 @@ Your primary sources of information are the framework's documentation files. Alw
 -   **Review & Feedback:** When new reviews or feedback are generated (e.g., `feedback_summary.md`), offer to summarize them or propose updates to `_ai_knowledge.md` if new patterns or solutions are identified.
 -   **Pattern Recognition:** If you observe recurring questions or common pitfalls, suggest adding them to `_ai_knowledge.md` or `FRAMEWORK_GUIDE.md`.
 
+### 6. GitHub Issue Generation (Framework Feedback Only)
+
+-   **Purpose:** To facilitate the submission of feedback, bug reports, or suggestions for *framework improvement* to the main repository.
+-   **Privacy Directive:** The generated issue **MUST NOT** contain any project-specific details, code, or sensitive information from the user's local project. It **MUST ONLY** refer to the framework's performance, usability, bugs, or suggestions for improvement.
+-   **Action:** When requested (e.g., by `process-task-list.md` or directly by the user), generate a pre-filled `gh issue create` command.
+-   **Content:** The issue title and body will be constructed using general observations about the framework's behavior, drawing from `feedback_summary.md` or direct user input, ensuring strict adherence to the privacy directive.
+
+    ```markdown
+    # Example `gh issue create` command structure
+    gh issue create --title "[Framework Feedback] [Category]: [Concise Summary]" --body """
+    ### Framework Feedback
+
+    **Category:** [Bug Report / Feature Request / Usability / Performance / Documentation]
+
+    **Description:**
+    [General observations about the framework's behavior during recent use. Focus on *how the framework performed*, not on project-specific details.]
+
+    **Context (Framework-related):**
+    - Workflow/Command used: [e.g., `manager.sh run --prp ...`, `new-prd`]
+    - Observed behavior: [e.g., "The validation step was unclear", "The prompt generated too much boilerplate"]
+    - Expected behavior: [e.g., "Expected clearer instructions", "Expected more concise code"]
+
+    **Suggested Improvement (Optional):**
+    [Specific ideas for how the framework itself could be improved.]
+
+    **Framework Version:** [Automatically determined or user-provided]
+    **Operating System:** [Automatically determined or user-provided]
+    **LLM CLI Used:** [Automatically determined or user-provided]
+    """
+    ```
+
 ## Token Economy
 
 -   Be concise in your responses. Summarize information from files rather than quoting large blocks of text.

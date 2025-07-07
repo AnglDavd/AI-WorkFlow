@@ -137,6 +137,14 @@ General utilities to assist with various development tasks.
     -   `prime-core.md`
     -   `smart-commit.md`
 
+## 🔄 Framework Feedback Loop (Continuous Improvement)
+
+To ensure the continuous improvement of the framework itself, a feedback mechanism has been integrated. After significant tasks are completed, the AI agent will suggest providing feedback on the framework's performance.
+
+-   **Purpose:** To gather insights on the framework's usability, performance, and identify areas for enhancement.
+-   **Privacy Note:** Any feedback submitted through this mechanism will **ONLY** pertain to the framework's functionality and suggestions for its improvement. **NO project-specific code, sensitive data, or private information will ever be included in these reports or GitHub issues.**
+-   **Process:** The `process-task-list.md` prompt will prompt the user for feedback, and the `FRAMEWORK_ASSISTANT` will help generate a pre-filled `gh issue create` command for the main repository.
+
 ## 🤖 The Role of `manager.sh`
 
 The `manager.sh` script is your primary interface with the AI-Assisted Development Framework. It acts as an orchestrator, simplifying the execution of complex AI agent prompts and workflows. Instead of directly interacting with individual `.md` prompt files, you use `manager.sh` to trigger the desired actions.
@@ -145,5 +153,6 @@ The `manager.sh` script is your primary interface with the AI-Assisted Developme
 -   **`manager.sh new-prd`**: Starts the PRD creation workflow.
 -   **`manager.sh new-prp`**: Initiates the PRP creation workflow.
 -   **`manager.sh run --prp <path>`**: Executes a specific PRP.
+-   **`manager.sh assistant <query>`**: Interacts with the Framework Assistant for guidance and support.
 
 By centralizing these operations, `manager.sh` provides a consistent and user-friendly experience, abstracting away the underlying complexity of prompt execution.

@@ -9,6 +9,7 @@ Welcome to the AI-Assisted Development Framework! This project provides a struct
 -   **Structured PRD & PRP Creation:** Tools to generate detailed Product Requirements Documents (PRDs) and Product Requirement Prompts (PRPs).
 -   **Automated Task Execution:** AI agents can execute granular tasks, write code, and perform validations.
 -   **Continuous Quality:** Integrated commands for code review, refactoring, and Git operations.
+-   **Framework Feedback Loop:** Automated suggestions to provide feedback on the framework's performance and generate GitHub issues, ensuring continuous improvement while respecting project privacy.
 -   **Clear Guidance:** Comprehensive documentation (`.ai_workflow/FRAMEWORK_GUIDE.md`) to guide you through every step.
 
 ## 🛠️ Available Commands
