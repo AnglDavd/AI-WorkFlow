@@ -41,6 +41,7 @@ show_help() {
     echo "  new-prd       - Guides you to create a new Product Requirements Document (PRD)."
     echo "  new-prp       - Creates a new Product Requirement Prompt (PRP) from a description."
     echo "  run           - Executes a PRP using a specified AI agent."
+    echo "  assistant     - Interacts with the Framework Assistant to get guidance."
     echo "  help          - Shows this help message."
     echo ""
     print_color "blue" "For command-specific help, run: ./manager.sh <command> --help"
@@ -92,10 +93,10 @@ Creating project structure..."
         cd "$current_dir_name"
         git ls-files -c -o --exclude-standard | xargs -I {} mv {} "../$PROJECT_NAME/"
         mv .git* "../$PROJECT_NAME/" # Move git related files
-        cd ..
+        cd ".."
         rm -rf "$current_dir_name" # Remove the old directory
     else
-        print_color "red" "Failed to create directory '$PROJECT_NAME'. It might already exist."
+        print_color "red" "Failed to create directory '$PROJECT_NAME'. It might already already exist."
         exit 1
     fi
 
@@ -316,6 +317,70 @@ PRP execution failed."
     fi
 }
 
+# 5. ASSISTANT COMMAND
+run_assistant() {
+    if [[ "$1" == "--help" ]]; then
+        print_color "yellow" "Usage: ./manager.sh assistant <your_question> [--model <llm_cli>]"
+        echo "Interacts with the Framework Assistant to get guidance, status updates, or command suggestions."
+        echo ""
+        print_color "blue" "Options:"
+        echo "  <your_question>  - (Required) The question or query for the assistant."
+        echo "  --model <cli>    - The LLM CLI to use (e.g., claude, gemini). Default: claude."
+        return
+    fi
+
+    local question=""
+    local llm_cli="claude"
+    local assistant_prompt_path="${WORKFLOW_DIR}/FRAMEWORK_ASSISTANT.md"
+
+    # Parse arguments for this specific command
+    local args_array=()
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --model) llm_cli="$2"; shift 2;;
+            *)
+                args_array+=("$1")
+                shift
+                ;;
+        esac
+    done
+    question=$(printf "%s " "${args_array[@]}")
+
+    if [ -z "$question" ]; then
+        print_color "red" "Error: A question is required for the assistant."
+        exit 1
+    fi
+    if [ ! -f "$assistant_prompt_path" ]; then
+        print_color "red" "Error: Assistant prompt file not found at '$assistant_prompt_path'."
+        exit 1
+    fi
+    if ! command -v "$llm_cli" &> /dev/null; then
+        print_color "red" "Error: '$llm_cli' command not found."
+        exit 1
+    fi
+
+    local assistant_prompt_content=$(cat "$assistant_prompt_path")
+    local full_prompt="${assistant_prompt_content}
+
+## User Query:
+${question}"
+
+    print_color "blue" "========================================================="
+    print_color "blue" "           Framework Assistant"
+    print_color "blue" "========================================================="
+    print_color "blue" "Querying assistant using $llm_cli..."
+
+    echo -e "$full_prompt" | "$llm_cli" --allowedTools "Edit,Bash,Write,MultiEdit,NotebookEdit,WebFetch,Agent,LS,Grep,Read,NotebookRead,TodoRead,TodoWrite,WebSearch"
+
+    if [ $? -eq 0 ]; then
+        print_color "green" "
+Assistant query completed."
+    else
+        print_color "red" "
+Assistant query failed."
+    fi
+}
+
 
 # --- Main Script Logic ---
 
@@ -338,6 +403,9 @@ case "$1" in
         ;;
     run)
         run_prp "$@"
+        ;;
+    assistant)
+        run_assistant "$@"
         ;;
     help|--help|-h)
         show_help

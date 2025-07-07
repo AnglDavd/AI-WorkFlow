@@ -21,6 +21,7 @@ The `manager.sh` script is your primary interface with the framework. Use these 
 | `new-prd`           | 💡 Guides you to create a new Product Requirements Document (PRD).          |
 | `new-prp`           | 📝 Creates a new Product Requirement Prompt (PRP) from a description.       |
 | `run`               | ⚙️ Executes a PRP using a specified AI agent.                               |
+| `assistant`         | 🧠 Interacts with the Framework Assistant to get guidance.                  |
 | `help`              | ❓ Shows the help message with available commands.                          |
 
 For detailed usage of each command and a deeper dive into the framework's workflows, refer to the `FRAMEWORK_GUIDE.md`.
