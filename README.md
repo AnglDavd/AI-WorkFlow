@@ -36,6 +36,16 @@ To set up a new project using this framework, run the setup command:
 
 This command will guide you through creating a new project directory, moving the framework files, and initializing a new Git repository.
 
+### 🧠 Interacting with the Framework Assistant
+
+To get guidance, ask questions, or receive command suggestions from the AI Assistant, use:
+
+```bash
+./manager.sh assistant "How do I create a new PRD?"
+```
+
+This will activate the AI Assistant, which can help you navigate the framework and its capabilities.
+
 ## 📚 Documentation
 
 -   **`.ai_workflow/FRAMEWORK_GUIDE.md`**: The main guide explaining the framework's philosophy, workflows, and component usage.
