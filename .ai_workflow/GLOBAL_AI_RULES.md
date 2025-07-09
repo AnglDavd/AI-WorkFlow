@@ -57,3 +57,10 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
 5.  **Contextual Error Reporting for Abstract Tools:**
     *   **Description:** When an abstract tool call fails during execution (i.e., the underlying shell command returns an error), the agent must not only report the raw error but also provide context, such as the abstract call that triggered it and potentially suggest that the tool adapter (`[tool_name]_adapter.md`) might need refinement or debugging.
     *   **Rationale:** Enhances debugging and maintenance of the tool abstraction layer.
+
+### Loop Prevention and Escalation:
+
+6.  **Loop Detection and Intervention:**
+    *   **Description:** If the agent detects a repetitive pattern in its own responses or actions (e.g., repeating the same explanation, attempting the same failed tool call multiple times, or getting stuck in a conversational loop), it must immediately break the pattern.
+    *   **Action:** The agent should explicitly state that it has detected a loop, summarize the repetitive behavior, and propose a different strategy or ask for direct intervention from the user.
+    *   **Rationale:** Prevents unproductive cycles, saves tokens, and improves user experience by signaling when the agent is stuck.
