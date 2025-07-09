@@ -1,10 +1,10 @@
 # Execute Abstract Tool Call
 
 ## Objective
-To interpret a semantic, abstract tool call and translate it into a concrete, executable shell command using the appropriate adapter. If an adapter does not exist, trigger its creation.
+To interpret a semantic, abstract tool call and translate it into a concrete, executable shell command using the appropriate adapter. If an adapter does not exist, trigger its creation. If the action modifies a critical file, request user confirmation.
 
 ## Role
-You are the core interpreter for the Tool Abstraction Layer. Your job is to parse an abstract tool call, orchestrate the process of converting it into a real command, and handle cases where the tool is not yet defined.
+You are the core interpreter for the Tool Abstraction Layer. Your job is to parse an abstract tool call, orchestrate the process of converting it into a real command, handle cases where the tool is not yet defined, and ensure critical file modifications are approved by the user.
 
 ## Input
 - A single line representing an abstract tool call (e.g., `tool.git.add_all()`).
@@ -24,7 +24,8 @@ You are the core interpreter for the Tool Abstraction Layer. Your job is to pars
 
     -   **If the adapter exists:**
         -   Read the adapter file. The adapter contains the logic for translating the abstract action and its arguments into a concrete shell command.
-        -   Follow the instructions in the adapter to construct the final command string.
+        -   **Extract Action Type and Affected File Path:** From the adapter's definition for the specific action, identify its `Action Type` (e.g., `read`, `write`) and `Affected File Path` (e.g., `package.json`, `.` for current directory, or a specific argument value like `<file_path>`).
+        -   **Construct the Concrete Command:** Follow the instructions in the adapter to construct the final command string.
         -   Proceed to Step 4.
 
     -   **If the adapter does NOT exist:**
@@ -35,28 +36,30 @@ You are the core interpreter for the Tool Abstraction Layer. Your job is to pars
             -   `ACTION_NAME`: The action name you just parsed.
         -   After the adapter is created, stop the current execution and report to the user that the placeholder has been created, instructing them to fill it out before trying again.
 
-4.  **Execute the Concrete Command:**
+4.  **Critical File Confirmation (if applicable):**
+    -   **Read Critical File Patterns:** Read the `Critical File Patterns` section from `/.ai_workflow/_ai_knowledge.md`.
+    -   **Check for Criticality:** If the `Action Type` is `write` AND the `Affected File Path` (after resolving any argument placeholders like `<file_path>`) matches any of the `Critical File Patterns`:
+        -   **Action:** Call the `/.ai_workflow/workflows/common/confirm_file_change.md` workflow.
+        -   **Inputs for `confirm_file_change.md`:**
+            -   `FILE_PATH`: The resolved `Affected File Path`.
+            -   `PROPOSED_CONTENT_DIFF`: (Optional, if available from the adapter's logic for this action) A diff of the proposed change.
+        -   **Await User Decision:** Wait for the user's approval.
+        -   **If User Disapproves:** Stop execution and report that the change was cancelled.
+
+5.  **Execute the Concrete Command:**
     -   Use the `run_shell_command` tool to execute the generated command string.
 
-5.  **Handle Output:**
+6.  **Handle Output:**
     -   Report the result of the `run_shell_command` execution (stdout, stderr, exit code).
     -   If the command fails, trigger the standard error handling protocol (`/.ai_workflow/workflows/common/error.md`).
 
-## Example (Adapter Found)
+## Example (Adapter Found & Critical File)
 
 **If the input is:** `tool.git.commit(message="feat: initial commit")`
 
 1.  **Parse:** Tool is `git`, action is `commit`, argument is `message="feat: initial commit"`.
 2.  **Find Adapter:** Locate `/.ai_workflow/tools/adapters/git_adapter.md`. It exists.
-3.  **Consult Adapter:** Read `git_adapter.md` and construct the command: `git commit -m "feat: initial commit"`.
-4.  **Execute:** Run `run_shell_command(command='git commit -m "feat: initial commit"')`.
-5.  **Report:** Show the output.
-
-## Example (Adapter Not Found)
-
-**If the input is:** `tool.docker.build(tag="my-image")`
-
-1.  **Parse:** Tool is `docker`, action is `build`.
-2.  **Find Adapter:** Look for `/.ai_workflow/tools/adapters/docker_adapter.md`. It does not exist.
-3.  **Trigger Creation:** Call `create_new_adapter.md` with `TOOL_NAME=docker` and `ACTION_NAME=build`.
-4.  **Report:** Inform the user: "The `docker` tool adapter was not found. I have created a placeholder at `/.ai_workflow/tools/adapters/docker_adapter.md`. Please edit this file to define the translation logic for the `build` action and then run your request again."
+3.  **Consult Adapter:** Read `git_adapter.md`. `Action Type` is `write`, `Affected File Path` is `.`. Construct command: `git commit -m "feat: initial commit"`.
+4.  **Critical File Confirmation:** `.` matches `src/**` (as it affects source files). Call `confirm_file_change.md` with `FILE_PATH=.` (and potentially a diff if `git diff --staged` can be run and passed).
+5.  **Execute (if approved):** Run `run_shell_command(command='git commit -m "feat: initial commit"')`.
+6.  **Report:** Show the output.

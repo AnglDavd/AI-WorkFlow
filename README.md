@@ -1,60 +1,82 @@
-# 🚀 AI-Assisted Development Framework 🚀
+# 🚀 AI-Assisted Development Framework | Your Autonomous Software Engineering Partner
 
-Welcome to the AI-Assisted Development Framework! This project provides a structured approach to building software with the help of advanced AI agents. It's designed to streamline your development workflow from ideation to code implementation and continuous improvement.
+## 💡 The Challenge of Modern Development
 
-## ✨ Key Features
+In the fast-paced world of software development, teams constantly face challenges: repetitive tasks, code inconsistencies, high operational costs of AI tools, and the need to maintain control over complex processes. AI agent autonomy, while powerful, can raise concerns about project security and stability.
 
--   **Dynamic Project Manager (DPM):** The framework's core is now driven by a transparent, auditable, and self-improving system based on `.md` workflow nodes. This replaces traditional scripts with human-readable, agent-executable manifests.
--   **Model-Agnostic Prompts:** Prompts designed to work effectively with various AI models (e.g., Gemini, Claude, OpenAI).
--   **Structured PRD & PRP Creation:** Tools to generate detailed Product Requirements Documents (PRDs) and Product Requirement Prompts (PRPs).
--   **Automated Task Execution:** AI agents can execute granular tasks, write code, and perform validations.
--   **Continuous Quality:** Integrated commands for code review, refactoring, and Git operations.
--   **Framework Feedback Loop:** Automated suggestions to provide feedback on the framework's performance and generate GitHub issues, ensuring continuous improvement while respecting project privacy.
--   **Clear Guidance:** Comprehensive documentation (`.ai_workflow/FRAMEWORK_GUIDE.md`) to guide you through every step.
+## ✨ Our Solution: The AI-Assisted Development Framework
 
-## 🛠️ How to Use the Dynamic Project Manager (DPM)
+This framework is an innovative system designed to empower development teams with artificial intelligence, ensuring transparency, control, and efficiency. We transform the way you build software, allowing AI agents to work autonomously, yet always under your supervision and with a focus on continuous optimization.
 
-The DPM operates through a series of interconnected Markdown files, making the entire workflow transparent and auditable.
+## 🌟 Key Features
 
-**To start any workflow or get help, simply read the main `manager.md` file:**
-
-```bash
-cat manager.md
-```
-
-This file acts as your central hub, listing all available workflows. Each workflow is a sequence of `.md` nodes. To execute a workflow, you (or an AI agent) will:
-1.  Read the current `.md` node.
-2.  Understand its `Objective` and `Commands`.
-3.  Execute the `Commands` block in your terminal.
-4.  Based on the `Next Steps` section, navigate to the next `.md` node (e.g., `cat ./.ai_workflow/workflows/setup/01_start_setup.md`).
-
-This approach provides unparalleled flexibility, allowing you to pause, inspect, modify, or even skip steps as needed.
+*   **Dynamic Project Manager (DPM):** The core of the framework. A transparent, auditable, and self-improving system based on **`.md` workflow nodes**. All project logic is visible and editable, replacing monolithic scripts with human-readable, agent-executable manifests.
+*   **Self-Extending Tools:** Need a new CLI tool? The framework can **dynamically create adapters** for undefined tools, guiding you through the integration process.
+*   **Automated Token Economy Optimization:** A proactive system that **monitors and optimizes the token consumption** of your LLMs, helping you reduce costs and improve efficiency without compromising quality.
+*   **Enhanced Security and Control:** We implement crucial safeguards:
+    *   **Critical File Change Approval:** The agent requests your explicit confirmation before modifying key project files.
+    *   **Mandatory Testing:** Automated execution of tests before and after each code change.
+    *   **Rapid Rollback:** Ability to easily undo the last commit.
+*   **Model-Agnostic Prompts:** Designed to work effectively with various AI models (e.g., Gemini, Claude, OpenAI), ensuring flexibility.
+*   **Intuitive Natural Language Interaction:** Initiate complex `workflows` with simple, conversational requests to your agent.
+*   **Continuous Learning and Improvement:** The framework learns from each interaction, optimizing its processes and adapting to your needs.
 
 ## 🚀 Getting Started
 
-To set up a new project using this framework, begin by reading the `manager.md` and following the "Project Setup" workflow:
+Getting started is easy! Once you have cloned the repository, simply instruct your assistant agent:
 
-```bash
-cat manager.md
+```
+let's start the project @manager.md
 ```
 
-Then, navigate to the first step of the setup workflow:
+Your AI agent will interpret this request, initiate the project setup `workflow`, and guide you through the initial steps.
 
-```bash
-cat ./.ai_workflow/workflows/setup/01_start_setup.md
-```
+## 💡 Why Choose This Framework?
 
-Follow the instructions within each `.md` file to proceed.
+*   **Increased Productivity:** Automate repetitive tasks and accelerate the development cycle.
+*   **Reduced Errors:** Security safeguards and automated testing minimize regressions.
+*   **Cost Savings:** Token optimization reduces the operational expenses of your LLMs.
+*   **Full Transparency:** Understand exactly what your agent is doing at every step.
+*   **Granular Control:** Maintain human oversight at critical junctures.
+*   **Future-Proof:** An extensible system adaptable to new tools and AI models.
 
-## 📚 Documentation
+## 📚 Documentation and Resources
 
--   **`manager.md`**: The main entry point and map of all available workflows.
--   **`.ai_workflow/FRAMEWORK_GUIDE.md`**: The main guide explaining the framework's philosophy, workflows, and component usage.
--   **`.ai_workflow/AGENT_GUIDE.md`**: Guidelines and best practices for AI agents working within this repository.
+*   **`manager.md`**: The main entry point and map of all available `workflows`.
+*   **`.ai_workflow/FRAMEWORK_GUIDE.md`**: Comprehensive guide on the framework's philosophy, `workflows`, and component usage.
+*   **`.ai_workflow/AGENT_GUIDE.md`**: Guidelines and best practices for AI agents operating within this repository.
+*   **`.ai_workflow/GLOBAL_AI_RULES.md`**: General agent rules and behavioral guidelines.
+
+## 💖 Support Our Mission
+
+This project is a labor of love, driven by the vision of making AI-assisted software engineering accessible and efficient for everyone. Your support directly fuels its development, allowing us to cover operational costs and dedicate more time to building new features and improvements.
+
+### How You Can Contribute Financially:
+
+You can support us via [http://coff.ee/angldavd](http://coff.ee/angldavd). Every contribution, big or small, makes a significant difference!
+
+### Our Funding Goals:
+
+Your contributions help us achieve key milestones:
+
+*   **Tier 1: Sustaining AI Operations ($20/month per platform)**
+    *   **Goal 1:** $20/month - Cover OpenAI API costs.
+    *   **Goal 2:** $20/month - Cover Claude API costs.
+    *   **Goal 3:** $20/month - Cover Gemini API costs.
+    *   *Achieving these goals ensures we can continuously use and test the best AI models to improve the framework's capabilities.* 
+
+*   **Tier 2: Advanced AI & Accelerated Development**
+    *   **Goal 4:** $100/month - Access to Claude Max (or equivalent top-tier models).
+    *   **Goal 5:** $200/month - Access to OpenAI Pro (or equivalent top-tier models).
+    *   **Goal 6:** $270/month - Access to Gemini Ultra (or equivalent top-tier models).
+    *   *These higher tiers enable us to leverage the most powerful AI tools, pushing the boundaries of what the framework can achieve and accelerating the development of cutting-edge features.*
+
+*   **Tier 3: Full-Time Dedication & Innovation ($1500/month)**
+    *   **Goal 7:** $1500/month - This crucial goal allows dedicated development time, enabling full-time commitment to the project. Achieving this means faster feature delivery, more robust solutions, and a significantly accelerated pace of innovation.
 
 ## 🤝 Contributing
 
-We welcome contributions to improve this framework! Please refer to the `FRAMEWORK_GUIDE.md` for insights into the project's structure and principles before contributing.
+We welcome contributions to improve this framework! Please refer to the documentation to understand its structure and principles before contributing.
 
 ## 📄 License
 

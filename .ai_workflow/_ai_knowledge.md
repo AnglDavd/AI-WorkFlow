@@ -17,6 +17,17 @@ This file serves as a persistent memory for the AI agent within this project. It
     -   **Format:** Each line is a separate JSON object representing a single API call.
     -   **Instruction:** When the user asks about token usage or costs, you MUST read and analyze this file to provide a data-driven answer. When asked to optimize for token economy, this file is your primary data source for identifying high-consumption workflows.
 
+### Critical File Patterns
+
+-   **Purpose:** These patterns define files that are considered critical to the project's integrity or functionality. Any modification to these files requires explicit user confirmation.
+-   **Patterns:**
+    -   `src/**` (all source code files)
+    -   `config/**` (configuration directories)
+    -   `package.json`, `pom.xml`, `build.gradle`, `requirements.txt` (dependency/build configs)
+    -   `Dockerfile`
+    -   `_ai_knowledge.md`, `GLOBAL_AI_RULES.md`, `manager.md`, `process-task-list.md` (framework core files)
+    -   `README.md`
+
 ### Common Patterns & Solutions:
 - [AI to add common code patterns, architectural decisions, or recurring solutions here]
 

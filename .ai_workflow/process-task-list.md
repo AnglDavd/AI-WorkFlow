@@ -36,12 +36,18 @@ Immediately after completing a sub-task, follow these steps in order:
     b. **Run Relevant Tests:** Execute unit or integration tests directly related to the changes. **To find the correct command, consult the project-specific stack guide (e.g., `CLAUDE-NODE.md`) identified in the PRD.**
     c. **If Tests Fail:** Immediately trigger the **Error Handling Protocol (Section 2)**.
     d. **If Tests Pass:**
-        i.  **Stage Changes:** `git add .`
-        ii. **Make an Atomic Commit:** Use a clear, concise message describing the completed sub-task.
-            ```bash
-            git commit -m "feat(login): implement password validation (sub-task 2.1)"
-            ```
-        iii. **Update the task file** to persist the `[x]` status.
+        i.  **Run Relevant Tests (Pre-Commit):** Execute unit or integration tests directly related to the changes. **To find the correct command, consult the project-specific stack guide (e.g., `CLAUDE-NODE.md`) identified in the PRD.**
+        ii. **If Pre-Commit Tests Fail:** Immediately trigger the **Error Handling Protocol (Section 2)**.
+        iii. **If Pre-Commit Tests Pass:**
+            1.  **Stage Changes:** `git add .`
+            2.  **Make an Atomic Commit:** Use a clear, concise message describing the completed sub-task.
+                ```bash
+                git commit -m "feat(login): implement password validation (sub-task 2.1)"
+                ```
+            3.  **Run Relevant Tests (Post-Commit):** Execute the same tests again to confirm stability after commit.
+            4.  **If Post-Commit Tests Fail:** Immediately trigger the **Error Handling Protocol (Section 2)**.
+            5.  **If Post-Commit Tests Pass:**
+                a. **Update the task file** to persist the `[x]` status.
 
 ### 1.3. Parent Task Completion Protocol
 1.  When **all** sub-tasks under a parent task are marked `[x]`:

@@ -78,3 +78,12 @@ tool.fs.read_file(path="./src/index.js")
 -   Implement a prototype of a few key adapters (e.g., for Git and NPM).
 -   Integrate the parsing of `tool_call` blocks into the agent's core workflow execution logic.
 -   Define a formal schema (e.g., JSON Schema) for abstract tool calls to ensure consistency.
+
+### 9.1. "Dry Run" / "Safe Mode" Capabilities
+
+-   **Concept:** Explore the possibility of adding a `dry_run` parameter to abstract tool calls. When `dry_run=true`, the adapter would generate the corresponding shell command with a `--dry-run` or equivalent flag, allowing the agent to simulate the action without making actual changes.
+-   **Mechanism:** This would require:
+    -   Updating the abstract tool call syntax to include a `dry_run` argument (e.g., `tool.git.commit(message="...", dry_run=true)`).
+    -   Modifying adapters to recognize and translate the `dry_run` argument into tool-specific flags (e.g., `git commit --dry-run -m "..."`).
+    -   Updating the `execute_abstract_tool_call.md` workflow to handle the `dry_run` parameter and report the simulated output.
+-   **Benefit:** Provides an additional layer of safety, allowing the agent and user to preview the impact of a command before execution.

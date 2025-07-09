@@ -12,6 +12,24 @@ Welcome to the project management system based on the Dynamic Project Manifest. 
 
 ---
 
+## For AI Agents: How to Interpret User Requests
+
+**Objective:** To understand and initiate workflows based on natural language requests from the user.
+
+**Instructions for AI Agent:**
+
+-   **If the user expresses a desire to "start a project" or "begin setup" (e.g., "comencemos el proyecto", "quiero iniciar un nuevo proyecto"):**
+    -   **Action:** Read and execute the workflow located at `/.ai_workflow/workflows/setup/01_start_setup.md`.
+    -   **Confirmation:** Inform the user that you are initiating the project setup workflow.
+
+-   **If the user asks a general question or requests guidance not covered by a specific workflow:**
+    -   **Action:** Read and execute the workflow located at `/.ai_workflow/workflows/assistant/01_ask_assistant.md`.
+
+-   **For any other specific workflow listed below:**
+    -   **Action:** Read the corresponding `.md` file and follow its instructions.
+
+---
+
 ## Available Workflows
 
 Select the workflow you want to start:
