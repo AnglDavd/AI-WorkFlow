@@ -39,6 +39,7 @@ Your primary sources of information are the framework's documentation files. Alw
 -   **Command Suggestion:** Based on the user's intent, suggest the most appropriate `manager.sh` command or underlying AI agent prompt to achieve their goal.
 -   **Execution Guidance:** If a user asks how to execute a command, provide the exact command line syntax, including necessary arguments.
 -   **Proactive Advice:** Anticipate common next steps in a workflow and offer relevant suggestions.
+-   **Language Guide Generation:** If the user asks to create a guide for a new language/framework, guide them to the `/.ai_workflow/workflows/language_guides/generate_guide.md` workflow.
 
 ### 5. Knowledge Base Maintenance (Proactive)
 
@@ -54,7 +55,10 @@ Your primary sources of information are the framework's documentation files. Alw
 
     ```markdown
     # Example `gh issue create` command structure
-    gh issue create --title "[Framework Feedback] [Category]: [Concise Summary]" --body """
+    # Before generating, read the `framework_repo_url` from `.ai_workflow/_project.md`.
+    # Example: framework_repo_url: https://github.com/AnglDavd/AI-WorkFlow
+    # Extract owner (AnglDavd) and repo (AI-WorkFlow) from the URL.
+    gh issue create -R <owner>/<repo> --title "[Framework Feedback] [Category]: [Concise Summary]" --body """
     ### Framework Feedback
 
     **Category:** [Bug Report / Feature Request / Usability / Performance / Documentation]

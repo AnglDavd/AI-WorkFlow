@@ -4,7 +4,7 @@ Welcome to the AI-Assisted Development Framework! This project provides a struct
 
 ## ✨ Key Features
 
--   **Unified Workflow:** A single `manager.sh` script to orchestrate all AI-assisted development tasks.
+-   **Dynamic Project Manager (DPM):** The framework's core is now driven by a transparent, auditable, and self-improving system based on `.md` workflow nodes. This replaces traditional scripts with human-readable, agent-executable manifests.
 -   **Model-Agnostic Prompts:** Prompts designed to work effectively with various AI models (e.g., Gemini, Claude, OpenAI).
 -   **Structured PRD & PRP Creation:** Tools to generate detailed Product Requirements Documents (PRDs) and Product Requirement Prompts (PRPs).
 -   **Automated Task Execution:** AI agents can execute granular tasks, write code, and perform validations.
@@ -12,43 +12,43 @@ Welcome to the AI-Assisted Development Framework! This project provides a struct
 -   **Framework Feedback Loop:** Automated suggestions to provide feedback on the framework's performance and generate GitHub issues, ensuring continuous improvement while respecting project privacy.
 -   **Clear Guidance:** Comprehensive documentation (`.ai_workflow/FRAMEWORK_GUIDE.md`) to guide you through every step.
 
-## 🛠️ Available Commands
+## 🛠️ How to Use the Dynamic Project Manager (DPM)
 
-The `manager.sh` script is your primary interface with the framework. Use these commands to orchestrate your AI-assisted development workflows:
+The DPM operates through a series of interconnected Markdown files, making the entire workflow transparent and auditable.
 
-| Command             | Description                                                                 |
-| :------------------ | :-------------------------------------------------------------------------- |
-| `setup`             | 🚀 Interactively sets up a new project from the framework.                  |
-| `new-prd`           | 💡 Guides you to create a new Product Requirements Document (PRD).          |
-| `new-prp`           | 📝 Creates a new Product Requirement Prompt (PRP) from a description.       |
-| `run`               | ⚙️ Executes a PRP using a specified AI agent.                               |
-| `assistant`         | 🧠 Interacts with the Framework Assistant to get guidance.                  |
-| `help`              | ❓ Shows the help message with available commands.                          |
+**To start any workflow or get help, simply read the main `manager.md` file:**
 
-For detailed usage of each command and a deeper dive into the framework's workflows, refer to the `FRAMEWORK_GUIDE.md`.
+```bash
+cat manager.md
+```
+
+This file acts as your central hub, listing all available workflows. Each workflow is a sequence of `.md` nodes. To execute a workflow, you (or an AI agent) will:
+1.  Read the current `.md` node.
+2.  Understand its `Objective` and `Commands`.
+3.  Execute the `Commands` block in your terminal.
+4.  Based on the `Next Steps` section, navigate to the next `.md` node (e.g., `cat ./.ai_workflow/workflows/setup/01_start_setup.md`).
+
+This approach provides unparalleled flexibility, allowing you to pause, inspect, modify, or even skip steps as needed.
 
 ## 🚀 Getting Started
 
-To set up a new project using this framework, run the setup command:
+To set up a new project using this framework, begin by reading the `manager.md` and following the "Project Setup" workflow:
 
 ```bash
-./manager.sh setup
+cat manager.md
 ```
 
-This command will guide you through creating a new project directory, moving the framework files, and initializing a new Git repository.
-
-### 🧠 Interacting with the Framework Assistant
-
-To get guidance, ask questions, or receive command suggestions from the AI Assistant, use:
+Then, navigate to the first step of the setup workflow:
 
 ```bash
-./manager.sh assistant "How do I create a new PRD?"
+cat ./.ai_workflow/workflows/setup/01_start_setup.md
 ```
 
-This will activate the AI Assistant, which can help you navigate the framework and its capabilities.
+Follow the instructions within each `.md` file to proceed.
 
 ## 📚 Documentation
 
+-   **`manager.md`**: The main entry point and map of all available workflows.
 -   **`.ai_workflow/FRAMEWORK_GUIDE.md`**: The main guide explaining the framework's philosophy, workflows, and component usage.
 -   **`.ai_workflow/AGENT_GUIDE.md`**: Guidelines and best practices for AI agents working within this repository.
 

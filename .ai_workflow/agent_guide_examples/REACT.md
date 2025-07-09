@@ -1,6 +1,6 @@
-# CLAUDE.md
+# REACT.md
 
-This file provides guidance to Claude Code when working with React 19 applications.
+This file provides guidance for the AI Assistant when working with React 19 applications.
 
 ## Core Development Philosophy
 
@@ -21,7 +21,7 @@ With React 19's compiler, manual optimizations are largely unnecessary. Focus on
 - **Composition Over Inheritance**: MUST use React's composition model
 - **Fail Fast**: MUST validate inputs early with Zod, throw errors immediately
 
-## 🤖 AI Assistant Guidelines
+## 🤖 Assistant Guidelines
 
 ### Context Awareness
 - When implementing features, always check existing patterns first

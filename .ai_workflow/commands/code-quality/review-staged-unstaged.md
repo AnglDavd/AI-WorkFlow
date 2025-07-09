@@ -18,6 +18,7 @@ You are a senior developer acting as a pre-commit code reviewer. Your task is to
     -   Create a concise review report in Markdown format.
     -   Save the report to `PRPs/code_reviews/review-git-status-[timestamp].md`.
     -   The report must follow the specified output format.
+    -   **Ensure your report is concise and to the point to optimize token usage.**
 
 ---
 
@@ -31,6 +32,8 @@ You are a senior developer acting as a pre-commit code reviewer. Your task is to
 -   **Commit Readiness:** Are the changes atomic and ready to be described in a single, logical commit message?
 
 ## Review Output Format
+
+Refer to the standard defined in `/.ai_workflow/docs/output_formats.md` under "Code Review Report Format".
 
 ```markdown
 # Git Status Review - [YYYY-MM-DD HH:MM]

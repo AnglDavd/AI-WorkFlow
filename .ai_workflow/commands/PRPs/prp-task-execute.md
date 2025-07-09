@@ -10,6 +10,7 @@ You are a detail-oriented AI Software Engineer. You follow task lists precisely,
 
 1.  **Load and Understand the Task PRP:**
     -   Read the entire TASK PRP file (`$ARGUMENTS`), including all context and task definitions.
+    -   **Be concise and direct in your communication to optimize token usage.**
 
 2.  **Execute Tasks Sequentially:**
     -   Process the tasks strictly in the order they are listed.

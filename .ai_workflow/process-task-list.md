@@ -52,10 +52,20 @@ Immediately after completing a sub-task, follow these steps in order:
     e. **Post-Completion Suggestions:**
         i. Read `_ai_knowledge.md` to get `completed_parent_tasks_count`.
         ii. Increment `completed_parent_tasks_count`.
-        iii. **Refactoring Cycle Suggestion:** If `completed_parent_tasks_count` is a multiple of 3 (e.g., 3, 6, 9...), suggest a refactoring cycle:
-            > "I have completed `completed_parent_tasks_count` parent tasks. This might be a good time to run a code review and refactoring cycle using `review-and-refactor.md`. Would you like to proceed with that now, or should I continue with the next development task?"
-            If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
-        iv. **Framework Feedback Suggestion:** Regardless of the refactoring cycle, always offer the user to provide feedback on the framework itself:
+        iii. **Automated Token Economy Review (New):**
+            - **Threshold:** 5 (This is configurable. You can change this number.)
+            - Check if `completed_parent_tasks_count` is a multiple of the **Threshold**.
+            - If it is, automatically trigger the token economy review cycle:
+                - **Notify User:** "I have completed 5 parent tasks. To ensure continued efficiency, I will now automatically run a token economy review."
+                - **Execute Review:** Read and execute the workflow at `/.ai_workflow/commands/code-quality/review-token-economy.md`.
+                - **Present Report:** Show the generated optimization report to the user.
+                - **Reset Counter:** After the review, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md`.
+        iv. **Refactoring Cycle Suggestion:**
+            - **Threshold:** 3 (This is configurable.)
+            - If `completed_parent_tasks_count` is a multiple of this **Threshold**, suggest a refactoring cycle:
+                > "I have completed `completed_parent_tasks_count` parent tasks. This might be a good time to run a code review and refactoring cycle using `review-and-refactor.md`. Would you like to proceed with that now, or should I continue with the next development task?"
+            - If the user agrees to refactor, reset `completed_parent_tasks_count` to 0 in `_ai_knowledge.md` after the refactoring cycle is complete.
+        v. **Framework Feedback Suggestion:** Regardless of the other cycles, always offer the user to provide feedback on the framework itself:
             > "Would you like to provide feedback on the framework's performance or suggest improvements? I can help generate a GitHub issue for the main repository. This issue will ONLY contain feedback related to the framework, NOT your project's code or sensitive data."
             If the user agrees, instruct the user to provide general feedback (e.g., "The prompt for task X was unclear", "The validation step was slow"). Then, generate a prompt for the `FRAMEWORK_ASSISTANT` to create the `gh issue create` command with this general feedback.
 

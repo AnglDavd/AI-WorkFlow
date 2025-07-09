@@ -16,13 +16,28 @@ This file provides a dynamic overview of the project's progress, updated automat
 - **Description:** [Current Task Description]
 - **Details:** [Current Task Details/Subtasks]
 
-## Task List:
+---
 
-### Pending Tasks:
-[List of Pending Tasks]
+## Structured Task Data (YAML)
 
-### Completed Tasks:
-[List of Completed Tasks]
+```yaml
+tasks:
+  - id: "TASK-001"
+    description: "Implement user authentication module"
+    status: "completed" # or "pending", "in-progress", "blocked"
+    start_date: "2025-07-01"
+    end_date: "2025-07-05"
+    assigned_to: "Agent A"
+    dependencies: []
+  - id: "TASK-002"
+    description: "Design database schema for products"
+    status: "in-progress"
+    start_date: "2025-07-03"
+    end_date: "2025-07-08"
+    assigned_to: "Agent B"
+    dependencies: ["TASK-001"]
+  # ... more tasks
+```
 
 ---
 

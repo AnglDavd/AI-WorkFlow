@@ -9,6 +9,14 @@ This file serves as a persistent memory for the AI agent within this project. It
 
 ## Contents:
 
+### Data Sources and Logs
+
+-   **Token Usage Log:**
+    -   **Location:** `/.ai_workflow/work_journal/token_usage.log`
+    -   **Purpose:** This file is the historical record of all LLM token consumption for the project.
+    -   **Format:** Each line is a separate JSON object representing a single API call.
+    -   **Instruction:** When the user asks about token usage or costs, you MUST read and analyze this file to provide a data-driven answer. When asked to optimize for token economy, this file is your primary data source for identifying high-consumption workflows.
+
 ### Common Patterns & Solutions:
 - [AI to add common code patterns, architectural decisions, or recurring solutions here]
 

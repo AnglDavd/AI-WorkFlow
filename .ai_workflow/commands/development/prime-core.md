@@ -17,7 +17,7 @@ You are an AI agent preparing to work on a new software project. Your task is to
     -   Use file system tools to understand the project's directory structure.
     -   Identify the main source code directories (e.g., `src/`).
 
-3.  **Synthesize and Report:** After your analysis, provide a concise summary that explains back your understanding of the following points:
+3.  **Synthesize and Report:** After your analysis, provide a concise summary that explains back your understanding of the following points: **Ensure conciseness and directness to optimize token usage.**
     -   **Project Purpose:** What is the main goal of this project?
     -   **Project Structure:** How is the codebase organized at a high level?
     -   **Key Technologies:** What are the primary languages, frameworks, and dependencies?

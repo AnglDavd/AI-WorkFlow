@@ -12,6 +12,8 @@ Generate a comprehensive PRP for general feature implementation with thorough re
    - Note existing conventions to follow
    - Check test patterns for validation approach
 
+**Ensure conciseness and directness in your communication and output to optimize token usage.**
+
 2. **External Research**
    - Library documentation (include specific URLs)
    - Implementation examples (GitHub/StackOverflow)

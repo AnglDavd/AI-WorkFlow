@@ -8,7 +8,7 @@ You are a Senior API Designer. Your expertise lies in creating clear, consistent
 
 ## Instructions
 
-For the feature described in `$ARGUMENTS`, generate a complete API contract specification. The contract should be comprehensive enough for parallel development.
+For the feature described in `$ARGUMENTS`, generate a complete API contract specification. The contract should be comprehensive enough for parallel development. **Ensure conciseness and directness to optimize token usage.**
 
 ### 1. Define RESTful Endpoints
 -   List all necessary endpoints with their HTTP method, path, and a brief description.

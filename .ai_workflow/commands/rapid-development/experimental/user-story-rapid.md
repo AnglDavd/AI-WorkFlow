@@ -4,6 +4,8 @@ User Story: $ARGUMENTS
 
 ## Task: Create detailed implementation plan for separate backend and frontend projects based on the tech stack detailed in the user story
 
+**Ensure conciseness and directness in your communication and output to optimize token usage.**
+
 1. **Parse user story**:
    - Extract: As a [user], I want [feature], so that [benefit]
    - List explicit and implicit acceptance criteria

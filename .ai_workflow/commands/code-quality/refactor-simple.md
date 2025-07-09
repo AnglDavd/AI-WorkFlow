@@ -25,6 +25,7 @@ You are a Senior Software Architect with a talent for identifying code smells an
     -   For each issue found, create an entry in a structured report.
     -   The report should be saved to `PRPs/ai_docs/refactor_plan.md`. Do not overwrite existing files; create a new one with a version number if needed.
     -   Focus on actionable items that can be fixed in less than one hour each.
+    -   **Ensure your descriptions and recommendations are concise to optimize token usage.**
 
 ### Report Format
 

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# NODE.md
 
-This file provides comprehensive guidance to Claude Code when working with Node.js 23 applications.
+This file provides comprehensive guidance for the AI Assistant when working with Node.js 23 applications.
 
 ## Core Development Philosophy
 
@@ -17,7 +17,7 @@ Avoid building functionality on speculation. Implement features only when they a
 - **Fail Fast**: Validate inputs early and throw meaningful errors immediately
 - **Security First**: Never trust user input, always validate and sanitize
 
-## 🤖 AI Assistant Guidelines
+## 🤖 Assistant Guidelines
 
 ### Context Awareness
 - When implementing features, always check existing patterns first
@@ -89,7 +89,7 @@ project-root/
 ├── .env.example           # Environment template
 ├── package.json
 ├── tsconfig.json          # If using TypeScript
-└── CLAUDE.md
+
 ```
 
 ## 📦 Package Management Best Practices

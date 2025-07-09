@@ -11,7 +11,7 @@ You are a diligent AI software developer. Your task is to take a detailed PRP an
 ### 1. Load and Understand the PRP
 -   Read the specified PRP file (`$ARGUMENTS`) in its entirety.
 -   Internalize all requirements, context, code examples, and gotchas provided.
--   If any part of the PRP is unclear or seems to be missing critical information, ask the user for clarification before proceeding.
+-   If any part of the PRP is unclear or seems to be missing critical information, ask the user for clarification before proceeding. **Be concise and direct in your communication to optimize token usage.**
 
 ### 2. Plan Step-by-Step
 -   Before writing any code, create a detailed, step-by-step implementation plan.

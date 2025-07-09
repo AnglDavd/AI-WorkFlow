@@ -6,7 +6,7 @@ Generate a comprehensive PRP using parallel research agents for maximum context 
 
 ## Parallel Research Phase
 
-**IMPORTANT**: Execute the following 4 research agents simultaneously using multiple Agent tool calls in a single response to maximize research efficiency.
+**IMPORTANT**: Execute the following 4 research agents simultaneously using multiple Agent tool calls in a single response to maximize research efficiency. **Ensure conciseness and directness in your communication and output to optimize token usage.**
 
 ### Research Agent Coordination
 

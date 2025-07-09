@@ -1,6 +1,6 @@
-# CLAUDE.md
+# NEXTJS-15.md
 
-This file provides comprehensive guidance to Claude Code when working with Next.js 15 applications with React 19 and TypeScript.
+This file provides comprehensive guidance for the AI Assistant when working with Next.js 15 applications with React 19 and TypeScript.
 
 ## Core Development Philosophy
 
@@ -17,7 +17,7 @@ Avoid building functionality on speculation. Implement features only when they a
 - **Component-First**: Build with reusable, composable components with single responsibility
 - **Fail Fast**: Validate inputs early, throw errors immediately
 
-## 🤖 AI Assistant Guidelines
+## 🤖 Assistant Guidelines
 
 ### Context Awareness
 - When implementing features, always check existing patterns first

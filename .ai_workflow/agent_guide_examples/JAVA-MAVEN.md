@@ -1,6 +1,6 @@
-# CLAUDE.md
+# JAVA-MAVEN.md
 
-This file provides comprehensive guidance to Claude Code when working with Java code in this repository.
+This file provides comprehensive guidance for the AI Assistant when working with Java projects using Maven in this repository.
 
 ## Core Development Philosophy
 
@@ -44,19 +44,13 @@ Avoid building functionality on speculation. Implement features only when they a
 - **Classes should focus on one concept** - follow Single Responsibility Principle.
 - **Cyclomatic complexity must not exceed 10** per method (SonarQube rule).
 
-### Project Structure (Gradle Standard Layout)
+### Project Structure (Maven Standard Layout)
 ```
 project-root/
-├── build.gradle.kts (or build.gradle)
-├── settings.gradle.kts (or settings.gradle)
-├── gradle.properties
-├── CLAUDE.md
-├── .claude/
-│   └── commands/
+├── pom.xml
 ├── src/
 │   ├── main/
 │   │   ├── java/
-│   │   │   └── com/company/project/
 │   │   │       ├── controller/
 │   │   │       ├── service/
 │   │   │       ├── repository/
@@ -73,146 +67,55 @@ project-root/
 │       ├── java/
 │       │   └── com/company/project/
 │       └── resources/
-├── build/
-└── gradle/
-    └── wrapper/
-        ├── gradle-wrapper.jar
-        └── gradle-wrapper.properties
+└── target/
 ```
 
-## 🛠️ Gradle Configuration
+## 🛠️ Maven Configuration
 
-### Essential build.gradle.kts Configuration
-```kotlin
-plugins {
-    java
-    id("org.springframework.boot") version "3.5.0"
-    id("io.spring.dependency-management") version "1.1.5"
-    id("com.diffplug.spotless") version "6.25.0"
-    id("com.github.spotbugs") version "6.0.18"
-    id("jacoco")
-    id("org.sonarqube") version "5.0.0.4638"
-}
-
-group = "com.company"
-version = "0.0.1-SNAPSHOT"
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    // Spring Boot starters
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+### Essential POM Configuration
+```xml
+<properties>
+    <!-- Java Version -->
+    > Insert project specific versions
     
-    // OpenAPI documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    <!-- Spring Versions -->
+    > Insert project specific versions
     
-    // Lombok
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
-    
-    // Testing
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.assertj:assertj-core")
-    
-    // Development tools
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-// JaCoCo configuration
-jacoco {
-    toolVersion = "0.8.12"
-}
-
-tasks.jacocoTestReport {
-    reports {
-        xml.required = true
-        html.required = true
-    }
-}
-
-tasks.jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = "0.80".toBigDecimal()
-            }
-        }
-    }
-}
-
-// SpotBugs configuration
-spotbugs {
-    ignoreFailures = false
-    showStackTraces = true
-    showProgress = true
-}
-
-// Spotless configuration
-spotless {
-    java {
-        googleJavaFormat()
-        removeUnusedImports()
-    }
-}
+    <!-- Plugin Versions -->
+    > Insert project specific versions
+</properties>
 ```
 
-### Gradle Commands
+### Maven Commands
 ```bash
 # Clean and compile
-./gradlew clean compileJava
+mvn clean compile
 
 # Run tests
-./gradlew test
+mvn test
 
 # Run tests with coverage
-./gradlew test jacocoTestReport
+mvn clean test jacoco:report
 
 # Package application
-./gradlew bootJar
-
-# Run application
-./gradlew bootRun
+mvn clean package
 
 # Run SonarQube analysis
-./gradlew sonarqube
+mvn clean verify sonar:sonar
 
 # Check for dependency updates
-./gradlew dependencyUpdates
+mvn versions:display-dependency-updates
 
-# Format code
-./gradlew spotlessApply
-
-# Check code formatting
-./gradlew spotlessCheck
+# Enforce code style
+mvn checkstyle:check
 
 # Run SpotBugs analysis
-./gradlew spotbugsMain
-
-# Run all checks
-./gradlew check
-
-# Build without tests
-./gradlew build -x test
+mvn spotbugs:check
 ```
 
 ## 📋 Code Style & Conventions
 
 ### Java Style Guide
-
 - **Follow Google Java Style Guide** with these specifics:
   - Line length: 100 characters
   - Indent: 4 spaces (no tabs)
@@ -263,8 +166,11 @@ import lombok.extern.slf4j.Slf4j;
 
 // Validation annotations
 import jakarta.validation.constraints.*;
-Generic Types Best Practices
-java// ❌ Bad: Raw types
+```
+
+### Generic Types Best Practices
+```java
+// ❌ Bad: Raw types
 List list = new ArrayList();
 Map map = new HashMap();
 
@@ -284,26 +190,7 @@ public <T extends Comparable<T> & Serializable> void process(T item) {
 }
 ```
 
-## 🤖 Claude Code
-
-### Best Practices
-
-- Document repository-specific conventions in CLAUDE.md
-- Specify coding style preferences in CLAUDE.md
-- List unexpected behaviors or warnings in CLAUDE.md
-- Include environment setup instructions in CLAUDE.md
-
-### AI-Assisted Development Guidelines
-- Provide clear context in method names and Javadoc
-- Include example inputs/outputs in documentation
-- Use descriptive variable names that convey intent
-- Structure code to be easily understood by AI assistants
-- Keep methods focused and under 50 lines for better AI comprehension
-- Use consistent naming patterns across the codebase
-- Document edge cases and business logic clearly
-- Include unit tests that demonstrate usage patterns
-
-## 📖 Documentation Standards
+## 🎯 Type Safety & Annotations
 
 ### OpenAPI/Swagger Documentation Requirements (MANDATORY)
 
@@ -423,11 +310,13 @@ public class ErrorResponse {
 }
 ```
 
-#### Dependencies Required (Gradle)
-```kotlin
-dependencies {
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-}
+#### Dependencies Required
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.5</version>
+</dependency>
 ```
 
 **Access URLs:**
@@ -540,13 +429,13 @@ class UserServiceTest {
 ## 🚀 Spring Boot
 
 ### Spring Boot Best Practices
-
 - Use Spring Boot starters for dependency management
 - Enable DevTools for development productivity
 - Configure virtual threads for better performance (Java 21)
 - Use `@ConfigurationProperties` for type-safe configuration
 - Implement proper actuator endpoints for monitoring
 - Enable graceful shutdown by default
+
 
 ## 🔐 Input Validation
 
@@ -620,25 +509,6 @@ public final class UserService { // CGLIB cannot proxy this!
 - **Connection Pooling**: Configure for AWS SDK (if needed)
 - **Caching**: Use Spring Cache abstraction
 
-## 🔥 Java Performance Shortcuts
-
-### Quick Wins
-- Use `@RestControllerAdvice` for global exception handling
-- Leverage `@ConfigurationProperties` for type-safe config
-- Use `@Async` with `CompletableFuture` for parallel processing
-- Enable virtual threads: `spring.threads.virtual.enabled=true`
-
-### Instant Productivity Boosters
-```java
-// Global exception handler template
-@RestControllerAdvice
-public class GlobalExceptionHandler {
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(ValidationException e) {
-        return ResponseEntity.badRequest().body(ErrorResponse.of(e));
-    }
-}
-
 ## 🛡️ Security Best Practices
 
 ### Security Guidelines
@@ -674,15 +544,18 @@ public class GlobalExceptionHandler {
 
 ### Commit Message Format
 
- - NEVER include claude code, written by claude code or similar in the commit message
-
+```
 <type>(<scope>): <subject>
 
 <body>
 
 <footer>
+```
+
 Types: feat, fix, docs, style, refactor, test, chore
+
 Example:
+```
 feat(user): add email verification with Nova model
 
 - Implement email verification service
@@ -718,7 +591,7 @@ Closes #234
 - [ ] Unit tests written (80%+ coverage)
 - [ ] No SonarQube critical/blocker issues
 - [ ] No SpotBugs high priority warnings
-- [ ] Code formatted (./gradlew spotlessApply)
+- [ ] Code formatted (mvn spotless:apply)
 - [ ] All inputs validated
 - [ ] Logging at appropriate levels (if logging is setup)
 - [ ] **Frontend developer can use API** without asking questions

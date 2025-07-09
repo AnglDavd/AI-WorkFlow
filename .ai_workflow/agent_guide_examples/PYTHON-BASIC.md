@@ -1,6 +1,6 @@
-# CLAUDE.md
+# PYTHON-BASIC.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance for the AI Assistant when working with Python code in this repository.
 
 ## Core Principles
 
@@ -12,7 +12,7 @@ Dependency Inversion: High-level modules should not depend on low-level modules.
 
 Open/Closed Principle: Software entities should be open for extension but closed for modification. Design your systems so that new functionality can be added with minimal changes to existing code.
 
-## 🤖 AI Assistant Guidelines
+## 🤖 Assistant Guidelines
 
 ### Context Awareness
 
@@ -223,12 +223,4 @@ When creating branches, follow these naming conventions:
 - **KEEP README.md UPDATED**
 - Whenever you make changes to the codebase, update the README.md file to reflect the changes. Espeially if you add configuration changes or new features.
 
-- **ALWAYS keep CLAUDE.md UPDATED**
-- Add new dependencies to CLAUDE.md
-- Add important types and patterns to CLAUDE.md
 
-## IMPORTANT TYPES & PATTERNS
-
-###
-
-> add important types and patterns here

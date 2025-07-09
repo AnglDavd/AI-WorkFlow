@@ -19,6 +19,7 @@ You are a Principal Software Engineer performing a code review. You are meticulo
 -   Create a concise review report in Markdown format.
 -   Save the report to `PRPs/code_reviews/review-[timestamp].md` to avoid overwriting previous reviews.
 -   The report must follow the format specified under "Review Output Format".
+-   **Ensure your report is concise and to the point to optimize token usage.**
 
 ---
 
@@ -50,6 +51,8 @@ You are a Principal Software Engineer performing a code review. You are meticulo
 
 ## Review Output Format
 
+Refer to the standard defined in `/.ai_workflow/docs/output_formats.md` under "Code Review Report Format".
+
 ```markdown
 # Code Review Report - [YYYY-MM-DD HH:MM]
 
@@ -76,7 +79,7 @@ You are a Principal Software Engineer performing a code review. You are meticulo
 ## Good Practices Noticed
 -   [Mention 1-2 things that were done particularly well.]
 
-## Test Coverage Analysis
+## Test Coverage Analysis (if applicable)
 -   **Current Coverage:** [X%]
     -   **Required:** [Y%]
 -   **Missing Tests:** [List specific functions or modules that need better test coverage.]

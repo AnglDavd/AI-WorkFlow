@@ -14,6 +14,8 @@ Analyze the challenge statement for:
 - Technical constraints and preferences
 - Target users and use cases
 
+**Ensure all communication and generated content from these agents are concise and direct to optimize token usage.**
+
 ### Solution Approach Generation
 
 Generate 3 distinct solution approaches:

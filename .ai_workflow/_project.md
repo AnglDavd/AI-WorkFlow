@@ -8,6 +8,10 @@
 - **Progress Report:** (Link to `progress_report.md` will be populated here)
 - **Feedback Summary:** (Link to `feedback_summary.md` will be populated here)
 
+## Framework Configuration
+- **framework_repo_url:** https://github.com/AnglDavd/AI-WorkFlow
+- **project_language:** [Not Set]
+
 ## Instructions
 1.  Start with `create-prd.md` to define the product requirements.
 2.  Use `generate-tasks.md` to break down the PRD into a task list.

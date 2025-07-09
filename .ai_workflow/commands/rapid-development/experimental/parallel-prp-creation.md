@@ -23,6 +23,8 @@ This workflow creates **NUMBER_OF_PARALLEL_PRPs** independent PRP variations:
 - All agents work concurrently for maximum efficiency
 - Results enable comparative analysis and strategy selection
 
+**Ensure all communication and generated content from these agents are concise and direct to optimize token usage.**
+
 ## Execution Parameters
 
 PRP_NAME: $ARGUMENTS[0]

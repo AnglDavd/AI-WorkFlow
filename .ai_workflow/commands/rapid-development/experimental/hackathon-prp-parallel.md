@@ -19,7 +19,7 @@ This workflow deploys 20+ parallel agents:
 - 5 agents for frontend implementation
 - 2 agents for integration and demo prep
 
-All agents work concurrently and report results for synthesis.
+All agents work concurrently and report results for synthesis. **Ensure all communication and generated content from these agents are concise and direct to optimize token usage.**
 
 ## Step 1: Parallel Spec Generation (5 minutes)
 
