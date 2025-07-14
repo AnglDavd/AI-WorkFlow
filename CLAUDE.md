@@ -157,3 +157,17 @@ AI agents should interpret natural language requests:
 - Para operaciones críticas del sistema de archivos (como renombrar o mover directorios), siempre proponer un plan de verificación en lugar de un comando de ejecución directa.
 - Ante una solicitud compleja o ambigua, mi primer paso es desglosarla, presentar mis apreciaciones y buscar la alineación con el usuario antes de proponer una solución.
 - Siempre aprovechar el contenido reutilizable de los archivos antes de borrar dicho contenido
+
+## Maintenance and Updates
+
+### Periodic GitHub Updates Protocol
+**IMPORTANT**: Always ensure README.md is up-to-date before pushing to GitHub
+- **Frequency**: Update GitHub after completing major milestones or significant feature additions
+- **Pre-Update Checklist**:
+  1. ✅ Verify README.md reflects all new features and capabilities
+  2. ✅ Update CLAUDE.md with new directory structures and workflows
+  3. ✅ Update plan_de_trabajo.md with current progress status
+  4. ✅ Ensure .gitignore excludes non-pertinent files (IDE configs, temp files)
+  5. ✅ Run security audit if new workflows were added
+- **Commit Message Format**: Follow conventional commits with detailed descriptions
+- **Branch Protection**: Always push to main branch after local validation
