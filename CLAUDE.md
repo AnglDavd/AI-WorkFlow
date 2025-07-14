@@ -168,6 +168,19 @@ AI agents should interpret natural language requests:
   2. ✅ Update CLAUDE.md with new directory structures and workflows
   3. ✅ Update plan_de_trabajo.md with current progress status
   4. ✅ Ensure .gitignore excludes non-pertinent files (IDE configs, temp files)
-  5. ✅ Run security audit if new workflows were added
+  5. ✅ **Run repository cleanliness check**: `./.ai_workflow/scripts/check_repo_cleanliness.sh`
+  6. ✅ Run security audit if new workflows were added
 - **Commit Message Format**: Follow conventional commits with detailed descriptions
 - **Branch Protection**: Always push to main branch after local validation
+
+### Repository Cleanliness Protocol
+**CRITICAL**: Keep repository free of development tool configurations and temporary files
+- **Automated Check**: Use `./.ai_workflow/scripts/check_repo_cleanliness.sh` before every push
+- **Prohibited Files**: 
+  - IDE configs (.vscode/, .idea/, *.swp)
+  - AI tool configs (.claude/, *.claude, .anthropic/)
+  - Logs and temp files (*.log, *.tmp, *.temp)
+  - OS files (.DS_Store, Thumbs.db)
+  - Credentials (*.key, *.pem, .env files)
+- **If Issues Found**: Use `git rm --cached <file>` to untrack, update .gitignore, then commit
+- **Prevention**: The .gitignore file is comprehensive and should prevent most issues automatically
