@@ -32,27 +32,53 @@ This framework is an innovative system designed to empower development teams wit
 
 ## 🚀 Getting Started
 
-Getting started is easy! Once you have cloned the repository, simply instruct your assistant agent:
+Getting started is simple and clean! The framework installs as a hidden subdirectory in your project:
+
+### Quick Installation
+
+```bash
+# 1. Create your project directory
+mkdir my-awesome-project
+cd my-awesome-project
+
+# 2. Clone the framework as a hidden subdirectory
+git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
+
+# 3. Start using the framework
+./.ai_framework/ai-dev setup
+```
+
+### Natural Language Integration
+
+Once installed, simply instruct your AI assistant:
 
 ```
-let's start the project @manager.md
+let's start the project using the AI framework @.ai_framework/manager.md
 ```
 
-Your AI agent will interpret this request, initiate the project setup `workflow`, and guide you through the initial steps.
+Your AI agent will interpret this request, access the hidden framework, and guide you through the setup process.
 
 ### Available Commands
 
-Once setup is complete, you can use these powerful commands:
+The framework provides these powerful commands from your project root:
 
 ```bash
-./ai-dev setup                    # Initialize project setup
-./ai-dev generate <prd_file>      # Generate tasks from PRD
-./ai-dev run <prp_file>           # Execute Project Response Plans
-./ai-dev optimize <prompt_file>   # Optimize prompt files and reduce token costs
-./ai-dev audit                    # Run comprehensive security audit
-./ai-dev sync                     # Synchronize with framework updates
-./ai-dev help                     # Show all available commands
+./.ai_framework/ai-dev setup                    # Initialize project setup
+./.ai_framework/ai-dev generate <prd_file>      # Generate tasks from PRD
+./.ai_framework/ai-dev run <prp_file>           # Execute Project Response Plans
+./.ai_framework/ai-dev optimize <prompt_file>   # Optimize prompts and reduce costs
+./.ai_framework/ai-dev audit                    # Run comprehensive security audit
+./.ai_framework/ai-dev sync                     # Synchronize with framework updates
+./.ai_framework/ai-dev help                     # Show all available commands
 ```
+
+### Why This Approach?
+
+- ✅ **Clean Project Structure**: Framework stays hidden and doesn't clutter your project
+- ✅ **No Installation Required**: Simple git clone, no additional setup needed
+- ✅ **Project Isolation**: Your code and framework code remain completely separate
+- ✅ **Easy Updates**: Update framework independently without affecting your project
+- ✅ **Version Control Friendly**: Add `.ai_framework/` to .gitignore to keep it private
 
 ## 💡 Why Choose This Framework?
 
