@@ -78,6 +78,11 @@ plan_de_trabajo.md
 roadmap_interno.md
 internal_planning.md
 
+# Internal development documentation
+CLAUDE.md
+claude_instructions.md
+dev_guide.md
+
 # Security and sensitive files
 *.key
 *.pem
