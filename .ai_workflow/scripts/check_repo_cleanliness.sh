@@ -48,6 +48,9 @@ check_files "\.pem$" "Certificate files"
 check_files "plan_de_trabajo\.md$" "Internal planning documents"
 check_files "roadmap_interno\.md$" "Internal roadmap files"
 check_files "internal_planning\.md$" "Internal planning files"
+check_files "CLAUDE\.md$" "Internal development documentation"
+check_files "claude_instructions\.md$" "Claude instruction files"
+check_files "dev_guide\.md$" "Development guide files"
 
 echo "=================================="
 
