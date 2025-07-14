@@ -20,6 +20,8 @@ The framework operates through a unified CLI interface:
 ./ai-dev generate <prd_file>      # Generate tasks from PRD
 ./ai-dev run <prp_file>           # Execute Project Response Plans
 ./ai-dev optimize <prompt_file>   # Optimize prompt files
+./ai-dev audit                    # Run security audit
+./ai-dev sync                     # Synchronize with framework updates
 ./ai-dev help                     # Show all available commands
 ```
 
@@ -34,6 +36,10 @@ The framework operates through a unified CLI interface:
 │   ├── prd/                     # Product Requirements Document workflows
 │   ├── prp/                     # Project Response Plan workflows
 │   ├── run/                     # PRP execution engine
+│   ├── security/                # Security validation and protection workflows
+│   ├── sync/                    # Framework synchronization and external feedback
+│   ├── monitoring/              # Token economy and performance monitoring
+│   ├── feedback/                # User feedback collection and processing
 │   └── common/                  # Shared utilities and error handling
 ├── commands/                    # Specialized AI agent commands
 │   ├── PRPs/                    # PRP creation and execution
@@ -57,10 +63,12 @@ The framework operates through a unified CLI interface:
 
 ### AI Agent Behavioral Guidelines
 - **Follow GLOBAL_AI_RULES.md**: Core principles supersede all other instructions
+- **Security First**: All inputs pass through validation, all commands through secure execution
 - **Think Hard for Critical Changes**: Explicitly articulate internal plan and reasoning
 - **Token Economy Optimization**: Actively seek and implement token efficiency
 - **Loop Prevention**: Detect and break repetitive patterns, escalate when stuck
 - **Privacy First**: Never include project-specific code in external communications
+- **Community Contribution**: Automatically identify and share framework improvements
 
 ## Development Workflow
 
@@ -94,9 +102,11 @@ AI agents should interpret natural language requests:
 - "run this plan" → Execute `./ai-dev run <prp_file>`
 
 ### Error Handling
+- **Security-First Error Processing**: All errors pass through security validation
 - **Resilient Testing**: Attempt diagnosis and auto-correction before escalating
 - **Contextual Error Reporting**: Provide context for abstract tool failures
 - **Graceful Degradation**: Suggest adapter refinement when tools fail
+- **Automated Security Escalation**: Critical security violations trigger immediate escalation
 
 ### Quality Assurance
 - Always run validation commands after implementation
@@ -118,11 +128,22 @@ AI agents should interpret natural language requests:
 - Feedback loops for continuous enhancement
 - GitHub issue generation for framework improvements
 
+### Community Integration & Synchronization
+- **External Feedback Integration**: Automated processing of community contributions
+- **Framework Synchronization**: Safe integration of upstream improvements
+- **Version Management**: Automated tracking and compatibility verification
+- **Community Contributions**: Streamlined process for sharing improvements
+- **Privacy-Safe Sharing**: Framework improvements shared without exposing project data
+
 ### Security & Control
-- Critical file change approval requirements
-- Mandatory testing before/after changes
-- Rapid rollback capabilities
-- Privacy-focused external communications
+- **Input Validation**: Comprehensive sanitization of file paths and commands
+- **Permission Management**: Automated verification of file system permissions
+- **Secure Execution**: Sandboxed command execution with resource limits
+- **Security Auditing**: Automated security scanning and vulnerability detection
+- **Critical file change approval requirements**
+- **Mandatory testing before/after changes**
+- **Rapid rollback capabilities**
+- **Privacy-focused external communications**
 
 ## Important Notes
 

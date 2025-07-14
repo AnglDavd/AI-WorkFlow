@@ -3,13 +3,79 @@ node_modules
 .env
 .DS_Store
 
-# Ignore Python artifacts
+# IDE and Editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude and AI tool configurations
+.claude/
+.anthropic/
+.openai/
+claude_sessions/
+*.claude
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# Logs and monitoring
+*.log
+token_usage.log
+error.log
+debug.log
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/
+
+# Node.js artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Generated files
 /PRPs/generated/
+/dist/
+/build/
+/out/
 
 # Environment variables
 .env
+.env.local
+.env.development
+.env.test
+.env.production
 
-# Ignore the Gemini workflow files themselves
-# It's recommended to keep this so the framework definition doesn't clutter your project's repository.
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Framework-specific ignores
 .gemini_workflow/
+.ai_temp/
+workflow_cache/
+
+# Security and sensitive files
+*.key
+*.pem
+*.cert
+secrets.json
+credentials.json
