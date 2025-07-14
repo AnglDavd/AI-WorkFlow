@@ -57,5 +57,5 @@ fi
 The command should exit with 0 and a new PRD file should be created in the `PRPs/generated` directory.
 
 ## Next Steps
-- **On Success:** Proceed to [Workflow Completed](../../common/success.md).
+- **On Success:** Proceed to [Generate Task List](../../generate-tasks.md).
 - **On Failure:** Proceed to [Generic Error Handler](../../common/error.md).

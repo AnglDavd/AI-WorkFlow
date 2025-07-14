@@ -1,3 +1,0 @@
-{"timestamp": "2025-07-09T10:15:00Z", "model_provider": "openai", "model_name": "gpt-4", "input_tokens": 1500, "output_tokens": 800, "total_tokens": 2300}
-{"timestamp": "2025-07-09T10:16:00Z", "model_provider": "anthropic", "model_name": "claude-3-opus", "input_tokens": 2200, "output_tokens": 1500, "total_tokens": 3700}
-{"timestamp": "2025-07-09T10:17:00Z", "model_provider": "google", "model_name": "gemini-1.5-pro", "input_tokens": 1800, "output_tokens": 950, "total_tokens": 2750}

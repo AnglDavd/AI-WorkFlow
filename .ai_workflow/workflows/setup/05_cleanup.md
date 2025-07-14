@@ -1,32 +1,44 @@
 ## Objective
-This node performs the final cleanup by removing the original framework directory.
+This node performs the final cleanup actions based on the setup mode used.
 
 ## Pre-conditions
-- The new project has been fully created and initialized.
-- The `OLD_DIR_NAME` is stored in `temp_state.vars`.
-- The current working directory is the new project directory.
+- The setup process is complete.
+- The `SETUP_MODE` is defined in `temp_state.vars`.
 
 ## Commands
 ```bash
-# The script that created the project is one level up
-cd ..
-
 source ./.ai_workflow/temp_state.vars
 
-if [ -n "$OLD_DIR_NAME" ]; then
-    rm -rf "$OLD_DIR_NAME"
-else
-    echo "Error: Could not determine the original directory to remove. Skipping cleanup."
-    ./.ai_workflow/workflows/common/error.md "Cleanup failed: Could not determine the original directory to remove."
-    exit 1
+# CASE 1: We injected the framework into an existing project.
+if [ "$SETUP_MODE" == "inject" ]; then
+    echo "--------------------------------------------------"
+    echo "Framework injection complete."
+    echo "This installer directory has served its purpose."
+    echo "You can now safely delete this directory."
+    echo "--------------------------------------------------"
+
+# CASE 2: We created a new project from the installer.
+elif [ "$SETUP_MODE" == "new" ]; then
+    # The logic to handle directory cleanup if a new one was created
+    # was complex and brittle. A simpler approach is to instruct the user.
+    echo "--------------------------------------------------"
+    echo "New project '$PROJECT_NAME' created successfully."
+    echo "This installer directory is no longer needed."
+    echo "You can now safely delete it."
+    echo "--------------------------------------------------"
 fi
 
-# Clean up the temporary state file
-rm ./.ai_workflow/temp_state.vars
+# Clean up the temporary state file in the final project directory
+if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
+    rm "$PROJECT_DIR/.ai_workflow/temp_state.vars"
+else
+    rm ./.ai_workflow/temp_state.vars
+fi
+
 ```
 
 ## Verification Criteria
-The original project directory should no longer exist.
+The `temp_state.vars` file should be removed from the final project directory.
 
 ## Next Steps
 - **On Success:** Proceed to [Workflow Completed](../../common/success.md).

@@ -1,89 +1,156 @@
-# Tool Abstraction Layer Design Document
+# Tool Abstraction Design
 
-## 1. Introduction
+## 1. Purpose
 
-This document outlines the design for a conceptual Tool Abstraction Layer within the Dynamic Project Manager (DPM) framework. Currently, workflow nodes (`.md` files) directly embed shell commands. While transparent, this approach can be brittle, less portable, and harder for AI agents to interpret semantically.
+This document defines the set of **abstract tools** that the AI agent will use to execute tasks described in Project-Response-Plans (PRPs). The goal is to decouple the agent from the user's specific environment (shell, language versions, etc.), allowing it to operate autonomously and predictably.
 
-This abstraction layer aims to introduce a more robust and intelligent way for prompts to request actions from underlying command-line tools.
+The **PRP Execution Engine** (`01_run_prp.md`) will be responsible for interpreting these abstract tools and translating them into calls to the agent's real, underlying tools (e.g., `write_file`, `run_shell_command`).
 
-## 2. Goals of the Abstraction Layer
+## 2. Design Principles
 
--   **Improve Prompt Portability:** Allow prompts to function correctly across different operating systems, shell environments, or tool versions without modification.
--   **Reduce Reliance on Specific Bash Syntax:** Abstract away complex shell piping, quoting, and conditional logic from the prompts.
--   **Enable Semantic Requests:** Allow prompts to request actions in a more human-readable and semantic way (e.g., "add all files to git" instead of `git add .`).
--   **Facilitate Adaptation:** Make it easier to adapt to new versions of tools or swap out underlying tools (e.g., `npm` for `yarn`) by only updating the adapter.
--   **Enhance Agent Understanding:** Provide the agent with a higher-level understanding of the intended action, rather than just a raw command string.
+*   **Atomicity:** Each tool performs a single, well-defined action.
+*   **Agnosticism:** The tools do not depend on a specific language or framework.
+*   **Verifiability:** Actions (e.g., `WRITE_FILE`) should be verifiable by other tools (e.g., `LINT_FILE`).
 
-## 3. Core Concepts
+---
 
--   **Abstract Tool Call:** A standardized, semantic representation of an action to be performed by a tool. This is what would be written in the `.md` files.
--   **Tool Adapter:** A conceptual component (executed by the agent's internal logic) responsible for translating an Abstract Tool Call into one or more concrete shell commands that can be executed by `run_shell_command`.
--   **Tool Registry:** An internal mapping within the agent that associates abstract tool names/actions with their corresponding Tool Adapters.
+## 3. Abstract Tool Catalog
 
-## 4. Proposed Syntax in `.md` Files
+The following details each tool, its parameters, and its expected mapping.
 
-To differentiate abstract tool calls from direct shell commands, a new Markdown code block type or a special comment syntax could be used. For this proposal, we'll use a `tool_call` block:
+### Action Tools (Modify State)
 
-```tool_call
-tool.git.add_all()
-tool.npm.install(package="react", dev=true)
-tool.fs.read_file(path="./src/index.js")
-```
+---
 
-## 5. Agent's Interpretation and Execution Flow
+#### **`WRITE_FILE`**
 
-1.  **Agent Reads `.md`:** The agent parses the workflow node (`.md` file).
-2.  **Identify `tool_call` Blocks:** The agent recognizes blocks marked with `tool_call`.
-3.  **Parse Abstract Tool Call:** For each line within the `tool_call` block, the agent parses the abstract call (e.g., `tool.git.add_all()`).
-4.  **Lookup Adapter:** The agent consults its internal Tool Registry to find the appropriate Tool Adapter (e.g., the `git` adapter for `tool.git`).
-5.  **Generate Concrete Command:** The Tool Adapter's method (e.g., `add_all()`) generates the concrete, environment-specific shell command (e.g., `git add .`).
-6.  **Execute Command:** The agent executes the concrete shell command using the `run_shell_command` tool.
-7.  **Handle Output/Errors:** The agent processes the output and exit code, and handles errors as per the framework's error handling protocol.
+*   **Description:** Creates a new file or completely overwrites an existing one with the provided content. It is the fundamental tool for generating or updating code and other artifacts.
+*   **Parameters:**
+    *   `path` (string, required): The absolute or project-root-relative path where the file will be written.
+    *   `content` (string, required): The full content to be written to the file.
+*   **Mapping to Real Tools:** `write_file(file_path=path, content=content)`
+*   **Example Usage (in a PRP):**
+    ```yaml
+    - tool: "WRITE_FILE"
+      path: "src/components/Button.js"
+      content: "export default function Button() { return <button>Click Me</button>; }"
+    ```
 
-## 6. Example Tool Adapters (Conceptual)
+---
 
-### Git Adapter
--   `tool.git.add_all()` -> `git add .`
--   `tool.git.commit(message="...")` -> `git commit -m "..."`
--   `tool.git.checkout_branch(name="...")` -> `git checkout -b "..."`
--   `tool.git.pull(remote="origin", branch="main")` -> `git pull origin main`
+#### **`REPLACE_IN_FILE`**
 
-### NPM Adapter
--   `tool.npm.install(package="...", dev=false)` -> `npm install <package>` or `npm install -D <package>`
--   `tool.npm.run_script(script_name="...")` -> `npm run <script_name>`
--   `tool.npm.test(coverage=true)` -> `npm test -- --coverage`
+*   **Description:** Searches for a specific block of text (`old_string`) within a file and replaces it with a new block (`new_string`). Ideal for making precise, targeted modifications without rewriting the entire file.
+*   **Parameters:**
+    *   `path` (string, required): The path to the file to be modified.
+    *   `old_string` (string, required): The exact block of text to be replaced (including indentation and newlines).
+    *   `new_string` (string, required): The new block of text that will replace the old one.
+*   **Mapping to Real Tools:** `replace(file_path=path, old_string=old_string, new_string=new_string)`
+*   **Example Usage (in a PRP):**
+    ```yaml
+    - tool: "REPLACE_IN_FILE"
+      path: "config/settings.py"
+      old_string: "FEATURE_FLAG_A = False"
+      new_string: "FEATURE_FLAG_A = True"
+    ```
 
-### FS (Filesystem) Adapter
--   `tool.fs.read_file(path="...")` -> `cat <path>` (or use `read_file` tool directly)
--   `tool.fs.write_file(path="...", content="...")` -> `echo "..." > <path>` (or use `write_file` tool directly)
--   `tool.fs.create_directory(path="...")` -> `mkdir -p <path>`
+---
 
-## 7. Benefits
+#### **`DELETE_FILE`**
 
--   **Enhanced Portability:** Changes in underlying tool syntax only require updating the adapter, not every `.md` file.
--   **Improved Readability:** Prompts become more semantic and easier for humans to understand at a glance.
--   **Centralized Error Handling:** Adapters can encapsulate tool-specific error patterns, leading to more robust error reporting.
--   **Increased Flexibility:** Easier to swap out tools (e.g., `npm` for `yarn`, `git` for `hg`) with minimal impact on prompts.
--   **Reduced Prompt Complexity:** Prompts can focus on *what* to do, not *how* to do it in specific shell syntax.
+*   **Description:** Permanently deletes a file from the filesystem.
+*   **Parameters:**
+    *   `path` (string, required): The path to the file to be deleted.
+*   **Mapping to Real Tools:** `run_shell_command(command=f"rm {path}")`
+*   **Example Usage (in a PRP):**
+    ```yaml
+    - tool: "DELETE_FILE"
+      path: "docs/old_feature.md"
+    ```
 
-## 8. Challenges/Considerations
+---
 
--   **Initial Development Effort:** Building a comprehensive set of adapters requires significant upfront work.
--   **Argument Mapping:** Designing a flexible way to map abstract arguments to concrete command-line flags and options.
--   **Performance Overhead:** While likely minimal, there's a slight overhead in the interpretation layer.
--   **Maintaining Registry:** The agent's internal Tool Registry needs to be kept up-to-date.
+### Validation Tools (Verify State)
 
-## 9. Future Work
+**Important Note:** The following validation tools (LINT, TEST, TYPE_CHECK) depend on the Execution Engine having the project-specific commands pre-configured. The engine must detect the project type and use the appropriate commands (e.g., `npm run lint`, `pytest`, `mypy .`, etc.).
 
--   Implement a prototype of a few key adapters (e.g., for Git and NPM).
--   Integrate the parsing of `tool_call` blocks into the agent's core workflow execution logic.
--   Define a formal schema (e.g., JSON Schema) for abstract tool calls to ensure consistency.
+---
 
-### 9.1. "Dry Run" / "Safe Mode" Capabilities
+#### **`FILE_EXISTS`**
 
--   **Concept:** Explore the possibility of adding a `dry_run` parameter to abstract tool calls. When `dry_run=true`, the adapter would generate the corresponding shell command with a `--dry-run` or equivalent flag, allowing the agent to simulate the action without making actual changes.
--   **Mechanism:** This would require:
-    -   Updating the abstract tool call syntax to include a `dry_run` argument (e.g., `tool.git.commit(message="...", dry_run=true)`).
-    -   Modifying adapters to recognize and translate the `dry_run` argument into tool-specific flags (e.g., `git commit --dry-run -m "..."`).
-    -   Updating the `execute_abstract_tool_call.md` workflow to handle the `dry_run` parameter and report the simulated output.
--   **Benefit:** Provides an additional layer of safety, allowing the agent and user to preview the impact of a command before execution.
+*   **Description:** Verifies that a file exists at the specified path. Useful for confirming that a `WRITE_FILE` action was successful.
+*   **Parameters:**
+    *   `path` (string, required): The path to the file to check.
+*   **Mapping to Real Tools:** `run_shell_command(command=f"test -f {path}")`. Success is determined by a 0 exit code.
+*   **Example Usage (in a PRP):**
+    ```yaml
+    validations:
+      - tool: "FILE_EXISTS"
+        path: "src/components/Button.js"
+    ```
+
+---
+
+#### **`LINT_FILE` / `LINT_PROJECT`**
+
+*   **Description:** Runs the project's configured linter on a specific file or the entire project. The tool should only succeed if the linter reports no errors.
+*   **Parameters:**
+    *   `path` (string, optional): The path to the file to lint. If omitted, it runs on the whole project (`LINT_PROJECT`).
+*   **Mapping to Real Tools:** `run_shell_command(command=LINT_COMMAND)` where `LINT_COMMAND` is a pre-configured variable in the engine (e.g., `ruff check .` or `eslint . --fix`).
+*   **Example Usage (in a PRP):**
+    ```yaml
+    validations:
+      - tool: "LINT_FILE"
+        path: "src/app.js"
+    ```
+
+---
+
+#### **`RUN_TESTS` / `RUN_ALL_TESTS`**
+
+*   **Description:** Runs the test suite on a specific test file or the entire project. The tool should only succeed if all tests pass.
+*   **Parameters:**
+    *   `path` (string, optional): The path to the test file to run. If omitted, all tests are run (`RUN_ALL_TESTS`).
+*   **Mapping to Real Tools:** `run_shell_command(command=TEST_COMMAND)` where `TEST_COMMAND` is a pre-configured variable in the engine (e.g., `pytest` or `npm test`).
+*   **Example Usage (in a PRP):**
+    ```yaml
+    validations:
+      - tool: "RUN_TESTS"
+        path: "tests/test_logic.py"
+    ```
+
+---
+
+#### **`RUN_TYPE_CHECK`**
+
+*   **Description:** Runs the project's static type checker (e.g., Mypy, TypeScript Compiler). The tool should only succeed if there are no type errors.
+*   **Parameters:**
+    *   `path` (string, optional): The path to check. If omitted, the entire project is checked.
+*   **Mapping to Real Tools:** `run_shell_command(command=TYPE_CHECK_COMMAND)` where `TYPE_CHECK_COMMAND` is a pre-configured variable (e.g., `mypy .` or `tsc --noEmit`).
+*   **Example Usage (in a PRP):**
+    ```yaml
+    validations:
+      - tool: "RUN_TYPE_CHECK"
+        path: "src/services/api.ts"
+    ```
+
+---
+
+#### **`HTTP_REQUEST`**
+
+*   **Description:** Performs an HTTP request. This is an advanced tool, useful for integration tests or for interacting with external APIs as part of a task.
+*   **Parameters:**
+    *   `method` (string, required): The HTTP method (e.g., `GET`, `POST`, `PUT`).
+    *   `url` (string, required): The URL to which the request will be made.
+    *   `headers` (dict, optional): A dictionary of HTTP headers.
+    *   `body` (string/dict, optional): The body of the request.
+*   **Mapping to Real Tools:** `run_shell_command` using `curl`. The engine must build the `curl` command from the parameters.
+*   **Example Usage (in a PRP):**
+    ```yaml
+    validations:
+      - tool: "HTTP_REQUEST"
+        method: "POST"
+        url: "http://localhost:8080/api/users"
+        body:
+          username: "testuser"
+    ```

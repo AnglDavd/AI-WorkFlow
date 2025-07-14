@@ -1,43 +1,54 @@
-# 🚀 Dynamic Project Manager (DPM)
+# 🚀 AI Development Framework
 
-Welcome to the project management system based on the Dynamic Project Manifest. All logic and workflows are driven by `.md` files for maximum transparency and auditability.
+Welcome to the AI Development Framework, a system for building and managing software using AI agents.
 
-**This file is the main entry point.**
+**This file is the main documentation entry point.**
 
 ## Key Principles
 
-- **Transparency:** What you see is what is executed. No hidden logic.
+- **Transparency:** All logic is defined in readable `.md` workflow files.
 - **User Control:** The system proposes, the user approves.
-- **Self-Improvement:** The system learns from feedback and errors to evolve.
+- **Automation:** A simple command-line interface (`ai-dev`) provides access to all major workflows.
+
+---
+
+## 🚀 Quick Start: The `ai-dev` CLI
+
+The primary way to interact with this framework is through the `ai-dev` command-line wrapper.
+
+**To see all available commands, run:**
+```bash
+./ai-dev help
+```
+
+### Common Commands
+
+-   **`./ai-dev setup`**
+    -   Initiates the interactive setup to configure the framework for a new or existing project. **This is the first command you should run.**
+
+-   **`./ai-dev generate <path_to_prd.md>`**
+    -   Takes a Product Requirements Document (PRD) and generates one or more executable Project-Response-Plan (PRP) files.
+
+-   **`./ai-dev run <path_to_prp.md>`**
+    -   Executes a specific PRP using the AI agent engine, which will then write code, run tests, and attempt to complete the task.
 
 ---
 
 ## For AI Agents: How to Interpret User Requests
 
-**Objective:** To understand and initiate workflows based on natural language requests from the user.
+**Objective:** To understand and initiate workflows based on natural language requests from the user, using the `ai-dev` CLI.
 
 **Instructions for AI Agent:**
 
--   **If the user expresses a desire to "start a project" or "begin setup" (e.g., "comencemos el proyecto", "quiero iniciar un nuevo proyecto"):**
-    -   **Action:** Read and execute the workflow located at `/.ai_workflow/workflows/setup/01_start_setup.md`.
-    -   **Confirmation:** Inform the user that you are initiating the project setup workflow.
+-   **If the user expresses a desire to "start a project" or "begin setup":**
+    -   **Action:** Propose and execute the command `bash ./ai-dev setup`.
+    -   **Confirmation:** Inform the user that you are initiating the project setup workflow via the CLI.
 
--   **If the user asks a general question or requests guidance not covered by a specific workflow:**
-    -   **Action:** Read and execute the workflow located at `/.ai_workflow/workflows/assistant/01_ask_assistant.md`.
+-   **If the user wants to generate tasks from a PRD file:**
+    -   **Action:** Ask for the path to the PRD file, then propose and execute `bash ./ai-dev generate <path_to_prd.md>`.
 
--   **For any other specific workflow listed below:**
-    -   **Action:** Read the corresponding `.md` file and follow its instructions.
+-   **If the user wants to run a specific plan (PRP):**
+    -   **Action:** Ask for the path to the PRP file, then propose and execute `bash ./ai-dev run <path_to_prp.md>`.
 
----
-
-## Available Workflows
-
-Select the workflow you want to start:
-
-- **[Project Setup](./.ai_workflow/workflows/setup/01_start_setup.md):** Set up a new project from scratch using this framework.
-- **[Create a new PRD (Product Requirements Document)](./.ai_workflow/workflows/prd/01_create_prd.md):** A guided process for creating a new PRD.
-- **[Create a new PRP (Product Requirement Prompt)](./.ai_workflow/workflows/prp/01_create_prp.md):** A guided process for creating a new PRP.
-- **[Execute a PRP](./.ai_workflow/workflows/run/01_run_prp.md):** Execute an existing PRP with an AI agent.
-- **[Framework Assistant](./.ai_workflow/workflows/assistant/01_ask_assistant.md):** Ask a question or request guidance from the framework assistant.
-
-To start a workflow, read its corresponding `.md` file and follow the instructions. Each workflow will log its progress to the work journal.
+-   **If the user asks a general question:**
+    -   **Action:** Execute the workflow at `/.ai_workflow/workflows/assistant/01_ask_assistant.md`. (This is a temporary exception until it is integrated into the CLI).

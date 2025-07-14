@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# ai-dev - A CLI wrapper for the AI Development Framework
+# This script provides a user-friendly interface to the underlying .md workflows.
+
+# --- Help Function ---
+show_help() {
+    echo "AI Development Framework CLI"
+    echo ""
+    echo "Usage: ./ai-dev <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  setup                Start the interactive project setup workflow."
+    echo "  generate <prd_file>  Generate tasks from a Product Requirements Document."
+    echo "  run <prp_file>       Execute a Project-Response-Plan file."
+    echo "  optimize <prompt_file> Optimize a prompt file using best practices."
+    echo "  help                 Show this help message."
+    echo ""
+    echo "Example:"
+    echo "  ./ai-dev setup"
+    echo "  ./ai-dev generate docs/prd.md"
+    echo "  ./ai-dev run .ai_workflow/PRPs/generated/prp-feature.md"
+    echo "  ./ai-dev optimize .ai_workflow/generate-tasks.md"
+}
+
+# --- Main Logic ---
+COMMAND=$1
+
+# Show help if no command is provided
+if [ -z "$COMMAND" ]; then
+    echo "Error: No command provided." >&2
+    show_help
+    exit 1
+fi
+
+# Shift to process arguments for the specific command
+shift
+
+case "$COMMAND" in
+    setup)
+        echo "Starting project setup..."
+        # The setup workflow is self-contained and doesn't need arguments.
+        bash ./.ai_workflow/workflows/setup/01_start_setup.md
+        ;;
+
+    generate)
+        PRD_FILE=$1
+        if [ -z "$PRD_FILE" ]; then
+            echo "Error: Missing required argument: <prd_file>" >&2
+            show_help
+            exit 1
+        fi
+        if [ ! -f "$PRD_FILE" ]; then
+            echo "Error: File not found: $PRD_FILE" >&2
+            exit 1
+        fi
+        
+        echo "Generating tasks from $PRD_FILE..."
+        # Export the file path so the workflow can access it.
+        export PRD_FILE_PATH="$PRD_FILE"
+        bash ./.ai_workflow/generate-tasks.md
+        ;;
+
+    run)
+        PRP_FILE=$1
+        if [ -z "$PRP_FILE" ]; then
+            echo "Error: Missing required argument: <prp_file>" >&2
+            show_help
+            exit 1
+        fi
+        if [ ! -f "$PRP_FILE" ]; then
+            echo "Error: File not found: $PRP_FILE" >&2
+            exit 1
+        fi
+        
+        echo "Executing PRP file: $PRP_FILE..."
+        # Export the file path for the run workflow.
+        export PRP_FILE_PATH="$PRP_FILE"
+        bash ./.ai_workflow/workflows/run/01_run_prp.md
+        ;;
+
+    optimize)
+        PROMPT_FILE=$1
+        if [ -z "$PROMPT_FILE" ]; then
+            echo "Error: Missing required argument: <prompt_file>" >&2
+            show_help
+            exit 1
+        fi
+        if [ ! -f "$PROMPT_FILE" ]; then
+            echo "Error: File not found: $PROMPT_FILE" >&2
+            exit 1
+        fi
+
+        echo "Optimizing prompt file: $PROMPT_FILE..."
+        # Export the file path for the optimize workflow.
+        export PROMPT_FILE_PATH="$PROMPT_FILE"
+        bash ./.ai_workflow/workflows/dev/optimize-prompt.md
+        ;;
+
+    help)
+        show_help
+        ;;
+
+    *)
+        echo "Error: Unknown command '$COMMAND'" >&2
+        show_help
+        exit 1
+        ;;
+esac
+
+exit $?
