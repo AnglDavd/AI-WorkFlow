@@ -76,28 +76,20 @@ Once setup is complete, you can use these powerful commands:
 
 This project is a labor of love, driven by the vision of making AI-assisted software engineering accessible and efficient for everyone. Your support directly fuels its development, allowing us to cover operational costs and dedicate more time to building new features and improvements.
 
-### How You Can Contribute Financially:
+### ☕ Buy Me a Coffee
 
-You can support us via [http://coff.ee/angldavd](http://coff.ee/angldavd). Every contribution, big or small, makes a significant difference!
+Building and maintaining this framework requires continuous research, development, and testing with cutting-edge AI models. Your support helps us:
 
-### Our Funding Goals:
+- 🚀 **Accelerate Development**: More time dedicated to building innovative features
+- 🔬 **Advanced AI Research**: Access to the latest AI models for framework optimization  
+- 🛡️ **Enhanced Security**: Continuous security improvements and vulnerability testing
+- 🌍 **Community Growth**: Better documentation, tutorials, and community support
 
-Your contributions help us achieve key milestones:
+**Every contribution, no matter the size, makes a real difference!** ✨
 
-*   **Tier 1: Sustaining AI Operations ($20/month per platform)**
-    *   **Goal 1:** $20/month - Cover OpenAI API costs.
-    *   **Goal 2:** $20/month - Cover Claude API costs.
-    *   **Goal 3:** $20/month - Cover Gemini API costs.
-    *   *Achieving these goals ensures we can continuously use and test the best AI models to improve the framework's capabilities.* 
+👉 **[Support the project](http://coff.ee/angldavd)** 👈
 
-*   **Tier 2: Advanced AI & Accelerated Development**
-    *   **Goal 4:** $100/month - Access to Claude Max (or equivalent top-tier models).
-    *   **Goal 5:** $200/month - Access to OpenAI Pro (or equivalent top-tier models).
-    *   **Goal 6:** $270/month - Access to Gemini Ultra (or equivalent top-tier models).
-    *   *These higher tiers enable us to leverage the most powerful AI tools, pushing the boundaries of what the framework can achieve and accelerating the development of cutting-edge features.*
-
-*   **Tier 3: Full-Time Dedication & Innovation ($1500/month)**
-    *   **Goal 7:** $1500/month - This crucial goal allows dedicated development time, enabling full-time commitment to the project. Achieving this means faster feature delivery, more robust solutions, and a significantly accelerated pace of innovation.
+Your generosity enables us to push the boundaries of AI-assisted development and create tools that empower developers worldwide. Thank you for being part of this journey! 🙏
 
 ## 🤝 Contributing
 
