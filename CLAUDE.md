@@ -166,10 +166,9 @@ AI agents should interpret natural language requests:
 - **Pre-Update Checklist**:
   1. ✅ Verify README.md reflects all new features and capabilities
   2. ✅ Update CLAUDE.md with new directory structures and workflows
-  3. ✅ Update plan_de_trabajo.md with current progress status
-  4. ✅ Ensure .gitignore excludes non-pertinent files (IDE configs, temp files)
-  5. ✅ **Run repository cleanliness check**: `./.ai_workflow/scripts/check_repo_cleanliness.sh`
-  6. ✅ Run security audit if new workflows were added
+  3. ✅ Ensure .gitignore excludes non-pertinent files (IDE configs, temp files, internal docs)
+  4. ✅ **Run repository cleanliness check**: `./.ai_workflow/scripts/check_repo_cleanliness.sh`
+  5. ✅ Run security audit if new workflows were added
 - **Commit Message Format**: Follow conventional commits with detailed descriptions
 - **Branch Protection**: Always push to main branch after local validation
 
@@ -182,5 +181,6 @@ AI agents should interpret natural language requests:
   - Logs and temp files (*.log, *.tmp, *.temp)
   - OS files (.DS_Store, Thumbs.db)
   - Credentials (*.key, *.pem, .env files)
+  - Internal planning docs (plan_de_trabajo.md, roadmap_interno.md)
 - **If Issues Found**: Use `git rm --cached <file>` to untrack, update .gitignore, then commit
 - **Prevention**: The .gitignore file is comprehensive and should prevent most issues automatically
