@@ -73,6 +73,11 @@ yarn-error.log*
 .ai_temp/
 workflow_cache/
 
+# Internal planning and roadmap files
+plan_de_trabajo.md
+roadmap_interno.md
+internal_planning.md
+
 # Security and sensitive files
 *.key
 *.pem
