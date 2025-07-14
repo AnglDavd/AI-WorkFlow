@@ -45,6 +45,9 @@ check_files "node_modules" "Node.js modules"
 check_files "\.env$" "Environment files"
 check_files "\.key$" "Key files"
 check_files "\.pem$" "Certificate files"
+check_files "plan_de_trabajo\.md$" "Internal planning documents"
+check_files "roadmap_interno\.md$" "Internal roadmap files"
+check_files "internal_planning\.md$" "Internal planning files"
 
 echo "=================================="
 
