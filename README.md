@@ -108,21 +108,16 @@ Help us reach our development milestones and work full-time on this project!
 
 #### 🎯 Funding Progress
 ```
-🎯 Full-Time Development     [$    0 / $1,500] ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜  0% 😴
 🤖 Claude MAX Access        [$    0 / $  250] ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜  0% 😴
 ```
 
 #### 🏆 What Your Support Unlocks
 
-- **$250 Milestone** 🤖 **Claude MAX Access**
+- **$250 Monthly** 🤖 **Claude MAX Access**
   - Access to the most advanced AI models for framework development
   - Faster feature implementation and optimization
   - Enhanced code quality and innovative solutions
-
-- **$1,500 Milestone** 💼 **Full-Time Development**
-  - Dedicated full-time work on the framework
-  - Rapid feature delivery and community support
-  - Expanded ecosystem of AI development tools
+  - Monthly subscription to maintain continuous development capabilities
 
 #### 💝 Every Contribution Matters
 
@@ -135,7 +130,7 @@ Building this framework requires continuous research, development, and testing w
 
 👉 **[Support the project](http://coff.ee/angldavd)** 👈
 
-*Update: Currently at $0 of our $1,500 goal - every coffee counts! ☕*
+*Update: Currently at $0 of our $250 monthly goal - every coffee counts! ☕*
 
 Your generosity enables us to push the boundaries of AI-assisted development and create tools that empower developers worldwide. Thank you for being part of this journey! 🙏
 
