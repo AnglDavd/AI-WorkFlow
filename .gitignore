@@ -82,6 +82,9 @@ internal_planning.md
 CLAUDE.md
 claude_instructions.md
 dev_guide.md
+funding_emoji_guide.md
+update_funding.md
+*_guide.md
 
 # Security and sensitive files
 *.key

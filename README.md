@@ -102,18 +102,40 @@ The framework provides these powerful commands from your project root:
 
 This project is a labor of love, driven by the vision of making AI-assisted software engineering accessible and efficient for everyone. Your support directly fuels its development, allowing us to cover operational costs and dedicate more time to building new features and improvements.
 
-### ☕ Buy Me a Coffee
+### ☕ Support Our Mission
 
-Building and maintaining this framework requires continuous research, development, and testing with cutting-edge AI models. Your support helps us:
+Help us reach our development milestones and work full-time on this project!
 
-- 🚀 **Accelerate Development**: More time dedicated to building innovative features
-- 🔬 **Advanced AI Research**: Access to the latest AI models for framework optimization  
-- 🛡️ **Enhanced Security**: Continuous security improvements and vulnerability testing
-- 🌍 **Community Growth**: Better documentation, tutorials, and community support
+#### 🎯 Funding Progress
+```
+🎯 Full-Time Development     [$    0 / $1,500] ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜  0% 😴
+🤖 Claude MAX Access        [$    0 / $  250] ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜  0% 😴
+```
 
-**Every contribution, no matter the size, makes a real difference!** ✨
+#### 🏆 What Your Support Unlocks
+
+- **$250 Milestone** 🤖 **Claude MAX Access**
+  - Access to the most advanced AI models for framework development
+  - Faster feature implementation and optimization
+  - Enhanced code quality and innovative solutions
+
+- **$1,500 Milestone** 💼 **Full-Time Development**
+  - Dedicated full-time work on the framework
+  - Rapid feature delivery and community support
+  - Expanded ecosystem of AI development tools
+
+#### 💝 Every Contribution Matters
+
+Building this framework requires continuous research, development, and testing with cutting-edge AI models. Your support enables:
+
+- 🚀 **Accelerated Development**: More time for innovative features
+- 🔬 **Advanced AI Research**: Access to latest models and capabilities  
+- 🛡️ **Enhanced Security**: Continuous improvements and testing
+- 🌍 **Community Growth**: Better docs, tutorials, and support
 
 👉 **[Support the project](http://coff.ee/angldavd)** 👈
+
+*Update: Currently at $0 of our $1,500 goal - every coffee counts! ☕*
 
 Your generosity enables us to push the boundaries of AI-assisted development and create tools that empower developers worldwide. Thank you for being part of this journey! 🙏
 
