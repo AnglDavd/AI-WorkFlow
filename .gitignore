@@ -92,3 +92,11 @@ update_funding.md
 *.cert
 secrets.json
 credentials.json
+
+# Screenshots and captures
+capturas/
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
