@@ -42,7 +42,7 @@ echo "Parameters: $PARAMS"
 #### Step 2: Validate Tool Call
 ```bash
 # Use validation workflow to check if tool call is valid
-source .ai_workflow/tools/validate_tool_call.md
+call_workflow "tools/validate_tool_call.md"
 
 # Pass parameters to validation
 if ! validate_tool_call "$TOOL_NAME" "$ACTION" "$PARAMS"; then
@@ -162,29 +162,29 @@ esac
 ```bash
 # Stage a file
 ABSTRACT_CALL="git.add(file_path='src/main.js')"
-source .ai_workflow/tools/execute_abstract_tool_call.md
+execute_abstract_tool_call "$ABSTRACT_CALL"
 
 # Commit changes
 ABSTRACT_CALL="git.commit(message='Add new feature')"
-source .ai_workflow/tools/execute_abstract_tool_call.md
+execute_abstract_tool_call "$ABSTRACT_CALL"
 ```
 
 #### Example 2: NPM Operations
 ```bash
 # Install dependencies
 ABSTRACT_CALL="npm.install()"
-source .ai_workflow/tools/execute_abstract_tool_call.md
+execute_abstract_tool_call "$ABSTRACT_CALL"
 
 # Run tests
 ABSTRACT_CALL="npm.test()"
-source .ai_workflow/tools/execute_abstract_tool_call.md
+execute_abstract_tool_call "$ABSTRACT_CALL"
 ```
 
 #### Example 3: File Operations
 ```bash
 # Write file
 ABSTRACT_CALL="file.write(path='config.json', content='{\"debug\": true}')"
-source .ai_workflow/tools/execute_abstract_tool_call.md
+execute_abstract_tool_call "$ABSTRACT_CALL"
 ```
 
 ### Logging and Monitoring

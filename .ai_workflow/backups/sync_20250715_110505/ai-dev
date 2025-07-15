@@ -1,0 +1,515 @@
+#!/bin/bash
+
+# ai-dev - A CLI wrapper for the AI Development Framework
+# This script provides a user-friendly interface to the underlying .md workflows.
+# Version: 2.0 - Enhanced with robust validation and new commands
+
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
+# --- Global Variables ---
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly AI_WORKFLOW_DIR="${SCRIPT_DIR}/.ai_workflow"
+readonly CACHE_DIR="${AI_WORKFLOW_DIR}/cache"
+readonly CONFIG_FILE="${AI_WORKFLOW_DIR}/config/framework.json"
+readonly LOG_FILE="${CACHE_DIR}/ai-dev.log"
+
+# Ensure directories exist
+mkdir -p "${CACHE_DIR}"
+mkdir -p "${AI_WORKFLOW_DIR}/config"
+mkdir -p "${AI_WORKFLOW_DIR}/logs"
+
+# Colors for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
+
+# --- Utility Functions ---
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
+}
+
+error() {
+    echo -e "${RED}Error: $*${NC}" >&2
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $*" >> "$LOG_FILE"
+}
+
+warning() {
+    echo -e "${YELLOW}Warning: $*${NC}" >&2
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARNING] $*" >> "$LOG_FILE"
+}
+
+success() {
+    echo -e "${GREEN}$*${NC}"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] $*" >> "$LOG_FILE"
+}
+
+info() {
+    echo -e "${BLUE}$*${NC}"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
+}
+
+# --- Validation Functions ---
+validate_environment() {
+    log "Validating environment"
+    
+    # Create necessary directories
+    mkdir -p "$CACHE_DIR" "$AI_WORKFLOW_DIR/config" "$AI_WORKFLOW_DIR/logs"
+    
+    # Check if we're in a valid AI framework directory
+    if [ ! -d "$AI_WORKFLOW_DIR" ]; then
+        error "Not in an AI Development Framework directory"
+        error "Expected to find .ai_workflow/ directory"
+        exit 1
+    fi
+    
+    # Check for required workflow directories
+    local required_dirs=(
+        "workflows/setup"
+        "workflows/run" 
+        "workflows/security"
+        "workflows/quality"
+        "workflows/monitoring"
+    )
+    
+    for dir in "${required_dirs[@]}"; do
+        if [ ! -d "${AI_WORKFLOW_DIR}/${dir}" ]; then
+            warning "Missing workflow directory: ${dir}"
+        fi
+    done
+    
+    # Check for critical files
+    if [ ! -f "${AI_WORKFLOW_DIR}/GLOBAL_AI_RULES.md" ]; then
+        warning "Missing GLOBAL_AI_RULES.md - framework may not function correctly"
+    fi
+    
+    # Validate permissions
+    if [ ! -w "$CACHE_DIR" ]; then
+        error "No write permission to cache directory: $CACHE_DIR"
+        exit 1
+    fi
+    
+    log "Environment validation completed"
+}
+
+validate_file_path() {
+    local file_path="$1"
+    local file_type="${2:-file}"
+    
+    # Security: Prevent path traversal attacks
+    if [[ "$file_path" == *".."* ]] || [[ "$file_path" == *"~"* ]]; then
+        error "Invalid file path: Path traversal not allowed"
+        return 1
+    fi
+    
+    # Check if file exists
+    if [ ! -f "$file_path" ]; then
+        error "File not found: $file_path"
+        return 1
+    fi
+    
+    # Check file extension for specific types
+    case "$file_type" in
+        "prd")
+            if [[ "$file_path" != *.md ]]; then
+                error "PRD file must be a markdown file (.md)"
+                return 1
+            fi
+            ;;
+        "prp")
+            if [[ "$file_path" != *.md ]]; then
+                error "PRP file must be a markdown file (.md)"
+                return 1
+            fi
+            ;;
+    esac
+    
+    # Check file readability
+    if [ ! -r "$file_path" ]; then
+        error "Cannot read file: $file_path"
+        return 1
+    fi
+    
+    log "File validation passed: $file_path"
+    return 0
+}
+
+check_dependencies() {
+    local missing_deps=()
+    
+    # Check for required commands
+    local required_commands=("bash" "mkdir" "touch" "grep" "find")
+    
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_deps+=("$cmd")
+        fi
+    done
+    
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        error "Missing required dependencies: ${missing_deps[*]}"
+        error "Please install missing dependencies and try again"
+        exit 1
+    fi
+    
+    log "Dependencies check passed"
+}
+
+# --- Enhanced Help Function ---
+show_help() {
+    cat << EOF
+${BLUE}AI Development Framework CLI v2.0${NC}
+
+${GREEN}Usage:${NC} ./ai-dev <command> [options]
+
+${GREEN}Core Commands:${NC}
+  setup                    Start the interactive project setup workflow
+  generate <prd_file>      Generate tasks from a Product Requirements Document
+  run <prp_file>           Execute a Project-Response-Plan file
+  optimize <prompt_file>   Optimize a prompt file using best practices
+
+${GREEN}New Commands:${NC}
+  audit                    Run comprehensive security audit
+  sync                     Synchronize with framework updates
+  configure [options]      Configure framework settings
+  diagnose                 Diagnose framework health and status
+  quality <path>           Run quality validation on project
+
+${GREEN}Utility Commands:${NC}
+  help                     Show this help message
+  version                  Show framework version information
+  status                   Show current framework status
+
+${GREEN}Options:${NC}
+  --verbose, -v           Enable verbose output
+  --quiet, -q             Suppress non-error output
+  --dry-run               Show what would be done without executing
+  --force                 Force execution (bypass some validations)
+
+${GREEN}Examples:${NC}
+  ./ai-dev setup
+  ./ai-dev generate docs/prd.md
+  ./ai-dev run .ai_workflow/PRPs/generated/prp-feature.md
+  ./ai-dev optimize .ai_workflow/generate-tasks.md
+  ./ai-dev quality src/
+  ./ai-dev audit --verbose
+  ./ai-dev configure --user
+  ./ai-dev diagnose
+
+${GREEN}Configuration:${NC}
+  Framework config: ${CONFIG_FILE}
+  Logs location: ${LOG_FILE}
+  Cache location: ${CACHE_DIR}
+
+For more information, visit: https://github.com/your-org/ai-framework
+EOF
+}
+
+# --- Option Parsing ---
+VERBOSE=false
+QUIET=false
+DRY_RUN=false
+FORCE=false
+
+# Parse global options
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -q|--quiet)
+            QUIET=true
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            error "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# --- Main Logic ---
+COMMAND=${1:-}
+
+# Show help if no command is provided
+if [ -z "$COMMAND" ]; then
+    error "No command provided"
+    show_help
+    exit 1
+fi
+
+# Shift to process arguments for the specific command
+shift
+
+# Initialize environment (always run basic validation)
+if [ "$QUIET" != "true" ]; then
+    info "AI Development Framework CLI v2.0"
+fi
+
+# Run validation unless bypassed
+if [ "$FORCE" != "true" ]; then
+    check_dependencies
+    validate_environment
+fi
+
+# Execute workflow with error handling
+execute_workflow() {
+    local workflow_path="$1"
+    local description="$2"
+    
+    if [ ! -f "$workflow_path" ]; then
+        error "Workflow not found: $workflow_path"
+        exit 1
+    fi
+    
+    if [ "$DRY_RUN" = "true" ]; then
+        info "DRY RUN: Would execute: $description"
+        info "Workflow: $workflow_path"
+        return 0
+    fi
+    
+    info "Executing: $description"
+    log "Executing workflow: $workflow_path"
+    
+    # Parse and execute markdown workflow
+    if ! execute_md_workflow "$workflow_path"; then
+        error "Workflow execution failed: $workflow_path"
+        error "Run with --verbose for detailed output"
+        exit 1
+    fi
+    
+    success "Completed: $description"
+}
+
+# Parse and execute markdown workflow - Native bash implementation
+execute_md_workflow() {
+    local workflow_file="$1"
+    local temp_script="/tmp/ai_workflow_$$.sh"
+    local in_bash_block=false
+    local bash_content=""
+    local line_num=0
+    local blocks_executed=0
+    
+    # Extract bash code blocks from markdown
+    while IFS= read -r line; do
+        line_num=$((line_num + 1))
+        
+        # Detect start of bash code block
+        if [[ "$line" =~ ^\`\`\`bash$ ]]; then
+            in_bash_block=true
+            bash_content=""
+            [ "$VERBOSE" = "true" ] && echo "Found bash block at line $line_num"
+            continue
+        fi
+        
+        # Detect end of code block
+        if [[ "$line" =~ ^\`\`\`$ ]] && [ "$in_bash_block" = true ]; then
+            in_bash_block=false
+            blocks_executed=$((blocks_executed + 1))
+            
+            # Create temporary script with the extracted bash code
+            echo "#!/bin/bash" > "$temp_script"
+            echo "set -euo pipefail" >> "$temp_script"
+            echo "# Extracted from $workflow_file - Block $blocks_executed" >> "$temp_script"
+            printf "%s" "$bash_content" >> "$temp_script"
+            chmod +x "$temp_script"
+            
+            [ "$VERBOSE" = "true" ] && echo "Executing bash block $blocks_executed..."
+            
+            # Execute the extracted bash code
+            if [ "$VERBOSE" = "true" ]; then
+                "$temp_script" || {
+                    error "Failed executing bash block $blocks_executed in $workflow_file"
+                    rm -f "$temp_script"
+                    return 1
+                }
+            else
+                "$temp_script" 2>/dev/null || {
+                    error "Failed executing bash block $blocks_executed in $workflow_file"
+                    rm -f "$temp_script"
+                    return 1
+                }
+            fi
+            
+            # Clean up temporary script
+            rm -f "$temp_script"
+            continue
+        fi
+        
+        # Collect bash code lines
+        if [ "$in_bash_block" = true ]; then
+            bash_content="${bash_content}${line}
+"
+        fi
+        
+    done < "$workflow_file"
+    
+    [ "$VERBOSE" = "true" ] && echo "Successfully executed $blocks_executed bash blocks from $workflow_file"
+    
+    # Clean up any remaining temp files
+    rm -f "$temp_script"
+    
+    return 0
+}
+
+# Command routing with enhanced validation
+case "$COMMAND" in
+    setup)
+        info "Starting project setup workflow"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/setup/01_start_setup.md" "Project Setup"
+        ;;
+
+    generate)
+        PRD_FILE=${1:-}
+        if [ -z "$PRD_FILE" ]; then
+            error "Missing required argument: <prd_file>"
+            show_help
+            exit 1
+        fi
+        
+        validate_file_path "$PRD_FILE" "prd"
+        
+        info "Generating tasks from: $PRD_FILE"
+        export PRD_FILE_PATH="$PRD_FILE"
+        execute_workflow "${AI_WORKFLOW_DIR}/generate-tasks.md" "Task Generation"
+        ;;
+
+    run)
+        PRP_FILE=${1:-}
+        if [ -z "$PRP_FILE" ]; then
+            error "Missing required argument: <prp_file>"
+            show_help
+            exit 1
+        fi
+        
+        validate_file_path "$PRP_FILE" "prp"
+        
+        info "Executing PRP: $PRP_FILE"
+        export PRP_FILE_PATH="$PRP_FILE"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/run/01_run_prp.md" "PRP Execution"
+        ;;
+
+    optimize)
+        PROMPT_FILE=${1:-}
+        if [ -z "$PROMPT_FILE" ]; then
+            error "Missing required argument: <prompt_file>"
+            show_help
+            exit 1
+        fi
+        
+        validate_file_path "$PROMPT_FILE"
+        
+        info "Optimizing prompt: $PROMPT_FILE"
+        export PROMPT_FILE_PATH="$PROMPT_FILE"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/monitoring/optimize_prompts.md" "Prompt Optimization"
+        ;;
+
+    audit)
+        info "Running comprehensive security audit"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/security/audit_security.md" "Security Audit"
+        ;;
+
+    sync)
+        info "Synchronizing with framework updates"
+        if [ -f "${AI_WORKFLOW_DIR}/workflows/sync/sync_framework_updates.md" ]; then
+            execute_workflow "${AI_WORKFLOW_DIR}/workflows/sync/sync_framework_updates.md" "Framework Sync"
+        else
+            warning "Sync workflow not yet implemented"
+            info "This feature will be available in the next phase"
+        fi
+        ;;
+
+    configure)
+        info "Configuring framework settings"
+        export CONFIGURE_OPTIONS="$*"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/configure_framework.md" "Framework Configuration"
+        ;;
+
+    diagnose)
+        info "Diagnosing framework health"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/diagnose_framework.md" "Framework Diagnosis"
+        ;;
+
+    quality)
+        PROJECT_PATH=${1:-"."}
+        if [ ! -d "$PROJECT_PATH" ]; then
+            error "Directory not found: $PROJECT_PATH"
+            exit 1
+        fi
+        
+        info "Running quality validation on: $PROJECT_PATH"
+        export PROJECT_PATH
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/quality/quality_gates.md" "Quality Validation"
+        ;;
+
+    status)
+        info "Framework Status Report"
+        echo ""
+        echo "Framework Directory: $AI_WORKFLOW_DIR"
+        echo "Config File: $CONFIG_FILE"
+        echo "Cache Directory: $CACHE_DIR"
+        echo "Log File: $LOG_FILE"
+        echo ""
+        
+        if [ -f "$CONFIG_FILE" ]; then
+            echo "Configuration: ✅ Found"
+        else
+            echo "Configuration: ❌ Not found"
+        fi
+        
+        if [ -d "${AI_WORKFLOW_DIR}/workflows" ]; then
+            workflow_count=$(find "${AI_WORKFLOW_DIR}/workflows" -name "*.md" | wc -l)
+            echo "Workflows: ✅ $workflow_count found"
+        else
+            echo "Workflows: ❌ Directory missing"
+        fi
+        
+        if [ -w "$CACHE_DIR" ]; then
+            echo "Cache Directory: ✅ Writable"
+        else
+            echo "Cache Directory: ❌ Not writable"
+        fi
+        ;;
+
+    version)
+        echo "AI Development Framework CLI v2.0"
+        echo "Enhanced with robust validation and new commands"
+        if [ -f "${AI_WORKFLOW_DIR}/VERSION" ]; then
+            echo "Framework Version: $(cat "${AI_WORKFLOW_DIR}/VERSION")"
+        fi
+        ;;
+
+    help|--help|-h)
+        show_help
+        ;;
+
+    *)
+        error "Unknown command: '$COMMAND'"
+        echo ""
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help"
+        show_help
+        exit 1
+        ;;
+esac
+
+# Log successful execution
+log "Command completed successfully: $COMMAND"
+exit 0
