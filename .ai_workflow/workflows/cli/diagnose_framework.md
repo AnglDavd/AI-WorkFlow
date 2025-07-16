@@ -543,6 +543,50 @@ echo "Integration Issues: $integration_issues"
 
 ## Comprehensive Health Report
 
+## Workflow Communication Test
+
+### Test Inter-Workflow Calling
+```bash
+echo ""
+echo "=== Testing Workflow Communication ==="
+echo ""
+
+# Test workflow-to-workflow communication by calling state management
+echo "🔄 Testing workflow calling mechanism..."
+if [ "$VERBOSE" = "true" ]; then
+    echo "Calling workflow: common/manage_workflow_state.md"
+fi
+
+# Use call_workflow to demonstrate workflow communication
+manage_workflow_state "get" "diagnosis_test"
+
+if [ $? -eq 0 ]; then
+    echo "  ✅ Workflow calling mechanism works"
+else
+    echo "  ❌ Workflow calling mechanism failed"
+    communication_issues=$((communication_issues + 1))
+fi
+
+# Test logging workflow integration
+echo "📝 Testing log workflow integration..."
+if [ "$VERBOSE" = "true" ]; then
+    echo "Calling workflow: common/log_work_journal.md"
+fi
+
+log_workflow_event "INFO" "Diagnosis completed successfully"
+
+if [ $? -eq 0 ]; then
+    echo "  ✅ Log workflow integration works"
+else
+    echo "  ❌ Log workflow integration failed"
+    communication_issues=$((communication_issues + 1))
+fi
+
+communication_issues=${communication_issues:-0}
+echo ""
+echo "Communication Issues: $communication_issues"
+```
+
 ### Generate Summary Report
 ```bash
 echo ""
@@ -551,7 +595,8 @@ echo "                 🏥 FRAMEWORK HEALTH REPORT"
 echo "================================================================"
 echo ""
 
-total_issues=$((structure_issues + permission_issues + dependency_issues + config_issues + workflow_issues + performance_issues + integration_issues))
+communication_issues=${communication_issues:-0}
+total_issues=$((structure_issues + permission_issues + dependency_issues + config_issues + workflow_issues + performance_issues + integration_issues + communication_issues))
 
 # Overall health status
 if [ "$critical_issues" -gt 0 ]; then

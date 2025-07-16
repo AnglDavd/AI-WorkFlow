@@ -64,3 +64,142 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
     *   **Description:** If the agent detects a repetitive pattern in its own responses or actions (e.g., repeating the same explanation, attempting the same failed tool call multiple times, or getting stuck in a conversational loop), it must immediately break the pattern.
     *   **Action:** The agent should explicitly state that it has detected a loop, summarize the repetitive behavior, and propose a different strategy or ask for direct intervention from the user.
     *   **Rationale:** Prevents unproductive cycles, saves tokens, and improves user experience by signaling when the agent is stuck.
+
+## Security and Quality Assurance Rules (v0.3.0/v0.4.0):
+
+### Enterprise Security Framework
+
+7.  **Input Validation Mandate:**
+    *   **Description:** ALL user inputs, file paths, and commands must pass through validation workflows before execution. Use `validate_input.md` for comprehensive sanitization.
+    *   **Action:** Never execute raw user input without validation. Reject malicious commands, path traversal attempts, and dangerous operations.
+    *   **Rationale:** Prevents security vulnerabilities and ensures framework integrity.
+
+8.  **Permission Verification Protocol:**
+    *   **Description:** Before any file system operation, verify permissions using `check_permissions.md`. Ensure write access exists before attempting modifications.
+    *   **Action:** Check read/write/execute permissions for target files and directories. Fail gracefully with clear error messages if permissions are insufficient.
+    *   **Rationale:** Prevents permission-related failures and enhances system reliability.
+
+9.  **Secure Execution Environment:**
+    *   **Description:** All command execution must occur within the secure execution framework with resource limits and timeout controls.
+    *   **Action:** Use `secure_execution.md` workflow for all shell commands. Never execute commands without security sandboxing.
+    *   **Rationale:** Prevents resource exhaustion and limits potential damage from malicious commands.
+
+10. **Critical File Protection:**
+    *   **Description:** Changes to critical framework files (GLOBAL_AI_RULES.md, CLAUDE.md, ai-dev script) require explicit user approval before modification.
+    *   **Action:** Use `confirm_file_change.md` workflow for critical files. Never modify core framework files without confirmation.
+    *   **Rationale:** Prevents accidental framework corruption and maintains system stability.
+
+### Quality Assurance and Testing
+
+11. **Pre-commit Validation Requirement:**
+    *   **Description:** ALL code changes must pass through pre-commit validation before being committed to the repository.
+    *   **Action:** Execute `precommit_validation.md` workflow before any commit. Ensure minimum 85% quality score and zero critical issues.
+    *   **Rationale:** Maintains code quality standards and prevents low-quality commits.
+
+12. **Integration Testing Protocol:**
+    *   **Description:** When implementing new features or workflows, run integration tests to ensure system interoperability.
+    *   **Action:** Use integration test suites to verify CLI-to-workflow, workflow-to-workflow, and tool system communications.
+    *   **Rationale:** Prevents integration failures and ensures system cohesion.
+
+13. **Security Audit Compliance:**
+    *   **Description:** Periodically run security audits using `audit_security.md` to identify vulnerabilities and compliance issues.
+    *   **Action:** Execute security audit before major releases and when security-sensitive changes are made.
+    *   **Rationale:** Maintains security posture and identifies potential threats early.
+
+## Framework Operations and Management:
+
+### Version and Release Management
+
+14. **Version Lifecycle Awareness:**
+    *   **Description:** Understand and respect the framework's version lifecycle: Alpha (core development), Beta (integration testing), Production (stable release).
+    *   **Action:** Apply appropriate quality gates and testing requirements based on current version phase.
+    *   **Rationale:** Ensures appropriate quality standards for each development phase.
+
+15. **Framework Diagnostics Usage:**
+    *   **Description:** When troubleshooting issues, use `diagnose_framework.md` to perform comprehensive health checks.
+    *   **Action:** Run diagnostics before escalating issues to users. Provide diagnostic reports with actionable recommendations.
+    *   **Rationale:** Enables systematic problem resolution and reduces support overhead.
+
+### Workflow Communication and State Management
+
+16. **Inter-Workflow Communication Protocol:**
+    *   **Description:** When workflows need to communicate, use the standardized workflow calling mechanism through `manage_workflow_state.md`.
+    *   **Action:** Call workflows using proper state management. Ensure state persistence across workflow boundaries.
+    *   **Rationale:** Maintains system consistency and enables complex workflow orchestration.
+
+17. **Work Journal Logging:**
+    *   **Description:** All significant actions and decisions must be logged using `log_work_journal.md` for audit trails and debugging.
+    *   **Action:** Log workflow executions, errors, and state changes. Include relevant context and timestamps.
+    *   **Rationale:** Provides comprehensive audit trails and debugging information.
+
+### CLI Integration and Command Handling
+
+18. **CLI Command Routing:**
+    *   **Description:** Understand the relationship between CLI commands and their underlying workflows. Use proper command routing for all operations.
+    *   **Action:** Route commands through `ai-dev` CLI interface. Respect command flags (--verbose, --quiet, --dry-run, --force).
+    *   **Rationale:** Provides consistent user experience and proper command handling.
+
+19. **GitHub Actions Integration:**
+    *   **Description:** When working with CI/CD pipelines, understand the GitHub Actions integration for automated testing and deployment.
+    *   **Action:** Ensure compatibility with CI/CD workflows. Maintain proper exit codes and output formats.
+    *   **Rationale:** Enables automated testing and deployment capabilities.
+
+## Advanced Framework Features:
+
+### Community and Synchronization
+
+20. **Framework Synchronization Protocol:**
+    *   **Description:** When framework updates are available, use `sync_framework_updates.md` to safely integrate changes.
+    *   **Action:** Backup current state before sync. Validate changes before applying. Resolve conflicts systematically.
+    *   **Rationale:** Enables safe framework updates while preserving local customizations.
+
+21. **Privacy-Safe External Communication:**
+    *   **Description:** When sharing framework improvements or reporting issues, never include project-specific code or sensitive data.
+    *   **Action:** Sanitize all external communications. Focus on framework improvements, not project details.
+    *   **Rationale:** Protects user privacy while enabling community collaboration.
+
+### Performance and Monitoring
+
+22. **Token Usage Monitoring:**
+    *   **Description:** Actively monitor token usage patterns and implement optimizations using `review-token-economy.md`.
+    *   **Action:** Log token usage data. Analyze patterns. Propose optimization strategies. Implement efficiency improvements.
+    *   **Rationale:** Reduces operational costs and improves system efficiency.
+
+23. **Framework Performance Optimization:**
+    *   **Description:** Continuously optimize framework performance through workflow caching, parallel execution, and resource management.
+    *   **Action:** Use performance monitoring tools. Implement caching strategies. Optimize resource usage.
+    *   **Rationale:** Improves user experience and system responsiveness.
+
+## Conflict Resolution and Escalation:
+
+### Updated Conflict Resolution Protocol
+
+24. **Hierarchical Rule Priority:**
+    *   **Framework Rules (Highest Priority):** GLOBAL_AI_RULES.md supersedes all other instructions
+    *   **Workflow-Specific Rules:** Individual workflow files take precedence over general guidelines
+    *   **User Instructions:** Direct user commands override automated behaviors
+    *   **Default Behaviors:** Fallback behaviors when no specific guidance exists
+
+25. **Escalation Procedures:**
+    *   **Technical Issues:** Use `escalate_to_user.md` for technical problems requiring user intervention
+    *   **Security Concerns:** Immediately escalate security issues with detailed context
+    *   **Framework Limitations:** Document limitations and suggest framework improvements
+    *   **User Conflicts:** Seek clarification for ambiguous or conflicting user instructions
+
+## Compliance and Validation:
+
+26. **Continuous Compliance Monitoring:**
+    *   **Description:** Regularly validate compliance with all framework rules and security requirements.
+    *   **Action:** Run compliance checks. Address violations immediately. Document exceptions with justification.
+    *   **Rationale:** Maintains framework integrity and security posture.
+
+27. **Quality Gate Enforcement:**
+    *   **Description:** Enforce quality gates at all critical junctures: pre-commit, pre-deploy, pre-release.
+    *   **Action:** Verify quality thresholds. Block operations that fail quality gates. Provide remediation guidance.
+    *   **Rationale:** Ensures consistent quality standards across all framework operations.
+
+---
+
+**Framework Version:** v0.3.0-alpha (Updated for Beta v0.4.0 preparation)
+**Last Updated:** July 2025
+**Total Rules:** 27 comprehensive operational guidelines
