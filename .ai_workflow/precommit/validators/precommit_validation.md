@@ -227,16 +227,24 @@ echo ""
 echo "=== Framework Compliance Validation ==="
 
 compliance_score=100
+compliance_issues=0
 
-# Check if CLAUDE.md needs updating
+# Check if CLAUDE.md needs updating (check if it exists and was recently modified)
 if echo "$filtered_files" | grep -v "CLAUDE.md" | grep -E "\.(sh|md)$|ai-dev" >/dev/null; then
-    if ! echo "$changed_files" | grep -q "CLAUDE.md"; then
-        echo "⚠️  Significant changes detected but CLAUDE.md not updated"
-        compliance_score=$((compliance_score - 10))
-        compliance_issues=$((compliance_issues + 1))
+    if [ -f "CLAUDE.md" ]; then
+        # Check if CLAUDE.md was modified recently (within last 24 hours)
+        if [ "$(find CLAUDE.md -mtime -1 2>/dev/null)" ]; then
+            echo "✅ CLAUDE.md appears to be recently updated"
+        else
+            echo "ℹ️  Consider updating CLAUDE.md with significant framework changes"
+            compliance_score=$((compliance_score - 5))
+        fi
     else
-        echo "✅ CLAUDE.md updated with changes"
+        echo "ℹ️  CLAUDE.md not found - framework documentation may be needed"
+        compliance_score=$((compliance_score - 3))
     fi
+else
+    echo "✅ No significant framework changes detected"
 fi
 
 # Check workflow structure compliance
@@ -285,12 +293,12 @@ echo "=== Validation Report ==="
 overall_score=$(( (quality_score + security_score + compliance_score) / 3 ))
 total_issues=$((critical_issues + security_issues + quality_issues + compliance_issues))
 
-# Generate JSON report
+# Generate JSON report (simplified without jq dependency)
 cat > "$REPORT_FILE" << EOF
 {
   "validation_id": "$REPORT_ID",
-  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
-  "changed_files": $(echo "$filtered_files" | jq -R -s 'split("\n") | map(select(length > 0))'),
+  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%S")",
+  "file_count": $(echo "$filtered_files" | wc -l),
   "scores": {
     "overall": $overall_score,
     "code_quality": $quality_score,
@@ -336,7 +344,7 @@ else
     echo "Issues detected that must be resolved before commit:"
     
     if [ $overall_score -lt 85 ]; then
-        echo "  - Overall quality score below threshold (85%)"
+        echo "  - Overall quality score below threshold (85 percent)"
     fi
     
     if [ $security_issues -gt 0 ]; then

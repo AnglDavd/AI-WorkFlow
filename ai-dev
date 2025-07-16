@@ -93,6 +93,163 @@ validate_environment() {
     log "Environment validation completed"
 }
 
+# Auto-install pre-commit system (zero friction)
+auto_install_precommit() {
+    log "Checking pre-commit system auto-installation"
+    
+    # Check if we're in a git repository
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
+        log "Not in a git repository, skipping pre-commit auto-installation"
+        return 0
+    fi
+    
+    local git_hooks_dir="$(git rev-parse --git-dir)/hooks"
+    local framework_hooks_dir="$AI_WORKFLOW_DIR/precommit/hooks"
+    local config_file="$AI_WORKFLOW_DIR/precommit/config/validation_rules.json"
+    
+    # Check if hooks are already installed
+    if [ -f "$git_hooks_dir/pre-commit" ] && [ -f "$config_file" ]; then
+        log "Pre-commit system already installed"
+        return 0
+    fi
+    
+    log "Auto-installing pre-commit system (zero friction mode)"
+    
+    # Create default configuration if not exists
+    if [ ! -f "$config_file" ]; then
+        mkdir -p "$(dirname "$config_file")"
+        cat > "$config_file" << 'EOF'
+{
+  "validation_rules": {
+    "code_quality": {
+      "enabled": true,
+      "max_complexity": 10,
+      "max_function_lines": 50,
+      "require_documentation": false,
+      "check_bash_syntax": true,
+      "validate_markdown": true,
+      "check_json_yaml": true
+    },
+    "security": {
+      "enabled": true,
+      "block_sensitive_data": true,
+      "require_secure_paths": true,
+      "scan_dependencies": true,
+      "check_permissions": true,
+      "validate_commands": true
+    },
+    "framework_compliance": {
+      "enabled": true,
+      "require_claude_md_updates": false,
+      "validate_workflow_structure": true,
+      "check_integration_tests": false,
+      "enforce_naming_conventions": true,
+      "validate_todo_updates": false
+    },
+    "documentation": {
+      "enabled": false,
+      "sync_readme": false,
+      "validate_comments": false,
+      "check_changelog": false,
+      "require_examples": false
+    }
+  },
+  "quality_gates": {
+    "minimum_score": 80,
+    "block_on_security_issues": true,
+    "block_on_critical_errors": true,
+    "allow_override": false,
+    "require_manual_review": false
+  },
+  "file_patterns": {
+    "include": [
+      "*.sh",
+      "*.md",
+      "*.json",
+      "*.yml",
+      "*.yaml",
+      "ai-dev"
+    ],
+    "exclude": [
+      ".git/**",
+      ".ai_workflow/cache/**",
+      ".ai_workflow/logs/**",
+      "*.log",
+      "*.tmp",
+      "capturas/**",
+      "*.png",
+      "*.jpg",
+      "*.jpeg",
+      "*.gif"
+    ]
+  },
+  "hooks": {
+    "pre_commit": {
+      "enabled": true,
+      "timeout_seconds": 30,
+      "fail_fast": true
+    },
+    "pre_push": {
+      "enabled": false,
+      "timeout_seconds": 60,
+      "additional_checks": true
+    },
+    "commit_msg": {
+      "enabled": false,
+      "enforce_conventional_commits": true,
+      "max_length": 100
+    }
+  },
+  "metadata": {
+    "created": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
+    "framework_version": "v0.4.0-beta",
+    "configuration_version": "1.0",
+    "auto_installed": true
+  }
+}
+EOF
+        log "Default pre-commit configuration created"
+    fi
+    
+    # Install hooks silently if framework hooks exist
+    if [ -d "$framework_hooks_dir" ]; then
+        local hooks_installed=0
+        
+        # Backup existing hooks silently
+        local backup_dir="$AI_WORKFLOW_DIR/precommit/backup_hooks_$(date +%Y%m%d_%H%M%S)"
+        mkdir -p "$backup_dir"
+        
+        for hook in pre-commit pre-push commit-msg; do
+            if [ -f "$git_hooks_dir/$hook" ]; then
+                cp "$git_hooks_dir/$hook" "$backup_dir/" 2>/dev/null || true
+            fi
+        done
+        
+        # Install framework hooks silently
+        for hook in pre-commit pre-push commit-msg; do
+            if [ -f "$framework_hooks_dir/$hook" ]; then
+                cp "$framework_hooks_dir/$hook" "$git_hooks_dir/" 2>/dev/null || true
+                chmod +x "$git_hooks_dir/$hook" 2>/dev/null || true
+                hooks_installed=$((hooks_installed + 1))
+            fi
+        done
+        
+        if [ $hooks_installed -gt 0 ]; then
+            log "Pre-commit hooks auto-installed silently ($hooks_installed hooks)"
+            
+            # Create installation marker
+            echo "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")" > "$AI_WORKFLOW_DIR/precommit/.auto_installed"
+            
+            # Log successful installation
+            echo "Auto-installed pre-commit system with $hooks_installed hooks" >> "$AI_WORKFLOW_DIR/logs/precommit_auto_install.log"
+        else
+            log "No hooks found to install"
+        fi
+    else
+        log "Framework hooks directory not found, skipping auto-installation"
+    fi
+}
+
 validate_file_path() {
     local file_path="$1"
     local file_type="${2:-file}"
@@ -373,14 +530,13 @@ fi
 shift
 
 # Initialize environment (always run basic validation)
-if [ "$QUIET" != "true" ]; then
-    info "AI Development Framework CLI v2.0"
-fi
+# CLI initialization message will be printed after command-specific flag parsing
 
 # Run validation unless bypassed
 if [ "$FORCE" != "true" ]; then
     check_dependencies
     validate_environment
+    auto_install_precommit
 fi
 
 # Execute workflow with error handling
@@ -536,6 +692,9 @@ EOF
             exit 0
         fi
         
+        if [ "$QUIET" != "true" ]; then
+            info "AI Development Framework CLI v2.0"
+        fi
         info "Starting project setup workflow"
         execute_workflow "${AI_WORKFLOW_DIR}/workflows/setup/01_start_setup.md" "Project Setup"
         ;;
@@ -723,7 +882,9 @@ EOF
             esac
         done
         
+        # Show CLI initialization message only if not in quiet mode
         if [ "$QUIET" != "true" ]; then
+            info "AI Development Framework CLI v2.0"
             info "Framework Status Report"
             echo ""
             echo "Framework Directory: $AI_WORKFLOW_DIR"

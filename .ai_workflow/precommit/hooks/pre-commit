@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Git Pre-commit Hook - AI Development Framework
+# This hook runs automatically before each commit to validate code quality, security, and compliance
+
+set -euo pipefail
+
+# Get the directory of the hook script
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Logging function
+log() {
+    echo -e "${BLUE}[PRE-COMMIT]${NC} $*"
+}
+
+error() {
+    echo -e "${RED}[PRE-COMMIT ERROR]${NC} $*" >&2
+}
+
+success() {
+    echo -e "${GREEN}[PRE-COMMIT SUCCESS]${NC} $*"
+}
+
+warning() {
+    echo -e "${YELLOW}[PRE-COMMIT WARNING]${NC} $*"
+}
+
+# Check if we're in an AI Development Framework directory
+if [ ! -f "$PROJECT_ROOT/ai-dev" ] || [ ! -d "$PROJECT_ROOT/.ai_workflow" ]; then
+    log "Framework files not found at $PROJECT_ROOT"
+    log "ai-dev exists: $([ -f "$PROJECT_ROOT/ai-dev" ] && echo "yes" || echo "no")"
+    log ".ai_workflow exists: $([ -d "$PROJECT_ROOT/.ai_workflow" ] && echo "yes" || echo "no")"
+    
+    # Try to find the framework in the current directory
+    if [ -f "./ai-dev" ] && [ -d "./.ai_workflow" ]; then
+        log "Found framework in current directory"
+        PROJECT_ROOT="$(pwd)"
+    else
+        error "Not in an AI Development Framework directory"
+        error "Expected to find ai-dev script and .ai_workflow directory"
+        exit 1
+    fi
+fi
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
+log "Starting pre-commit validation..."
+log "Project: $PROJECT_ROOT"
+
+# Check if pre-commit validation is enabled
+if [ -f ".ai_workflow/precommit/config/validation_rules.json" ]; then
+    # Check if pre-commit is enabled in config
+    if command -v python3 >/dev/null 2>&1; then
+        PRE_COMMIT_ENABLED=$(python3 -c "
+import json
+try:
+    with open('.ai_workflow/precommit/config/validation_rules.json', 'r') as f:
+        config = json.load(f)
+    print(config.get('hooks', {}).get('pre_commit', {}).get('enabled', 'true'))
+except:
+    print('true')
+" 2>/dev/null || echo "true")
+    else
+        PRE_COMMIT_ENABLED="true"
+    fi
+    
+    if [ "$PRE_COMMIT_ENABLED" = "false" ]; then
+        warning "Pre-commit validation is disabled in configuration"
+        exit 0
+    fi
+fi
+
+# Run the actual pre-commit validation
+log "Executing pre-commit validation workflow..."
+
+# Use the framework's pre-commit validation
+if [ -f "./ai-dev" ]; then
+    # Run pre-commit validation using the framework CLI
+    if ! ./ai-dev precommit validate; then
+        error "Pre-commit validation failed"
+        error "Please fix the issues above and try committing again"
+        echo ""
+        echo "To bypass this validation (not recommended), use:"
+        echo "  git commit --no-verify"
+        echo ""
+        echo "To configure validation rules, run:"
+        echo "  ./ai-dev precommit configure"
+        exit 1
+    fi
+else
+    error "ai-dev script not found"
+    exit 1
+fi
+
+success "Pre-commit validation passed"
+success "Commit is ready to proceed"
+exit 0
