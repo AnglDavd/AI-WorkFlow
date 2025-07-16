@@ -34,10 +34,26 @@ echo "$changed_files" | while read -r file; do
 done
 echo ""
 
-# Filter relevant files
+# Filter relevant files and detect irrelevant ones
 filtered_files=""
+irrelevant_files=""
 for file in $changed_files; do
     if [ ! -f "$file" ]; then
+        continue
+    fi
+    
+    # Check for irrelevant files that shouldn't be committed
+    if [[ "$file" =~ ^test_ ]] || [[ "$file" =~ _test\.md$ ]] || [[ "$file" =~ _debug\.md$ ]] || \
+       [[ "$file" == "plan_de_trabajo.md" ]] || [[ "$file" == "project_info.md" ]] || \
+       [[ "$file" =~ integration_test_ ]] || [[ "$file" =~ \.tmp$ ]] || [[ "$file" =~ \.temp$ ]] || \
+       [[ "$file" =~ \.log$ ]] || [[ "$file" =~ \.bak$ ]] || [[ "$file" =~ \.orig$ ]] || [[ "$file" =~ ~$ ]]; then
+        irrelevant_files="$irrelevant_files$file"$'\n'
+        continue
+    fi
+    
+    # Check for development/internal files
+    if [[ "$file" =~ ^(capturas/|screenshots/|docs/internal/|temp/|debug/|\.vscode/|\.idea/|\.vs/)$ ]]; then
+        irrelevant_files="$irrelevant_files$file"$'\n'
         continue
     fi
     
@@ -49,6 +65,25 @@ for file in $changed_files; do
 done
 
 filtered_files=$(echo "$filtered_files" | sed '/^$/d')
+irrelevant_files=$(echo "$irrelevant_files" | sed '/^$/d')
+
+# Check for irrelevant files and warn/block
+if [ -n "$irrelevant_files" ]; then
+    echo "🚨 IRRELEVANT FILES DETECTED:"
+    echo "$irrelevant_files" | while read -r file; do
+        echo "  ❌ $file (should not be committed)"
+    done
+    echo ""
+    echo "❌ COMMIT BLOCKED: Remove irrelevant files before committing"
+    echo "💡 These files appear to be development/testing files that shouldn't be in the repository"
+    echo ""
+    echo "To fix this:"
+    echo "  1. Remove these files from staging: git reset HEAD <file>"
+    echo "  2. Add them to .gitignore if needed"
+    echo "  3. Commit again"
+    echo ""
+    exit 1
+fi
 
 if [ -z "$filtered_files" ]; then
     echo "✅ No relevant files to validate"
