@@ -1,9 +1,9 @@
 {
-  "framework_version": "v0.3.0-alpha",
+  "framework_version": "v0.4.0-beta",
   "framework_name": "AI-Assisted Development Framework",
   "framework_description": "A sophisticated system that enables AI agents to build production-ready software through structured workflows and templates",
-  "build_date": "2025-07-15",
-  "build_status": "stable",
+  "build_date": "2025-07-16",
+  "build_status": "beta",
   "global_settings": {
     "default_quality_threshold": 0.8,
     "token_efficiency_mode": true,
@@ -106,10 +106,17 @@
     },
     "integration": {
       "git_support": true,
-      "github_actions": false,
+      "github_actions": true,
       "docker_support": false,
       "api_endpoints": false,
       "webhook_support": false
+    },
+    "precommit_validation": {
+      "enabled": true,
+      "auto_installation": true,
+      "quality_gates": true,
+      "security_scanning": true,
+      "compliance_validation": true
     }
   },
   "metrics": {
@@ -122,15 +129,15 @@
     "documentation_coverage": 90
   },
   "roadmap": {
-    "current_phase": "alpha",
-    "next_milestone": "beta",
-    "estimated_beta_date": "2025-08-15",
+    "current_phase": "beta",
+    "next_milestone": "production",
+    "estimated_beta_date": "2025-07-16",
     "estimated_production_date": "2025-12-01"
   },
   "repository": {
     "type": "git",
     "branch": "main",
-    "last_update": "2025-07-15",
+    "last_update": "2025-07-16",
     "commit_hash": "placeholder",
     "contributors": ["AI Assistant", "User"],
     "license": "MIT"

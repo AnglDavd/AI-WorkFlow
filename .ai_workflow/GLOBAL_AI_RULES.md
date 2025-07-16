@@ -198,8 +198,20 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
     *   **Action:** Verify quality thresholds. Block operations that fail quality gates. Provide remediation guidance.
     *   **Rationale:** Ensures consistent quality standards across all framework operations.
 
+## Zero-Friction Development Philosophy:
+
+28. **Seamless Automation Principle:**
+    *   **Description:** Every system should work through seamless automation with minimal user intervention.
+    *   **Action:** Implement intelligent defaults, auto-configuration, and proactive automation. Convert manual processes to automatic background operations.
+    *   **Rationale:** Maximizes user productivity and framework adoption by eliminating friction points.
+
+29. **Continuous Friction Analysis:**
+    *   **Description:** Continuously identify and document user friction points for future zero-friction improvements.
+    *   **Action:** During every development and review cycle, analyze user interactions for friction. Document findings and implement automated solutions.
+    *   **Rationale:** Ensures framework evolves toward seamless user experience and maximum value delivery.
+
 ---
 
-**Framework Version:** v0.3.0-alpha (Updated for Beta v0.4.0 preparation)
+**Framework Version:** v0.4.0-beta (Updated for Zero-Friction Philosophy)
 **Last Updated:** July 2025
-**Total Rules:** 27 comprehensive operational guidelines
+**Total Rules:** 29 comprehensive operational guidelines
