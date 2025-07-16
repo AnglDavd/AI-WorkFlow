@@ -1,12 +1,14 @@
 # 🚀 AI-Assisted Development Framework | Your Autonomous Software Engineering Partner
 
-[![Version](https://img.shields.io/badge/version-v0.3.0--alpha-blue.svg)](https://github.com/AnglDavd/AI-WorkFlow/releases)
+[![Version](https://img.shields.io/badge/version-v0.4.0--beta-brightgreen.svg)](https://github.com/AnglDavd/AI-WorkFlow/releases)
 [![Framework Status](https://img.shields.io/badge/framework-100%25%20functional-brightgreen.svg)](https://github.com/AnglDavd/AI-WorkFlow)
-[![Workflows](https://img.shields.io/badge/workflows-43%20active-success.svg)](https://github.com/AnglDavd/AI-WorkFlow/tree/main/.ai_workflow/workflows)
-[![CLI Commands](https://img.shields.io/badge/CLI%20commands-12%20available-informational.svg)](https://github.com/AnglDavd/AI-WorkFlow#available-commands)
+[![Workflows](https://img.shields.io/badge/workflows-61%20active-success.svg)](https://github.com/AnglDavd/AI-WorkFlow/tree/main/.ai_workflow/workflows)
+[![CLI Commands](https://img.shields.io/badge/CLI%20commands-13%20available-informational.svg)](https://github.com/AnglDavd/AI-WorkFlow#available-commands)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-orange.svg)](https://github.com/AnglDavd/AI-WorkFlow)
+[![Security](https://img.shields.io/badge/security-100%25%20compliant-green.svg)](https://github.com/AnglDavd/AI-WorkFlow)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-> **🎉 Alpha v0.3.0 Released**: Framework core completed with 100% functionality, all interdependencies resolved, and comprehensive CLI interface!
+> **🎉 Beta v0.4.0 Released**: Integration Testing & Quality Assurance completed with seamless automation, advanced security, and zero-friction pre-commit validation!
 
 ## 💡 The Challenge of Modern Development
 
@@ -21,6 +23,12 @@ This framework is an innovative system designed to empower development teams wit
 *   **Dynamic Project Manager (DPM):** The core of the framework. A transparent, auditable, and self-improving system based on **`.md` workflow nodes**. All project logic is visible and editable, replacing monolithic scripts with human-readable, agent-executable manifests.
 *   **Self-Extending Tools:** Need a new CLI tool? The framework can **dynamically create adapters** for undefined tools, guiding you through the integration process.
 *   **Automated Token Economy Optimization:** A proactive system that **monitors and optimizes the token consumption** of your LLMs, helping you reduce costs and improve efficiency without compromising quality.
+*   **Zero-Friction Pre-commit Validation System:** Revolutionary background quality assurance:
+    *   **Seamless Auto-Installation:** Pre-commit hooks install automatically on first framework use
+    *   **Intelligent Quality Gates:** Automated code quality, security, and compliance validation
+    *   **Background Operation:** Works transparently without user intervention
+    *   **Smart Reporting:** Detailed validation reports with actionable recommendations
+    *   **Configurable Rules:** Customizable validation thresholds and quality standards
 *   **Enterprise-Grade Security System:** Comprehensive security framework with multiple protection layers:
     *   **Input Validation:** Advanced sanitization preventing malicious commands and path traversal attacks
     *   **Permission Management:** Automated verification of file system access rights
@@ -38,25 +46,31 @@ This framework is an innovative system designed to empower development teams wit
     *   **Privacy-Safe Sharing:** Share framework optimizations without exposing project-specific data
 *   **Continuous Learning and Improvement:** The framework learns from each interaction, optimizing its processes and adapting to your needs.
 
-## 🎯 What's New in v0.3.0-alpha
+## 🎯 What's New in v0.4.0-beta
 
-### 🚀 **Framework Core Completed**
-- **100% Functional Workflows**: All 43 workflows are now fully operational
-- **Native Parser System**: Custom bash parser for .md workflow execution
-- **Interdependency Resolution**: Fixed 95+ workflow interdependency issues
-- **Robust CLI Interface**: 12 comprehensive commands for complete framework control
+### 🚀 **Integration Testing & Quality Assurance**
+- **Zero-Friction Pre-commit System**: Automatic installation and configuration with seamless background operation
+- **Advanced Parser Integration**: Enhanced function context injection for robust workflow execution
+- **100% Security Compliance**: All 5 critical security vulnerabilities resolved with comprehensive protection
+- **Seamless Automation Philosophy**: Framework works transparently behind the scenes with minimal user intervention
 
 ### 🔧 **Major Improvements**
-- **Enhanced Error Handling**: Comprehensive fallback systems and recovery mechanisms
-- **Security Audit System**: Advanced pattern detection and vulnerability scanning
-- **Framework Diagnostics**: Complete health monitoring and reporting system
-- **Version Management**: Structured versioning with Alpha/Beta/Production phases
+- **Pre-commit Validation**: Automated code quality, security, and compliance validation on every commit
+- **Enhanced CLI Interface**: 13 commands with improved routing and help system
+- **Parser Robustness**: Fixed critical parser-to-tool integration with comprehensive error handling
+- **GitHub Actions Ready**: CI/CD workflows for automated testing and security scanning
 
 ### 🛠️ **Technical Achievements**
-- **Zero External Dependencies**: Framework runs entirely on bash and standard tools
-- **Workflow Calling System**: Seamless inter-workflow communication
-- **Local/Offline Mode**: Full functionality without external connections
-- **Quality Gates**: Automated validation and testing throughout the framework
+- **Function Context Injection**: Parser now provides full framework function context to bash blocks
+- **Multi-layer Security**: Input validation, path traversal protection, and symbolic link detection
+- **Auto-configuration**: Intelligent defaults with zero user intervention required
+- **Git Hook Integration**: Seamless integration with git workflow for automated quality assurance
+
+### 🎉 **Beta Milestones Achieved**
+- **Parser Integration**: ✅ FIXED (function context injection)
+- **Security Vulnerabilities**: ✅ RESOLVED (5/5 fixed)
+- **Pre-commit System**: ✅ OPERATIONAL (zero-friction automation)
+- **Integration Tests**: ✅ PASSING (critical issues resolved)
 
 ## 🚀 Getting Started
 
@@ -97,12 +111,13 @@ The framework provides these powerful commands from your project root:
 ./.ai_framework/ai-dev run <prp_file>           # Execute Project Response Plans
 ./.ai_framework/ai-dev optimize <prompt_file>   # Optimize prompts and reduce costs
 
-# New Commands (v0.3.0-alpha)
+# Enhanced Commands (v0.4.0-beta)
 ./.ai_framework/ai-dev audit                    # Run comprehensive security audit
 ./.ai_framework/ai-dev sync                     # Synchronize with framework updates
 ./.ai_framework/ai-dev configure [options]      # Configure framework settings
 ./.ai_framework/ai-dev diagnose                 # Diagnose framework health
 ./.ai_framework/ai-dev quality <path>           # Run quality validation
+./.ai_framework/ai-dev precommit [action]       # Manage pre-commit validation system
 
 # Utility Commands
 ./.ai_framework/ai-dev help                     # Show all available commands
@@ -117,6 +132,7 @@ The framework provides these powerful commands from your project root:
 - ✅ **Project Isolation**: Your code and framework code remain completely separate
 - ✅ **Easy Updates**: Update framework independently without affecting your project
 - ✅ **Version Control Friendly**: Add `.ai_framework/` to .gitignore to keep it private
+- ✅ **Zero-Friction Automation**: Pre-commit hooks auto-install and work seamlessly in background
 
 ## 💡 Why Choose This Framework?
 
