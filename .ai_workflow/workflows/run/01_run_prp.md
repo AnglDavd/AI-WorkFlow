@@ -1,4 +1,5 @@
 ---
+# === AUTOMATIC QUALITY VALIDATION ===echo "🔍 Running automatic quality validation before PRP execution..."if [[ "$QUALITY_VALIDATION_ENABLED" != "false" ]]; then    PROJECT_PATH="$(pwd)" bash .ai_workflow/workflows/quality/quality_gates.md    if [[ $? -ne 0 ]]; then        echo "❌ Quality validation failed before PRP execution"        if [[ "$QUALITY_VALIDATION_STRICT" == "true" ]]; then            echo "🚫 Blocking PRP execution due to quality issues (strict mode enabled)"            exit 1        else            echo "⚠️  Quality issues detected but proceeding with PRP execution"        fi    else        echo "✅ Quality validation passed, proceeding with PRP execution"    fielse    echo "⏭️  Quality validation disabled for PRP execution"fi
 description: AI prompt for executing a Project-Response-Plan (PRP) using the abstract tool engine.
 globs:
   alwaysApply: false

@@ -96,12 +96,22 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
     *   **Action:** Execute `precommit_validation.md` workflow before any commit. Ensure minimum 85% quality score and zero critical issues.
     *   **Rationale:** Maintains code quality standards and prevents low-quality commits.
 
-12. **Integration Testing Protocol:**
+12. **Automatic Quality Integration:**
+    *   **Description:** Quality validation is automatically integrated into all critical framework touchpoints without user intervention.
+    *   **Action:** Quality validation runs automatically in pre-commit hooks, CLI commands, and PRP execution. Uses adaptive language support for seamless multi-language project compatibility.
+    *   **Rationale:** Enables zero-friction quality assurance across all development workflows.
+
+13. **Adaptive Language Support:**
+    *   **Description:** Framework must intelligently adapt to any programming language or technology stack without manual configuration.
+    *   **Action:** Use `adaptive_language_support.md` to automatically detect and configure quality tools for 30+ programming languages. Gracefully degrade for unknown languages.
+    *   **Rationale:** Provides universal compatibility and eliminates language-specific setup barriers.
+
+14. **Integration Testing Protocol:**
     *   **Description:** When implementing new features or workflows, run integration tests to ensure system interoperability.
     *   **Action:** Use integration test suites to verify CLI-to-workflow, workflow-to-workflow, and tool system communications.
     *   **Rationale:** Prevents integration failures and ensures system cohesion.
 
-13. **Security Audit Compliance:**
+15. **Security Audit Compliance:**
     *   **Description:** Periodically run security audits using `audit_security.md` to identify vulnerabilities and compliance issues.
     *   **Action:** Execute security audit before major releases and when security-sensitive changes are made.
     *   **Rationale:** Maintains security posture and identifies potential threats early.
@@ -212,6 +222,6 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
 
 ---
 
-**Framework Version:** v0.4.0-beta (Updated for Zero-Friction Philosophy)
+**Framework Version:** v0.4.1-beta (see [ARCHITECTURE.md - Framework Status](ARCHITECTURE.md#framework-status) for complete version information)
 **Last Updated:** July 2025
-**Total Rules:** 29 comprehensive operational guidelines
+**Total Rules:** 31 comprehensive operational guidelines

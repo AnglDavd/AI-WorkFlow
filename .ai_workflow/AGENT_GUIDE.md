@@ -4,18 +4,34 @@ This file provides guidance to the AI agent when working with code in this repos
 
 ## Project Nature
 
-This is a **PRP (Product Requirement Prompt) Framework** repository, not a traditional software project. The core concept: **"PRP = PRD + curated codebase intelligence + agent/runbook"** - designed to enable AI agents to ship production-ready code on the first pass.
+This is an **AI-Assisted Development Framework** repository - a comprehensive system that enables AI agents to build production-ready software through structured workflows and templates. The core concept: **"PRP = PRD + curated codebase intelligence + agent/runbook"** - designed to enable AI agents to ship production-ready code on the first pass.
+
+## Framework Version Status
+
+**Current Version:** v0.4.1-beta (Beta Phase with Quality Integration)
+**Key Features:** 
+- ✅ Complete Alpha v0.3.0 core functionality
+- ✅ Automatic quality validation with adaptive language support
+- ✅ Pre-commit system with background validation
+- ✅ Zero-friction automation philosophy
+- ✅ Multi-language project compatibility (30+ languages)
+- ✅ Comprehensive CLI integration
 
 ## Core Architecture
 
 ### Command-Driven System
 
-- **Pre-configured AI agent commands** in `.ai_workflow/commands/`
-- Commands organized by function:
-  - `PRPs/` - PRP creation and execution workflows
-  - `development/` - Core development utilities (prime-core, onboarding, debug)
-  - `code-quality/` - Review and refactoring commands
-  - `git-operations/` - Conflict resolution and smart git operations
+**📋 For complete architectural overview, see [ARCHITECTURE.md - System Overview](ARCHITECTURE.md#1-system-overview)**
+
+The framework operates through a unified CLI interface:
+- **Main Entry Point**: `ai-dev` script - provides user-friendly access to all workflows
+- **Core Commands** (see [CLI Command Registry](ARCHITECTURE.md#command-registry) for complete reference):
+  - `setup` - Initialize project setup
+  - `generate <prd_file>` - Generate tasks from PRD
+  - `run <prp_file>` - Execute Project Response Plans
+  - `quality <path>` - Run quality validation with adaptive language support
+  - `audit` - Run security audit
+  - `precommit` - Pre-commit validation and quality assurance
 
 ### Template-Based Methodology
 
@@ -62,6 +78,8 @@ The commands are stored in `.ai_workflow/commands/`. They are designed to be exe
 4.  **Progressive Success**: Start simple, validate, then enhance.
 5.  **Resilient Testing**: When tests fail, attempt initial diagnosis and auto-correction before escalating. Do not halt development unless explicitly instructed or all recovery options are exhausted.
 6.  **Privacy & Data Handling**: When generating external output (e.g., GitHub issues, reports), ensure that **NO project-specific code, sensitive data, or private information is ever included**. All external communication must strictly adhere to framework-related feedback only.
+7.  **Zero-Friction Automation**: Every system should work through seamless automation with minimal user intervention. Convert manual processes to automatic background operations.
+8.  **Adaptive Language Support**: Framework must intelligently adapt to any programming language or technology stack without manual configuration.
 
 ### PRP Structure Requirements
 

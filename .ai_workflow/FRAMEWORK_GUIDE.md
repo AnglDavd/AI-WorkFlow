@@ -2,6 +2,17 @@
 
 This guide provides a comprehensive overview of the AI-Assisted Development Framework, explaining its core components, workflows, and how to leverage each part effectively. It's designed to help you navigate from an initial idea to production-ready code with the power of AI.
 
+## 🎯 Framework Version Status
+
+**📋 For complete version information and development status, see [ARCHITECTURE.md - Framework Status](ARCHITECTURE.md#framework-status)**
+
+**Current Version:** v0.4.1-beta (Beta Phase with Quality Integration)
+**Major Features Completed:**
+- ✅ **Automatic Quality Validation**: Adaptive language support for 30+ programming languages
+- ✅ **Zero-Friction Automation**: Seamless background validation and pre-commit systems
+- ✅ **CLI Integration**: Comprehensive command-line interface with advanced options
+- ✅ **Master Architectural Documentation**: Complete system overview and development guidelines
+
 ## 🎯 Core Workflow: From Idea to Code
 
 This section outlines the primary, end-to-end workflow for developing new features or products using the framework.
@@ -145,14 +156,31 @@ To ensure the continuous improvement of the framework itself, a feedback mechani
 -   **Privacy Note:** Any feedback submitted through this mechanism will **ONLY** pertain to the framework's functionality and suggestions for its improvement. **NO project-specific code, sensitive data, or private information will ever be included in these reports or GitHub issues.**
 -   **Process:** The `process-task-list.md` prompt will prompt the user for feedback, and the `FRAMEWORK_ASSISTANT` will help generate a pre-filled `gh issue create` command for the main repository.
 
-## 🤖 The Role of `manager.sh`
+## 🤖 The Role of `ai-dev`
 
-The `manager.sh` script is your primary interface with the AI-Assisted Development Framework. It acts as an orchestrator, simplifying the execution of complex AI agent prompts and workflows. Instead of directly interacting with individual `.md` prompt files, you use `manager.sh` to trigger the desired actions.
+The `ai-dev` script is your primary interface with the AI-Assisted Development Framework. It acts as an orchestrator, simplifying the execution of complex AI agent prompts and workflows. Instead of directly interacting with individual `.md` prompt files, you use `ai-dev` to trigger the desired actions.
 
--   **`manager.sh setup`**: Initializes a new project with the framework.
--   **`manager.sh new-prd`**: Starts the PRD creation workflow.
--   **`manager.sh new-prp`**: Initiates the PRP creation workflow.
--   **`manager.sh run --prp <path>`**: Executes a specific PRP.
--   **`manager.sh assistant <query>`**: Interacts with the Framework Assistant for guidance and support.
+### Core Commands
 
-By centralizing these operations, `manager.sh` provides a consistent and user-friendly experience, abstracting away the underlying complexity of prompt execution.
+**📋 For complete command reference and technical details, see [ARCHITECTURE.md - CLI Command Registry](ARCHITECTURE.md#command-registry)**
+
+**Primary Workflow Commands:**
+-   **`./ai-dev setup`**: Initializes a new project with the framework
+-   **`./ai-dev generate <prd_file>`**: Generate tasks from a Product Requirements Document
+-   **`./ai-dev run <prp_file>`**: Execute a Project-Response-Plan file
+-   **`./ai-dev quality <path>`**: Run quality validation with adaptive language support
+
+**Advanced Commands:**
+-   **`./ai-dev audit`**: Run comprehensive security audit
+-   **`./ai-dev precommit <subcommand>`**: Pre-commit validation and quality assurance
+-   **`./ai-dev configure`**: Configure framework settings
+-   **`./ai-dev diagnose`**: Diagnose framework health and status
+
+### Advanced Features
+
+-   **Automatic Quality Integration**: Quality validation runs automatically in pre-commit hooks, CLI commands, and PRP execution
+-   **Adaptive Language Support**: Intelligent adaptation to 30+ programming languages without manual configuration
+-   **Zero-Friction Automation**: Seamless background operations with minimal user intervention
+-   **Comprehensive Validation**: Security, quality, and compliance checking integrated across all operations
+
+By centralizing these operations, `ai-dev` provides a consistent and user-friendly experience, abstracting away the underlying complexity of prompt execution while maintaining powerful automation capabilities.

@@ -1,27 +1,19 @@
-# Validate Dependencies Workflow
+# Dependencies Validation Workflow
 
 ## Purpose
-Perform comprehensive validation of project dependencies including availability, security vulnerabilities, version compatibility, and license compliance to ensure reliable and secure project builds.
+Validate project dependencies for security vulnerabilities, compatibility issues, and missing requirements to ensure stable and secure project execution.
 
-## When to Use
-- Before project build or deployment
-- During security audits
-- After dependency updates
-- As part of quality gates validation
-- Before accepting external contributions
-
-## Prerequisites
-- Project type detection completed
-- Network connectivity for vulnerability databases
-- Package manager tools available
+## Design Philosophy
+- **Language-Agnostic**: Works with any package manager or dependency system
+- **Security-First**: Prioritizes security vulnerability detection
+- **Graceful Degradation**: Provides useful feedback even when tools are unavailable
+- **Extensible**: Easy to add support for new package managers
 
 ## Input Parameters
-- `project_path`: Path to project directory
-- `check_security`: Boolean to enable security vulnerability scanning (default: true)
-- `check_licenses`: Boolean to enable license compatibility checking (default: true)
-- `check_updates`: Boolean to check for available updates (default: false)
-- `fail_on_vulnerabilities`: Boolean to fail on security issues (default: true)
-- `severity_threshold`: Minimum vulnerability severity to fail on (low|medium|high|critical)
+- `PROJECT_PATH`: Path to project directory (default: current directory)
+- `SECURITY_SCAN`: Enable security vulnerability scanning (default: true)
+- `UPDATE_CHECK`: Check for outdated dependencies (default: true)
+- `REPORT_FORMAT`: Output format (json|text) (default: json)
 
 ## Dependency Validation Sequence
 

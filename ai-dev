@@ -26,6 +26,7 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # --- Utility Functions ---
+# Quality validation functionrun_quality_validation() {    local context="$1"    local project_path="${2:-$(pwd)}"        if [[ "$QUALITY_VALIDATION_ENABLED" == "false" ]]; then        echo "⏭️  Quality validation disabled"        return 0    fi        echo "🔍 Running quality validation ($context)..."        if PROJECT_PATH="$project_path" bash .ai_workflow/workflows/quality/quality_gates.md; then        echo "✅ Quality validation passed"        return 0    else        echo "❌ Quality validation failed"        if [[ "$QUALITY_VALIDATION_STRICT" == "true" ]]; then            echo "🚫 Operation blocked due to quality issues (strict mode enabled)"            return 1        else            echo "⚠️  Quality issues detected but operation proceeding"            return 0        fi    fi}
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
 }
@@ -346,6 +347,15 @@ ${GREEN}New Commands:${NC}
   quality <path>           Run quality validation on project
   precommit <subcommand>   Pre-commit validation and quality assurance
 
+${GREEN}Documentation Commands:${NC}
+  generate-architecture    Generate project architecture documentation
+  update-architecture      Update existing architecture documentation
+
+${GREEN}Maintenance Commands:${NC}
+  cleanup [options]        Manage obsolete files and repository cleanup
+  update-gitignore         Update .gitignore with latest patterns
+  maintenance [level]      Run periodic repository maintenance
+
 ${GREEN}Utility Commands:${NC}
   help                     Show this help message
   version                  Show framework version information
@@ -366,6 +376,10 @@ ${GREEN}Examples:${NC}
   ./ai-dev audit --verbose
   ./ai-dev configure --user
   ./ai-dev diagnose
+  ./ai-dev generate-architecture
+  ./ai-dev update-architecture
+  ./ai-dev cleanup --status
+  ./ai-dev maintenance weekly
 
 ${GREEN}Configuration:${NC}
   Framework config: ${CONFIG_FILE}
@@ -1004,10 +1018,142 @@ EOF
         esac
         ;;
 
+    generate-architecture)
+        info "Generating project architecture documentation"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/documentation/generate_project_architecture.md" "Generate Architecture Documentation"
+        ;;
+
+    update-architecture)
+        info "Updating project architecture documentation"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/documentation/generate_project_architecture.md" "Update Architecture Documentation"
+        ;;
+
+    cleanup)
+        # Handle cleanup subcommands
+        SUBCOMMAND=${1:-}
+        
+        case "$SUBCOMMAND" in
+            --help|-h)
+                cat << EOF
+${BLUE}Cleanup Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev cleanup [OPTION]
+
+${GREEN}Description:${NC}
+Manage obsolete files in the framework and user projects using the automated
+obsolete files management system.
+
+${GREEN}Options:${NC}
+  (no args)           Show cleanup status and candidates
+  --auto              Run automatic cleanup (archive obsolete files)
+  --confirm           Permanently delete old archived files (>30 days)
+  --recover <file>    Recover specific archived file
+  --status            Show cleanup system status
+  --help, -h          Show this help
+
+${GREEN}Examples:${NC}
+  ./ai-dev cleanup                    # Show cleanup status
+  ./ai-dev cleanup --auto             # Run automatic cleanup
+  ./ai-dev cleanup --confirm          # Delete old archived files
+  ./ai-dev cleanup --recover file.md  # Recover specific file
+  ./ai-dev cleanup --status           # Show system status
+
+${GREEN}Note:${NC} All cleanup operations are reversible except --confirm.
+EOF
+                exit 0
+                ;;
+            --auto)
+                info "Running automatic obsolete files cleanup"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/manage_obsolete_files.md" "Automatic Cleanup"
+                ;;
+            --confirm)
+                info "Permanently deleting old archived files (>30 days)"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/permanent_cleanup.md" "Permanent Cleanup"
+                ;;
+            --recover)
+                RECOVER_FILE=${2:-}
+                if [ -z "$RECOVER_FILE" ]; then
+                    error "Missing required argument: <file>"
+                    echo "Usage: ./ai-dev cleanup --recover <file>"
+                    exit 1
+                fi
+                info "Recovering archived file: $RECOVER_FILE"
+                export RECOVER_FILE_PATH="$RECOVER_FILE"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/recover_file.md" "File Recovery"
+                ;;
+            --status)
+                info "Showing cleanup system status"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/cleanup_status.md" "Cleanup Status"
+                ;;
+            "")
+                info "Showing cleanup candidates and system status"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/cleanup_status.md" "Cleanup Status"
+                ;;
+            *)
+                error "Unknown cleanup option: $SUBCOMMAND"
+                echo "Run './ai-dev cleanup --help' for available options"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    update-gitignore)
+        info "Updating .gitignore with latest patterns and technology detection"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/setup/auto_gitignore_setup.md" "Auto GitIgnore Update"
+        ;;
+
+    maintenance)
+        # Handle maintenance subcommands
+        MAINTENANCE_LEVEL=${1:-daily}
+        
+        case "$MAINTENANCE_LEVEL" in
+            --help|-h)
+                cat << EOF
+${BLUE}Maintenance Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev maintenance [LEVEL]
+
+${GREEN}Description:${NC}
+Run periodic repository maintenance tasks to keep your repository clean and optimized.
+
+${GREEN}Levels:${NC}
+  daily               Daily maintenance (default)
+  weekly              Weekly maintenance + daily tasks
+  monthly             Monthly maintenance + weekly + daily tasks
+  --help, -h          Show this help
+
+${GREEN}Examples:${NC}
+  ./ai-dev maintenance            # Run daily maintenance
+  ./ai-dev maintenance weekly     # Run weekly maintenance
+  ./ai-dev maintenance monthly    # Run monthly maintenance
+
+${GREEN}What it does:${NC}
+  Daily:   Update .gitignore, clean obsolete files, health check
+  Weekly:  + Delete old archived files, update documentation
+  Monthly: + Deep analysis, duplicate detection, git optimization
+
+${GREEN}Note:${NC} All maintenance tasks are zero-friction and safe.
+EOF
+                exit 0
+                ;;
+            daily|weekly|monthly)
+                info "Running $MAINTENANCE_LEVEL repository maintenance"
+                export MAINTENANCE_LEVEL="$MAINTENANCE_LEVEL"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/periodic_repository_maintenance.md" "Repository Maintenance"
+                ;;
+            *)
+                error "Unknown maintenance level: $MAINTENANCE_LEVEL"
+                echo "Available levels: daily, weekly, monthly"
+                echo "Run './ai-dev maintenance --help' for more information"
+                exit 1
+                ;;
+        esac
+        ;;
+
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, test-workflow-calling, test-simple-audit"
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance"
         show_help
         exit 1
         ;;

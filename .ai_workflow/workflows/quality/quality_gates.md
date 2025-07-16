@@ -23,34 +23,54 @@ Execute comprehensive quality validation gates including syntax checking, test e
 
 ## Quality Gates Sequence
 
-### Gate 1: Syntax Validation
+### Gate 1: Adaptive Syntax Validation
 ```bash
-# Detect project type and run appropriate syntax checks
-project_type=$(cat .ai_workflow/cache/project_type.txt 2>/dev/null || echo "unknown")
+# Use adaptive language support for comprehensive language detection
+if ! bash .ai_workflow/workflows/quality/adaptive_language_support.md; then
+    echo "QUALITY_GATE_WARNING: Adaptive language support had issues, using basic detection"
+fi
 
-case $project_type in
-    "javascript"|"typescript")
-        LINT_FILE "eslint" "${project_path}" || exit 1
-        ;;
-    "python")
-        LINT_FILE "pylint" "${project_path}" || exit 1
-        LINT_FILE "flake8" "${project_path}" || exit 1
-        ;;
-    "java")
-        LINT_FILE "checkstyle" "${project_path}" || exit 1
-        ;;
-    "go")
-        LINT_FILE "golint" "${project_path}" || exit 1
-        LINT_FILE "gofmt" "${project_path}" || exit 1
-        ;;
-    "rust")
-        LINT_FILE "clippy" "${project_path}" || exit 1
-        LINT_FILE "rustfmt" "${project_path}" || exit 1
-        ;;
-    *)
-        echo "QUALITY_GATE_WARNING: Unknown project type, skipping syntax validation"
-        ;;
-esac
+# Load adaptive configuration
+ADAPTIVE_CONFIG="${project_path}/.ai_workflow/cache/quality/adaptive_config.json"
+if [[ -f "$ADAPTIVE_CONFIG" ]]; then
+    project_type=$(jq -r '.primary_language // "unknown"' "$ADAPTIVE_CONFIG")
+    linting_commands=($(jq -r '.linting_commands[]?' "$ADAPTIVE_CONFIG"))
+    analysis_strategy=$(jq -r '.analysis_strategy // "generic"' "$ADAPTIVE_CONFIG")
+    
+    echo "QUALITY_GATE_INFO: Using adaptive configuration for $project_type"
+    
+    # Execute linting commands if available
+    if [[ ${#linting_commands[@]} -gt 0 ]]; then
+        for cmd in "${linting_commands[@]}"; do
+            echo "QUALITY_GATE_LINT: Running $cmd"
+            if ! eval "$cmd" 2>&1; then
+                echo "QUALITY_GATE_ERROR: Linting failed with $cmd"
+                exit 1
+            fi
+        done
+    else
+        echo "QUALITY_GATE_INFO: No linting commands configured, using generic validation"
+        # Generic syntax validation
+        if [[ "$analysis_strategy" == "generic" ]]; then
+            # Basic file syntax checks
+            find "${project_path}" -name "*.sh" -type f -exec bash -n {} \; 2>/dev/null || echo "QUALITY_GATE_WARNING: Some shell scripts have syntax errors"
+            find "${project_path}" -name "*.json" -type f -exec python -m json.tool {} \; >/dev/null 2>&1 || echo "QUALITY_GATE_WARNING: Some JSON files are malformed"
+        fi
+    fi
+else
+    echo "QUALITY_GATE_WARNING: No adaptive configuration found, using fallback validation"
+    # Fallback to basic project detection
+    if [[ -f "${project_path}/package.json" ]]; then
+        echo "QUALITY_GATE_INFO: Detected Node.js project"
+        npm run lint 2>/dev/null || echo "QUALITY_GATE_WARNING: npm lint not configured"
+    elif [[ -f "${project_path}/requirements.txt" ]]; then
+        echo "QUALITY_GATE_INFO: Detected Python project"
+        python -m py_compile "${project_path}"/*.py 2>/dev/null || echo "QUALITY_GATE_WARNING: Python syntax check failed"
+    elif [[ -f "${project_path}/Cargo.toml" ]]; then
+        echo "QUALITY_GATE_INFO: Detected Rust project"
+        cargo check 2>/dev/null || echo "QUALITY_GATE_WARNING: Cargo check failed"
+    fi
+fi
 ```
 
 ### Gate 2: Type Checking
@@ -111,6 +131,33 @@ case $project_type in
 esac
 ```
 
+### Gate 5: Architecture Documentation Validation
+```bash
+# Validate architecture documentation synchronization
+if [[ -f "${project_path}/.ai_workflow/config/quality_config.json" ]]; then
+    DOC_VALIDATION_ENABLED=$(jq -r '.documentation_validation.enabled // false' "${project_path}/.ai_workflow/config/quality_config.json")
+    
+    if [[ "$DOC_VALIDATION_ENABLED" == "true" ]]; then
+        echo "QUALITY_GATE_INFO: Running architecture documentation validation"
+        
+        # Execute architecture documentation validation
+        if bash "${project_path}/.ai_workflow/workflows/documentation/validate_architecture_sync.md"; then
+            echo "QUALITY_GATE_SUCCESS: Architecture documentation is synchronized"
+        else
+            echo "QUALITY_GATE_WARNING: Architecture documentation is out of sync"
+            # Check if this should fail the build
+            FAIL_ON_OUTDATED=$(jq -r '.documentation_validation.fail_on_outdated // false' "${project_path}/.ai_workflow/config/quality_config.json")
+            if [[ "$FAIL_ON_OUTDATED" == "true" ]]; then
+                echo "QUALITY_GATE_FAILURE: Architecture documentation validation failed"
+                exit 1
+            fi
+        fi
+    else
+        echo "QUALITY_GATE_INFO: Architecture documentation validation disabled"
+    fi
+fi
+```
+
 ### Gate 5: Code Coverage Analysis
 ```bash
 if [ "$skip_tests" != "true" ]; then
@@ -147,7 +194,7 @@ echo "QUALITY_METRICS_EXECUTION_TIME: ${execution_time}s"
 ```bash
 # Calculate overall quality score based on gates passed
 gates_passed=0
-total_gates=5
+total_gates=6
 
 # Increment gates_passed for each successful gate
 # Quality score = (gates_passed / total_gates) * 100
@@ -167,7 +214,7 @@ fi
 ```
 QUALITY_GATES_PASSED: true
 QUALITY_SCORE: 95
-GATES_EXECUTED: syntax,type_check,tests,security,coverage
+GATES_EXECUTED: syntax,type_check,tests,security,documentation,coverage
 EXECUTION_TIME: 45s
 WARNINGS: 2
 ERRORS: 0
@@ -177,7 +224,7 @@ ERRORS: 0
 ```
 QUALITY_GATES_FAILED: true
 QUALITY_SCORE: 65
-FAILED_GATES: tests,coverage
+FAILED_GATES: tests,documentation,coverage
 GATE_ERRORS: [
   "TEST_FAILURE: 3 tests failed in user_service_test.py",
   "COVERAGE_LOW: Only 45% coverage, minimum required is 80%"

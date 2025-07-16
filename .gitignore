@@ -1,14 +1,13 @@
-# Common ignores
-node_modules
-.env
-.DS_Store
+# === CORE FRAMEWORK .gitignore ===
+# This file defines what should NOT be in the repository
+# Goal: Keep only essential files for framework functionality
 
-# IDE and Editor configurations
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# === DEVELOPMENT/INTERNAL FILES ===
+# Development workspace (internal use only)
+.dev_workspace/
+plan_de_trabajo.md
+roadmap_interno.md
+internal_planning.md
 
 # Claude and AI tool configurations
 .claude/
@@ -16,83 +15,44 @@ node_modules
 .openai/
 claude_sessions/
 *.claude
-
-# OS-specific files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-.temp/
-
-# Logs and monitoring
-*.log
-token_usage.log
-error.log
-debug.log
-
-# Python artifacts
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.so
-.coverage
-.pytest_cache/
-
-# Node.js artifacts
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Generated files
-/PRPs/generated/
-/dist/
-/build/
-/out/
-
-# Environment variables
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-
-# Backup files
-*.bak
-*.backup
-*.orig
-
-# Framework-specific ignores
-.gemini_workflow/
-.ai_temp/
-workflow_cache/
-
-# Internal planning and roadmap files
-plan_de_trabajo.md
-roadmap_interno.md
-internal_planning.md
-
-# Internal development documentation
 CLAUDE.md
 claude_instructions.md
-dev_guide.md
-funding_emoji_guide.md
-update_funding.md
-*_guide.md
 
-# Security and sensitive files
-*.key
-*.pem
-*.cert
-secrets.json
-credentials.json
+# === GENERATED/RUNTIME FILES ===
+# Framework logs and cache
+.ai_workflow/logs/
+.ai_workflow/cache/
+.ai_workflow/obsolete_files/
+.ai_workflow/audit_reports/
+.ai_workflow/backups/
+.ai_workflow/_project_state.log
+.ai_workflow/consolidation_*.md
 
+# User project runtime files
+*.log
+*.tmp
+*.temp
+*.cache
+*_backup*
+*_old*
+*_deprecated*
+*diagnostic_*.txt
+*_state.log
+consolidation_*.md
+
+# === TESTING/TEMPORARY FILES ===
+# Basic test files (keep integration tests)
+.ai_workflow/testing/test_*.md
+.ai_workflow/testing/simple_*.md
+.ai_workflow/testing/basic_*.md
+!.ai_workflow/testing/integration_test*.md
+!.ai_workflow/testing/edge_cases_test*.md
+
+# Generated reports
+integration_test_report.md
+*_test_report*.md
+
+# === CAPTURES AND MEDIA ===
 # Screenshots and captures
 capturas/
 screenshots/
@@ -100,3 +60,86 @@ screenshots/
 *.jpg
 *.jpeg
 *.gif
+*.bmp
+*.webp
+
+# === OS AND IDE SPECIFIC ===
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.kate-swp
+*.sublime-*
+.vim/
+
+# === LANGUAGE SPECIFIC ===
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# === SECURITY AND CREDENTIALS ===
+# Environment variables
+.env*
+*.key
+*.pem
+*.cert
+*.crt
+secrets.json
+credentials.json
+
+# === BACKUP AND RECOVERY ===
+*.bak
+*.backup
+*.orig
+*.rej
+
+# === CACHE AND TEMPORARY DIRECTORIES ===
+.cache/
+.temp/
+.tmp/
+workflow_cache/
+temp_files/

@@ -1,38 +1,57 @@
-# Detect Project Type Workflow
+# Project Type Detection Workflow
 
 ## Purpose
-Automatically identify the programming language, framework, and build system of a project to enable appropriate quality validation, tool selection, and optimization strategies.
+Automatically detect project type, programming languages, and framework configurations to enable adaptive quality validation and tool configuration.
 
-## When to Use
-- At the start of any workflow that needs language-specific tools
-- Before executing quality gates
-- During project initialization
-- When validating dependencies
-
-## Prerequisites
-- Read access to project directory
-- Valid project path
+## Design Philosophy
+- **Adaptive Detection**: Gracefully handle unknown languages and frameworks
+- **Extensible Configuration**: Easy to add support for new languages without code changes
+- **Fallback Strategy**: Always provide meaningful defaults when detection fails
+- **Multi-Language Support**: Detect and handle polyglot projects
 
 ## Input Parameters
-- `project_path`: Path to the project directory to analyze
-- `cache_result`: Boolean to cache detection result (default: true)
-- `force_redetect`: Boolean to ignore cached results (default: false)
+- `PROJECT_PATH`: Path to project directory (default: current directory)
+- `CACHE_RESULT`: Boolean to cache detection result (default: true)
+- `FORCE_REDETECT`: Boolean to ignore cached results (default: false)
 
-## Detection Algorithm
+## Workflow Steps
 
-### Step 1: Check Cache
+### 1. Initialize Detection Environment
 ```bash
-cache_file=".ai_workflow/cache/project_type.txt"
-cache_metadata=".ai_workflow/cache/project_detection_meta.json"
+# Create detection cache directory
+DETECTION_DIR=".ai_workflow/cache/quality"
+mkdir -p "$DETECTION_DIR"
 
-if [ "$force_redetect" != "true" ] && FILE_EXISTS "$cache_file"; then
-    # Check if cache is still valid (project files haven't changed significantly)
-    last_detection=$(cat "$cache_metadata" 2>/dev/null | grep "timestamp" | cut -d'"' -f4)
-    if [ -n "$last_detection" ]; then
-        # Cache is valid for 24 hours or until key files change
-        echo "PROJECT_TYPE_CACHED: Using cached detection result"
-        cat "$cache_file"
-        exit 0
+# Initialize detection results
+DETECTION_RESULTS="$DETECTION_DIR/project_config.json"
+echo '{
+  "timestamp": "'$(date -Iseconds)'",
+  "primary_language": "unknown",
+  "secondary_languages": [],
+  "frameworks": [],
+  "build_tools": [],
+  "linting_commands": [],
+  "test_commands": [],
+  "type_check_commands": [],
+  "security_scan_commands": [],
+  "package_managers": [],
+  "confidence_score": 0,
+  "detection_strategy": "automatic"
+}' > "$DETECTION_RESULTS"
+
+PROJECT_PATH="${PROJECT_PATH:-$(pwd)}"
+
+# Check cache if not forcing redetection
+if [[ "$FORCE_REDETECT" != "true" && -f "$DETECTION_RESULTS" ]]; then
+    # Check if cache is less than 24 hours old
+    cache_timestamp=$(jq -r '.timestamp // ""' "$DETECTION_RESULTS")
+    if [[ -n "$cache_timestamp" ]]; then
+        cache_age=$(( $(date +%s) - $(date -d "$cache_timestamp" +%s) ))
+        if [[ $cache_age -lt 86400 ]]; then
+            echo "Using cached project detection results"
+            cat "$DETECTION_RESULTS"
+            exit 0
+        fi
     fi
 fi
 ```
