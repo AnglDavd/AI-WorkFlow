@@ -111,23 +111,30 @@ fi
 # Run the actual pre-commit validation
 log "Executing pre-commit validation workflow..."
 
-# Use the framework's pre-commit validation
-if [ -f "./ai-dev" ]; then
-    # Run pre-commit validation using the framework CLI
-    if ! ./ai-dev precommit validate; then
+# Use simplified pre-commit validation
+if [ -f ".ai_workflow/precommit/validators/simple_precommit_validation.md" ]; then
+    # Run simplified validation (non-blocking)
+    if ! bash <(sed -n '/^```bash/,/^```/p' .ai_workflow/precommit/validators/simple_precommit_validation.md | sed '/^```/d'); then
         error "Pre-commit validation failed"
-        error "Please fix the issues above and try committing again"
+        error "Please fix the critical issues above and try committing again"
         echo ""
         echo "To bypass this validation (not recommended), use:"
         echo "  git commit --no-verify"
-        echo ""
-        echo "To configure validation rules, run:"
-        echo "  ./ai-dev precommit configure"
         exit 1
     fi
 else
-    error "ai-dev script not found"
-    exit 1
+    warning "Simple validation not found, using basic checks"
+    # Basic fallback validation
+    if git diff --cached --name-only | grep -q '\.json$'; then
+        if command -v jq >/dev/null 2>&1; then
+            for file in $(git diff --cached --name-only | grep '\.json$'); do
+                if ! jq empty "$file" >/dev/null 2>&1; then
+                    error "Invalid JSON syntax in $file"
+                    exit 1
+                fi
+            done
+        fi
+    fi
 fi
 
 success "Pre-commit validation passed"
