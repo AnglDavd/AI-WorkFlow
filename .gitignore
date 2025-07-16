@@ -28,6 +28,14 @@ claude_instructions.md
 .ai_workflow/_project_state.log
 .ai_workflow/consolidation_*.md
 
+# Framework backup and analysis files
+.ai_workflow/analysis/
+.ai_workflow/precommit/backup_*/
+.ai_workflow/precommit/reports/
+.ai_workflow/precommit/backup_config/
+*.backup.*
+backup_*
+
 # User project runtime files
 *.log
 *.tmp

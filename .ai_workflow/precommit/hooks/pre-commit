@@ -32,16 +32,16 @@ success() {
 # === AUTOMATIC QUALITY VALIDATION ===
 echo "🔍 Running automatic quality validation..."
 if [[ "${QUALITY_VALIDATION_ENABLED:-true}" != "false" ]]; then
-    PROJECT_PATH="$(pwd)" bash "$PROJECT_ROOT/.ai_workflow/workflows/quality/quality_gates.md"
-    if [[ $? -ne 0 ]]; then
+    cd "$PROJECT_ROOT"
+    if PROJECT_PATH="$(pwd)" bash <(sed -n '/^```bash/,/^```/p' .ai_workflow/workflows/quality/quality_gates.md | sed '/^```/d'); then
+        success "✅ Quality validation passed"
+    else
         error "❌ Quality validation failed. Use --no-verify to bypass or fix issues."
         if [[ "${QUALITY_VALIDATION_STRICT:-false}" == "true" ]]; then
             exit 1
         else
             echo "⚠️  Quality issues detected but not blocking commit (strict mode disabled)"
         fi
-    else
-        success "✅ Quality validation passed"
     fi
 else
     echo "⏭️  Quality validation disabled"
