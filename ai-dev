@@ -966,6 +966,16 @@ EOF
         execute_workflow "${AI_WORKFLOW_DIR}/testing/simple_audit_test.md" "Simple Audit Test"
         ;;
 
+    detect-manual)
+        shift
+        if [[ -x "$AI_WORKFLOW_DIR/scripts/execute_manual_detection.sh" ]]; then
+            bash "$AI_WORKFLOW_DIR/scripts/execute_manual_detection.sh" "$@"
+        else
+            error "Manual detection script not found"
+            exit 1
+        fi
+        ;;
+
     precommit)
         # Handle precommit subcommands
         SUBCOMMAND=${1:-validate}
@@ -1153,7 +1163,7 @@ EOF
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance"
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual"
         show_help
         exit 1
         ;;
