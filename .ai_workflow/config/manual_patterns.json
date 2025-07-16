@@ -1,0 +1,40 @@
+{
+  "manual_indicators": [
+    {
+      "pattern": "read -p",
+      "description": "Manual user input required",
+      "severity": "high",
+      "auto_solution": "Create workflow with environment variables or config file"
+    },
+    {
+      "pattern": "manually.*run",
+      "description": "Manual execution required",
+      "severity": "high",
+      "auto_solution": "Create CLI command or workflow automation"
+    },
+    {
+      "pattern": "user.*confirm",
+      "description": "User confirmation required",
+      "severity": "high",
+      "auto_solution": "Implement auto-confirmation with --force flag override"
+    },
+    {
+      "pattern": "check.*manually",
+      "description": "Manual verification required",
+      "severity": "high",
+      "auto_solution": "Implement automated validation workflow"
+    },
+    {
+      "pattern": "configure.*manually",
+      "description": "Manual configuration required",
+      "severity": "high",
+      "auto_solution": "Create auto-configuration workflow"
+    },
+    {
+      "pattern": "you.*need.*to",
+      "description": "Manual action required from user",
+      "severity": "high",
+      "auto_solution": "Automate the required action"
+    }
+  ]
+}

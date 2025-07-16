@@ -1,0 +1,19 @@
+Git Hooks Installation Report
+Generated: mié 16 jul 2025 17:33:26 -04
+Framework: AI Development Framework
+
+Installation Summary:
+- Repository: /home/ainu/Documentos/Project_Manager
+- Hooks installed: 3
+- Hooks backed up: 3
+- Backup location: .ai_workflow/precommit/backup_hooks_20250716_173325
+
+Installed Hooks:
+  ✅ pre-commit
+  ✅ pre-push
+  ✅ commit-msg
+
+Configuration:
+  Validation rules: /home/ainu/Documentos/Project_Manager/.ai_workflow/config/framework.json
+  Framework hooks: .ai_workflow/precommit/hooks
+
