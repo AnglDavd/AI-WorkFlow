@@ -40,4 +40,4 @@ git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
 - Organizations wanting transparent AI automation
 - Teams looking to optimize development costs and workflows
 
-Built with ❤️ for the developer community. MIT Licensed.
+Built with ❤️ by AnglDavd using Claude Code. Custom Dual Licensed.

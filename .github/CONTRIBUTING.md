@@ -235,7 +235,7 @@ Brief description of changes made
 
 ## 📄 License
 
-By contributing to this project, you agree that your contributions will be licensed under the MIT License.
+By contributing to this project, you agree that your contributions will be licensed under the Custom Dual License, granting the project maintainer rights to use your contributions in both non-commercial and commercial contexts.
 
 ---
 
