@@ -6,7 +6,10 @@ This guide provides a comprehensive overview of the AI-Assisted Development Fram
 
 **📋 For complete version information and development status, see [ARCHITECTURE.md - Framework Status](ARCHITECTURE.md#framework-status)**
 
-**Current Version:** v0.4.2-beta (Beta Phase with Advanced Features)
+**Current Version:** v1.0.0 (Stable Release - Production Ready)  
+**Developer:** AnglDavd using Claude Code (Solo Developer Project)  
+**License:** Custom Dual License  
+**Cross-Platform Support:** Linux (full), macOS (good), Windows (limited via Git Bash/WSL)
 **Major Features Completed:**
 - ✅ **Automatic Quality Validation**: Adaptive language support for 30+ programming languages
 - ✅ **Zero-Friction Automation**: Seamless background validation and pre-commit systems
@@ -167,17 +170,34 @@ The `ai-dev` script is your primary interface with the AI-Assisted Development F
 
 **📋 For complete command reference and technical details, see [ARCHITECTURE.md - CLI Command Registry](ARCHITECTURE.md#command-registry)**
 
-**Primary Workflow Commands:**
+**Core Workflow Commands:**
 -   **`./ai-dev setup`**: Initializes a new project with the framework
 -   **`./ai-dev generate <prd_file>`**: Generate tasks from a Product Requirements Document
 -   **`./ai-dev run <prp_file>`**: Execute a Project-Response-Plan file
--   **`./ai-dev quality <path>`**: Run quality validation with adaptive language support
+-   **`./ai-dev optimize <prompt_file>`**: Optimize prompt files using best practices
+-   **`./ai-dev performance <subcommand>`**: Performance optimization and monitoring
 
-**Advanced Commands:**
+**Quality & Security Commands:**
+-   **`./ai-dev quality <path>`**: Run quality validation with adaptive language support
 -   **`./ai-dev audit`**: Run comprehensive security audit
 -   **`./ai-dev precommit <subcommand>`**: Pre-commit validation and quality assurance
--   **`./ai-dev configure`**: Configure framework settings
+
+**Framework Management Commands:**
+-   **`./ai-dev configure [options]`**: Configure framework settings
 -   **`./ai-dev diagnose`**: Diagnose framework health and status
+-   **`./ai-dev sync <subcommand>`**: Framework synchronization and external feedback
+
+**Documentation & Maintenance Commands:**
+-   **`./ai-dev generate-architecture`**: Generate project architecture documentation
+-   **`./ai-dev update-architecture`**: Update existing architecture documentation
+-   **`./ai-dev cleanup [options]`**: Manage obsolete files and repository cleanup
+-   **`./ai-dev maintenance [level]`**: Run periodic repository maintenance
+-   **`./ai-dev platform`**: Show platform compatibility information
+
+**Utility Commands:**
+-   **`./ai-dev help`**: Show all available commands
+-   **`./ai-dev version`**: Framework version and platform information
+-   **`./ai-dev status`**: Current framework status
 
 ### Advanced Features
 

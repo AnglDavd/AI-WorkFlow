@@ -153,4 +153,4 @@ project-name/
 └── ... (rest of your project files)
 ```
 
-Remember: This framework is about **one-pass implementation success through comprehensive context**. Every PRP should contain enough context for an AI agent to implement working code without additional research.
+Core principle: This framework is about **one-pass implementation success through comprehensive context**. Every PRP should contain enough context for an AI agent to implement working code without additional research.

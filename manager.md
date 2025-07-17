@@ -10,7 +10,10 @@ Welcome to the AI Development Framework, a comprehensive system for building and
 
 **📋 For complete version information and development status, see [ARCHITECTURE.md - Framework Status](ARCHITECTURE.md#framework-status)**
 
-**Current Version:** v1.0.0 (Stable Release - Production Ready)
+**Current Version:** v1.0.0 (Stable Release - Production Ready)  
+**Developer:** AnglDavd using Claude Code (Solo Developer Project)  
+**License:** Custom Dual License  
+**Cross-Platform Support:** Linux (full), macOS (good), Windows (limited via Git Bash/WSL)
 **Key Features:**
 - ✅ Automatic quality validation with adaptive language support
 - ✅ Zero-friction automation philosophy
@@ -38,7 +41,7 @@ The primary way to interact with this framework is through the `ai-dev` command-
 ./ai-dev help
 ```
 
-### Core Commands
+### Core Commands (15 Total Commands)
 
 -   **`./ai-dev setup`**
     -   Initiates the interactive setup to configure the framework for a new or existing project. **This is the first command you should run.**
@@ -49,7 +52,13 @@ The primary way to interact with this framework is through the `ai-dev` command-
 -   **`./ai-dev run <path_to_prp.md>`**
     -   Executes a specific PRP using the AI agent engine, which will then write code, run tests, and attempt to complete the task.
 
-### New Quality & Automation Commands
+-   **`./ai-dev optimize <prompt_file>`**
+    -   Optimizes prompt files using best practices and token economy analysis.
+
+-   **`./ai-dev performance <subcommand>`**
+    -   Performance optimization and monitoring for the framework.
+
+### Quality & Security Commands
 
 -   **`./ai-dev quality <path>`**
     -   Runs comprehensive quality validation with adaptive language support (30+ languages). Works automatically in the background.
@@ -60,21 +69,46 @@ The primary way to interact with this framework is through the `ai-dev` command-
 -   **`./ai-dev precommit <subcommand>`**
     -   Manages pre-commit validation system. Subcommands: `validate`, `install-hooks`, `configure`, `report`.
 
-### Advanced Commands
-
--   **`./ai-dev optimize <prompt_file>`**
-    -   Optimizes prompt files using best practices and token economy analysis.
+### Framework Management Commands
 
 -   **`./ai-dev sync <subcommand>`**
     -   Synchronizes framework with updates and community improvements.
     -   **`./ai-dev sync feedback`** - Integrate external community feedback from GitHub issues/PRs
-    -   **`./ai-dev sync framework`** - Synchronize framework updates (planned)
+    -   **`./ai-dev sync framework`** - Synchronize framework updates
 
--   **`./ai-dev configure`**
+-   **`./ai-dev configure [options]`**
     -   Interactive configuration management for framework settings.
 
 -   **`./ai-dev diagnose`**
     -   Comprehensive health check and diagnostic reporting for the framework.
+
+### Documentation & Maintenance Commands
+
+-   **`./ai-dev generate-architecture`**
+    -   Generate project architecture documentation.
+
+-   **`./ai-dev update-architecture`**
+    -   Update existing architecture documentation.
+
+-   **`./ai-dev cleanup [options]`**
+    -   Manage obsolete files and repository cleanup.
+
+-   **`./ai-dev maintenance [level]`**
+    -   Run periodic repository maintenance.
+
+-   **`./ai-dev platform`**
+    -   Show platform compatibility information.
+
+### Utility Commands
+
+-   **`./ai-dev help`**
+    -   Show all available commands.
+
+-   **`./ai-dev version`**
+    -   Framework version and platform information.
+
+-   **`./ai-dev status`**
+    -   Current framework status.
 
 ---
 
