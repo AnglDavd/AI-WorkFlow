@@ -1,0 +1,359 @@
+name: Repository Cleanliness Audit
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC - CRITICAL for file auditing
+    - cron: '0 6 * * *'
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  critical-file-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for comprehensive audit
+    
+    - name: Set up environment
+      run: |
+        chmod +x ./ai-dev
+        chmod +x ./.ai_workflow/scripts/check_repo_cleanliness.sh
+        export AUTO_CONFIRM=true
+        export CI_MODE=true
+        export AUDIT_MODE=critical
+    
+    - name: Run Critical Repository Cleanliness Check
+      run: |
+        echo "🚨 CRITICAL: Running repository cleanliness audit..."
+        
+        # Run the comprehensive cleanliness check
+        ./.ai_workflow/scripts/check_repo_cleanliness.sh > cleanliness_report.txt
+        
+        # Check exit code
+        if [ $? -ne 0 ]; then
+          echo "❌ CRITICAL: Repository cleanliness check failed"
+          exit 1
+        fi
+        
+        echo "✅ Repository cleanliness check passed"
+    
+    - name: Audit Tracked Files for Unwanted Content
+      run: |
+        echo "🔍 Auditing all tracked files for unwanted content..."
+        
+        # Create comprehensive file audit
+        cat > file_audit.sh << 'EOF'
+#!/bin/bash
+        
+# Critical file patterns that should NEVER be in repository
+CRITICAL_PATTERNS=(
+  "\.vscode/"
+  "\.idea/"
+  "\.claude$"
+  "\.DS_Store$"
+  "\.log$"
+  "\.tmp$"
+  "\.temp$"
+  "\.cache$"
+  "__pycache__"
+  "node_modules"
+  "\.env$"
+  "\.key$"
+  "\.pem$"
+  "\.cert$"
+  "\.crt$"
+  "plan_de_trabajo\.md$"
+  "roadmap_interno\.md$"
+  "internal_planning\.md$"
+  "test_production/"
+  "ai-dev\.original$"
+  ".*\.original$"
+  ".*_backup.*"
+  ".*_old.*"
+  ".*_deprecated.*"
+  "progress_report\.md$"
+  "feedback_integration_.*\.md$"
+  ".*_report_.*\.md$"
+  "capturas/"
+  "screenshots/"
+  "\.swp$"
+  "\.swo$"
+  "\.bak$"
+  "\.backup$"
+)
+
+echo "🔍 Checking for critical unwanted files..."
+ISSUES_FOUND=0
+
+for pattern in "${CRITICAL_PATTERNS[@]}"; do
+  if git ls-files | grep -q "$pattern"; then
+    echo "❌ CRITICAL: Found unwanted files matching pattern: $pattern"
+    git ls-files | grep "$pattern" | sed 's/^/  - /'
+    ISSUES_FOUND=1
+  fi
+done
+
+if [ $ISSUES_FOUND -eq 1 ]; then
+  echo "🚨 CRITICAL: Unwanted files found in repository!"
+  exit 1
+else
+  echo "✅ No unwanted files found"
+fi
+EOF
+        
+        chmod +x file_audit.sh
+        ./file_audit.sh
+    
+    - name: Check File Sizes for Large Files
+      run: |
+        echo "📊 Checking for large files that shouldn't be in repository..."
+        
+        # Find files larger than 1MB
+        find . -type f -size +1M -not -path "./.git/*" > large_files.txt
+        
+        if [ -s large_files.txt ]; then
+          echo "⚠️  Large files found (>1MB):"
+          cat large_files.txt
+          
+          # Check if any large files are tracked
+          while read -r file; do
+            if git ls-files --error-unmatch "$file" 2>/dev/null; then
+              echo "❌ CRITICAL: Large file is being tracked: $file"
+              ls -lh "$file"
+              exit 1
+            fi
+          done < large_files.txt
+        else
+          echo "✅ No large files found"
+        fi
+    
+    - name: Audit .gitignore Effectiveness
+      run: |
+        echo "🔍 Auditing .gitignore effectiveness..."
+        
+        # Check if .gitignore is working properly
+        cat > gitignore_audit.sh << 'EOF'
+#!/bin/bash
+
+echo "📋 Testing .gitignore patterns..."
+
+# Test patterns that should be ignored
+TEST_PATTERNS=(
+  "test_file.log"
+  "test_file.tmp"
+  "test_file.cache"
+  "test_production/test.txt"
+  "ai-dev.original"
+  ".vscode/settings.json"
+  ".idea/workspace.xml"
+  "progress_report.md"
+  "feedback_integration_20250101_120000.md"
+)
+
+GITIGNORE_ISSUES=0
+
+for pattern in "${TEST_PATTERNS[@]}"; do
+  # Create test file
+  mkdir -p "$(dirname "$pattern")" 2>/dev/null
+  touch "$pattern"
+  
+  # Check if git would track it
+  if git check-ignore "$pattern" >/dev/null 2>&1; then
+    echo "✅ Pattern ignored correctly: $pattern"
+  else
+    echo "❌ Pattern NOT ignored: $pattern"
+    GITIGNORE_ISSUES=1
+  fi
+  
+  # Clean up test file
+  rm -f "$pattern"
+  rmdir "$(dirname "$pattern")" 2>/dev/null || true
+done
+
+if [ $GITIGNORE_ISSUES -eq 1 ]; then
+  echo "🚨 CRITICAL: .gitignore is not working properly!"
+  exit 1
+else
+  echo "✅ .gitignore is working correctly"
+fi
+EOF
+        
+        chmod +x gitignore_audit.sh
+        ./gitignore_audit.sh
+    
+    - name: Generate Critical Audit Report
+      if: always()
+      run: |
+        echo "📊 Generating critical audit report..."
+        
+        cat > critical_audit_report.md << 'EOF'
+# 🚨 CRITICAL Repository Cleanliness Audit Report
+
+## Executive Summary
+- **Audit Date**: $(date)
+- **Repository**: ${{ github.repository }}
+- **Commit**: ${{ github.sha }}
+- **Audit Type**: Critical File Cleanliness
+
+## Audit Results
+
+### Repository Cleanliness Check
+```
+EOF
+        cat cleanliness_report.txt >> critical_audit_report.md
+        
+        cat >> critical_audit_report.md << 'EOF'
+```
+
+### Large Files Check
+```
+EOF
+        if [ -s large_files.txt ]; then
+          cat large_files.txt >> critical_audit_report.md
+        else
+          echo "No large files found" >> critical_audit_report.md
+        fi
+        
+        cat >> critical_audit_report.md << 'EOF'
+```
+
+## Critical Findings
+- **Unwanted Files**: $(if [ -f "unwanted_files.txt" ]; then wc -l < unwanted_files.txt; else echo "0"; fi)
+- **Large Files**: $(if [ -s large_files.txt ]; then wc -l < large_files.txt; else echo "0"; fi)
+- **Repository Status**: $(if [ -f "cleanliness_report.txt" ] && grep -q "✅ Repository is clean" cleanliness_report.txt; then echo "CLEAN"; else echo "ISSUES FOUND"; fi)
+
+## Recommendations
+1. **Immediate Actions**: Remove any unwanted files found
+2. **Prevention**: Ensure .gitignore is comprehensive
+3. **Monitoring**: Continue daily audits
+4. **Team Training**: Educate on file management
+
+## Next Steps
+- [ ] Review all flagged files
+- [ ] Update .gitignore if needed
+- [ ] Clean up unwanted files
+- [ ] Document process improvements
+
+---
+*This audit is CRITICAL for maintaining repository cleanliness*
+*Any issues found require immediate attention*
+EOF
+        
+        # Replace date placeholder
+        sed -i "s/\$(date)/$(date)/g" critical_audit_report.md
+        
+        echo "📋 Critical audit report generated: critical_audit_report.md"
+    
+    - name: Upload Critical Audit Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: critical-audit-report-${{ github.run_number }}
+        path: |
+          critical_audit_report.md
+          cleanliness_report.txt
+          large_files.txt
+        retention-days: 30
+    
+    - name: Create Issue for Critical Findings
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read audit report
+          let auditReport = '';
+          try {
+            auditReport = fs.readFileSync('critical_audit_report.md', 'utf8');
+          } catch (error) {
+            auditReport = 'Error reading audit report';
+          }
+          
+          // Create critical issue
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 CRITICAL: Repository Cleanliness Audit Failed',
+            body: `## 🚨 CRITICAL REPOSITORY CLEANLINESS ISSUE
+
+${auditReport}
+
+## ⚠️ IMMEDIATE ACTION REQUIRED
+
+This audit has detected unwanted files in the repository. This is a critical issue that needs immediate attention.
+
+**Please:**
+1. Review the audit report above
+2. Remove any unwanted files immediately
+3. Update .gitignore to prevent future issues
+4. Run the audit again to verify fixes
+
+**Priority:** 🔴 CRITICAL
+**Impact:** Repository cleanliness compromised
+**Timeline:** Fix within 24 hours`,
+            labels: ['critical', 'repository-cleanliness', 'immediate-action-required']
+          });
+    
+    - name: Fail Build on Critical Issues
+      if: failure()
+      run: |
+        echo "🚨 CRITICAL: Repository cleanliness audit failed"
+        echo "❌ Build failed due to unwanted files in repository"
+        echo "📋 Review the audit report for details"
+        exit 1
+
+  preventive-monitoring:
+    runs-on: ubuntu-latest
+    needs: critical-file-audit
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up preventive monitoring
+      run: |
+        echo "🛡️ Setting up preventive monitoring..."
+        
+        # Create monitoring script
+        cat > preventive_monitor.sh << 'EOF'
+#!/bin/bash
+
+echo "🔍 Preventive file monitoring active..."
+
+# Monitor for common mistake patterns
+WATCH_PATTERNS=(
+  "*.log being added"
+  "*.tmp being added"
+  "test_production/ being added"
+  "*.original being added"
+  "IDE config files being added"
+)
+
+echo "👀 Monitoring for these patterns:"
+for pattern in "${WATCH_PATTERNS[@]}"; do
+  echo "  - $pattern"
+done
+
+# Check recent commits for issues
+echo "📊 Checking last 10 commits for issues..."
+git log --name-only --oneline -10 | grep -E '\.(log|tmp|original|cache)$|test_production/|\.vscode/|\.idea/' || echo "✅ No issues in recent commits"
+
+echo "✅ Preventive monitoring complete"
+EOF
+        
+        chmod +x preventive_monitor.sh
+        ./preventive_monitor.sh
+    
+    - name: Update Monitoring Status
+      run: |
+        echo "📊 Repository cleanliness monitoring is ACTIVE"
+        echo "🔄 Next audit: Daily at 6 AM UTC"
+        echo "⚠️  Any issues will trigger immediate alerts"
+        echo "✅ Preventive monitoring complete"
