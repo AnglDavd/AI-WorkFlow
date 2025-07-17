@@ -1,0 +1,158 @@
+name: Security Audit & Compliance
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    name: Framework Security Audit
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Environment
+      run: |
+        chmod +x ./ai-dev
+        echo "🛡️ Security audit starting..."
+        
+    - name: Framework Security Audit
+      run: |
+        echo "🔍 Running comprehensive security audit..."
+        ./ai-dev audit || {
+          echo "❌ Security audit failed"
+          exit 1
+        }
+        
+    - name: Sensitive Data Detection
+      run: |
+        echo "🔍 Scanning for sensitive data..."
+        
+        # Check for common sensitive patterns
+        if grep -r -i -E "(password|passwd|pwd|secret|token|key|api_key|access_key)" . \
+           --exclude-dir=.git \
+           --exclude-dir=node_modules \
+           --exclude="*.log" \
+           --exclude="*.md" \
+           --exclude="security.yml"; then
+          echo "⚠️ Potential sensitive data found"
+          echo "Please review and remove sensitive information"
+          exit 1
+        fi
+        
+        echo "✅ No sensitive data patterns detected"
+        
+    - name: File Permission Check
+      run: |
+        echo "🔍 Checking file permissions..."
+        
+        # Check for overly permissive files
+        if find . -type f -perm /o+w -not -path "./.git/*"; then
+          echo "⚠️ World-writable files detected"
+          echo "Please fix file permissions for security"
+          exit 1
+        fi
+        
+        echo "✅ File permissions are secure"
+        
+    - name: Dependency Security Check
+      run: |
+        echo "🔍 Checking dependencies..."
+        
+        # Check for known vulnerable patterns in bash scripts
+        if grep -r -i -E "(eval|exec|system|shell_exec)" . \
+           --include="*.sh" \
+           --include="ai-dev" \
+           --exclude-dir=.git; then
+          echo "⚠️ Potentially dangerous command execution found"
+          echo "Please review for security implications"
+        fi
+        
+        echo "✅ Dependency security check completed"
+        
+    - name: Validate Security Policy
+      run: |
+        echo "🔍 Validating security policy compliance..."
+        
+        # Check if security policy exists
+        if [[ ! -f ".github/SECURITY.md" ]]; then
+          echo "❌ Security policy not found"
+          exit 1
+        fi
+        
+        # Check if security policy is up to date
+        if [[ $(find .github/SECURITY.md -mtime +90) ]]; then
+          echo "⚠️ Security policy is over 90 days old"
+          echo "Consider updating security policy"
+        fi
+        
+        echo "✅ Security policy validation passed"
+        
+    - name: Pre-commit Security Validation
+      run: |
+        echo "🔍 Running pre-commit security validation..."
+        ./ai-dev precommit validate
+        
+    - name: Generate Security Report
+      if: always()
+      run: |
+        echo "📊 Generating security report..."
+        mkdir -p .github/reports
+        
+        # Get audit results
+        AUDIT_RESULT=$(./ai-dev audit 2>&1 | tail -n 10)
+        
+        cat > .github/reports/security-report.md << EOF
+        # Security Audit Report
+        **Date**: $(date)
+        **Branch**: ${{ github.ref }}
+        **Commit**: ${{ github.sha }}
+        
+        ## Security Status
+        - Framework Security Audit: ${{ job.status }}
+        - Sensitive Data Detection: ${{ job.status }}
+        - File Permission Check: ${{ job.status }}
+        - Dependency Security: ${{ job.status }}
+        - Policy Compliance: ${{ job.status }}
+        
+        ## Audit Results
+        \`\`\`
+        $AUDIT_RESULT
+        \`\`\`
+        
+        ## Security Recommendations
+        - Keep security policy updated
+        - Regular dependency updates
+        - Monitor for new vulnerabilities
+        - Review file permissions regularly
+        
+        ## Token Security
+        - All external feedback validated for security
+        - No sensitive data in AI processing
+        - Secure token usage optimization
+        EOF
+        
+    - name: Upload Security Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: .github/reports/security-report.md
+        
+    - name: Security Issue Detection
+      if: failure()
+      run: |
+        echo "🚨 Security issues detected!"
+        echo "Please review the security report and fix issues before merging"
+        
+        # Create security issue if needed
+        if [[ "${{ github.event_name }}" == "schedule" ]]; then
+          echo "Creating security issue for tracking..."
+          # Could create GitHub issue here for tracking
+        fi

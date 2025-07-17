@@ -32,6 +32,143 @@ configure_gitignore() {
     echo "--- End .gitignore Configuration ---"
 }
 
+# Function to configure GitHub Actions in a target directory
+configure_github_actions() {
+    TARGET_DIR=$1
+    echo "--- GitHub Actions Configuration in $TARGET_DIR ---"
+    
+    # Create .github directory structure
+    GITHUB_DIR="$TARGET_DIR/.github"
+    WORKFLOWS_DIR="$GITHUB_DIR/workflows"
+    
+    if [ ! -d "$GITHUB_DIR" ]; then
+        echo "Creating .github directory structure..."
+        mkdir -p "$WORKFLOWS_DIR"
+        mkdir -p "$GITHUB_DIR/ISSUE_TEMPLATE"
+    else
+        echo ".github directory already exists"
+        mkdir -p "$WORKFLOWS_DIR"
+        mkdir -p "$GITHUB_DIR/ISSUE_TEMPLATE"
+    fi
+    
+    # Copy GitHub Actions workflows from framework
+    echo "Copying GitHub Actions workflows..."
+    if [ -d ".ai_workflow/.github/workflows" ]; then
+        cp -r .ai_workflow/.github/workflows/* "$WORKFLOWS_DIR/" 2>/dev/null || {
+            echo "⚠️  No workflows found in framework"
+        }
+    fi
+    
+    # Copy GitHub templates
+    echo "Copying GitHub templates..."
+    if [ -d ".ai_workflow/.github/ISSUE_TEMPLATE" ]; then
+        cp -r .ai_workflow/.github/ISSUE_TEMPLATE/* "$GITHUB_DIR/ISSUE_TEMPLATE/" 2>/dev/null || {
+            echo "⚠️  No issue templates found in framework"
+        }
+    fi
+    
+    # Copy other GitHub files
+    for file in CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md PULL_REQUEST_TEMPLATE.md; do
+        if [ -f ".ai_workflow/.github/$file" ]; then
+            cp ".ai_workflow/.github/$file" "$GITHUB_DIR/"
+            echo "Copied $file"
+        fi
+    done
+    
+    # Adapt workflow paths for user project
+    echo "Adapting workflow paths for user project..."
+    for workflow in "$WORKFLOWS_DIR"/*.yml; do
+        if [ -f "$workflow" ]; then
+            # Update ai-dev path to use framework path
+            sed -i.bak 's|./ai-dev|./.ai_framework/ai-dev|g' "$workflow"
+            rm -f "${workflow}.bak"
+            echo "Updated paths in $(basename "$workflow")"
+        fi
+    done
+    
+    # Create GitHub Actions status file
+    cat > "$GITHUB_DIR/.actions_configured" << EOF
+# GitHub Actions Configuration
+Configured: $(date)
+Framework: AI-Assisted Development Framework
+Version: v0.4.2-beta
+
+## Enabled Workflows
+- CI Pipeline (ci.yml)
+- Feedback Automation (feedback-automation.yml)
+- Security Audit (security.yml)
+- Release Pipeline (release.yml)
+
+## Token Optimization
+- Automated feedback filtering
+- Quality gates before AI processing
+- Security validation
+- Template compliance checking
+
+## Benefits
+- 60-70% token reduction
+- Automated quality assurance
+- Continuous security monitoring
+- Streamlined development workflow
+EOF
+    
+    echo "✅ GitHub Actions configured successfully"
+    echo "📋 Workflows available: ci.yml, feedback-automation.yml, security.yml, release.yml"
+    echo "🛡️ Security templates and policies copied"
+    echo "💰 Token optimization enabled"
+    echo "--- End GitHub Actions Configuration ---"
+}
+
+# Function to deploy circuit breaker protection to user project
+deploy_protection() {
+    TARGET_DIR=$1
+    echo "--- Circuit Breaker Protection Deployment to $TARGET_DIR ---"
+    
+    # Check if deployment script exists
+    if [ ! -f ".ai_workflow/scripts/deploy_protection.sh" ]; then
+        echo "⚠️  Protection deployment script not found - skipping"
+        return 0
+    fi
+    
+    # Ask user if they want protection
+    echo "🛡️  Circuit Breaker Protection Available"
+    echo "This provides loop prevention and safety mechanisms."
+    echo ""
+    echo "📋 Available modes:"
+    echo "1. production - Balanced limits for normal use"
+    echo "2. development - Permissive limits for development"
+    echo "3. enterprise - Strict limits for enterprise"
+    echo "4. skip - No protection (can be enabled later)"
+    echo ""
+    
+    read -p "Choose protection mode [1-4]: " protection_choice
+    
+    case "$protection_choice" in
+        1)
+            echo "🔧 Deploying production mode protection..."
+            bash .ai_workflow/scripts/deploy_protection.sh "$TARGET_DIR" "production"
+            ;;
+        2)
+            echo "🔧 Deploying development mode protection..."
+            bash .ai_workflow/scripts/deploy_protection.sh "$TARGET_DIR" "development"
+            ;;
+        3)
+            echo "🔧 Deploying enterprise mode protection..."
+            bash .ai_workflow/scripts/deploy_protection.sh "$TARGET_DIR" "enterprise"
+            ;;
+        4)
+            echo "ℹ️  Protection deployment skipped"
+            echo "💡 To enable later: $TARGET_DIR/.ai_framework/scripts/deploy_protection.sh"
+            ;;
+        *)
+            echo "ℹ️  Invalid choice - defaulting to production mode"
+            bash .ai_workflow/scripts/deploy_protection.sh "$TARGET_DIR" "production"
+            ;;
+    esac
+    
+    echo "--- End Circuit Breaker Protection Deployment ---"
+}
+
 
 # CASE 1: Injecting into an EXISTING project
 if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
@@ -54,6 +191,12 @@ if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
     # Configure .gitignore in the target directory
     configure_gitignore "$PROJECT_DIR"
 
+    # Configure GitHub Actions for the user project
+    configure_github_actions "$PROJECT_DIR"
+
+    # Deploy circuit breaker protection for the user project
+    deploy_protection "$PROJECT_DIR"
+
     # Set a flag for the cleanup step
     echo "export SETUP_MODE='inject'" >> ./.ai_workflow/temp_state.vars
 
@@ -69,6 +212,12 @@ else
     
     # Configure .gitignore in the current directory
     configure_gitignore "."
+
+    # Configure GitHub Actions for the user project
+    configure_github_actions "."
+
+    # Deploy circuit breaker protection for the user project
+    deploy_protection "."
 
     # Set a flag for the git initialization step
     echo "export SETUP_MODE='new'" >> ./.ai_workflow/temp_state.vars

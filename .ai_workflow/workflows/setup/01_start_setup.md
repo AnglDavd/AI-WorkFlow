@@ -1,3 +1,13 @@
+# Start Project Setup
+
+## Purpose
+This node starts the project setup process by gathering the new project's name from the user.
+
+## When to Use
+- Starting a new project setup workflow
+- Initializing project configuration
+- Beginning the framework setup process
+
 ## Objective
 This node starts the project setup process by gathering the new project's name from the user.
 

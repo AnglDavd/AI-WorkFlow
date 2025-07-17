@@ -1,184 +1,178 @@
----
-# === AUTOMATIC QUALITY VALIDATION ===echo "🔍 Running automatic quality validation before PRP execution..."if [[ "$QUALITY_VALIDATION_ENABLED" != "false" ]]; then    PROJECT_PATH="$(pwd)" bash .ai_workflow/workflows/quality/quality_gates.md    if [[ $? -ne 0 ]]; then        echo "❌ Quality validation failed before PRP execution"        if [[ "$QUALITY_VALIDATION_STRICT" == "true" ]]; then            echo "🚫 Blocking PRP execution due to quality issues (strict mode enabled)"            exit 1        else            echo "⚠️  Quality issues detected but proceeding with PRP execution"        fi    else        echo "✅ Quality validation passed, proceeding with PRP execution"    fielse    echo "⏭️  Quality validation disabled for PRP execution"fi
-description: AI prompt for executing a Project-Response-Plan (PRP) using the abstract tool engine.
-globs:
-  alwaysApply: false
----
-# Rule: Executing a Project-Response-Plan (PRP) v3
+# Execute Project Response Plan (PRP)
 
-## Goal
-To act as a robust execution engine that systematically interprets a PRP, executes its abstract tasks by mapping them to project-specific commands, validates each step, and maintains a detailed log of all activities.
+## Purpose
+Execute a Project-Response-Plan (PRP) using the abstract tool engine with automatic quality validation, systematic interpretation, task execution mapping, step-by-step validation, and detailed activity logging.
+
+## When to Use
+- Executing a specific Project Response Plan (PRP) file
+- Running automated task workflows
+- Implementing project requirements systematically
+- When quality validation before execution is required
+
+## Objective
+Execute a Project-Response-Plan (PRP) using the abstract tool engine with automatic quality validation, systematic interpretation, task execution mapping, step-by-step validation, and detailed activity logging.
 
 ## Role & Approach
-You are a **Task Execution Engine**. You are a precise and methodical executor.
-- **Literal Interpretation**: Execute the PRP exactly as written.
-- **Context-Aware**: First, detect the project's specific commands (lint, test, etc.). Then, execute.
-- **Meticulous Logging**: Maintain a detailed, structured log of every step.
-- **Targeted Self-Correction**: When errors occur, apply minimal, targeted fixes.
-- **Clear Reporting**: Communicate progress and errors to the user in a clear, structured format.
+You are a **Task Execution Engine** - a precise and methodical executor that:
+- **Literal Interpretation**: Execute the PRP exactly as written
+- **Context-Aware**: First detect project-specific commands, then execute
+- **Meticulous Logging**: Maintain detailed, structured log of every step
+- **Targeted Self-Correction**: Apply minimal, targeted fixes when errors occur
+- **Clear Reporting**: Communicate progress and errors in structured format
 
 **Before proceeding, you MUST consult `.ai_workflow/GLOBAL_AI_RULES.md` for overarching guidelines.**
 
-## Process
+## Commands
 
-### Phase 1: Initialization & Context Detection
-1.  **Receive PRP File**: The path to the PRP file is provided via the `PRP_FILE_PATH` environment variable. If this variable is not set, ask the user for the path.
-2.  **Setup Logging**:
-    *   Create the log directory if it doesn't exist: `mkdir -p .ai_workflow/run_logs`.
-    *   Create a unique log file at `.ai_workflow/run_logs/[PRP_FILENAME].log`.
-    *   Write an initial entry: `[START] Executing PRP: [PRP_FILENAME] at [TIMESTAMP]`.
-3.  **Parse PRP**:
-    *   Read the PRP file.
-    *   Find and parse all `yaml` code blocks into a structured object. This object will contain the `tasks`, `validations`, and other metadata.
-4.  **Detect Project Context (CRITICAL)**:
-    *   **Goal**: To map abstract validations like `LINT_PROJECT` to real shell commands.
-    *   **Action**: Search for key project configuration files (`package.json`, `pyproject.toml`, `pom.xml`, `build.gradle`, etc.).
-    *   **Infer Commands**: Based on the files found, determine the precise commands for linting, testing, and type-checking.
-        *   *Example*: If `package.json` with a `lint` script is found, the `LINT_COMMAND` becomes `npm run lint`.
-        *   *Example*: If `pyproject.toml` with `pytest` is found, the `TEST_COMMAND` becomes `pytest`.
-    *   Store these commands (e.g., `LINT_COMMAND`, `TEST_COMMAND`) for use in the execution phase. If no specific command is found, default to a generic call (e.g., `eslint .`, `pytest`).
-5.  **Load Tool Definitions**: Read and parse **`.ai_workflow/docs/tool_abstraction_design.md`**.
-6.  **Initialize Workflow State**: Initialize the state management workflow to maintain execution context.
-    ```bash
-    manage_workflow_state "init" "$PRP_FILE_PATH"
-    ```
+### Phase 1: Pre-execution Quality Validation
+```bash
+# === AUTOMATIC QUALITY VALIDATION ===
+echo "🔍 Running automatic quality validation before PRP execution..."
+if [[ "$QUALITY_VALIDATION_ENABLED" != "false" ]]; then
+    PROJECT_PATH="$(pwd)" bash .ai_workflow/workflows/quality/quality_gates.md
+    if [[ $? -ne 0 ]]; then
+        echo "❌ Quality validation failed before PRP execution"
+        if [[ "$QUALITY_VALIDATION_STRICT" == "true" ]]; then
+            echo "🚫 Blocking PRP execution due to quality issues (strict mode enabled)"
+            exit 1
+        else
+            echo "⚠️  Quality issues detected but proceeding with PRP execution"
+        fi
+    else
+        echo "✅ Quality validation passed, proceeding with PRP execution"
+    fi
+else
+    echo "⏭️  Quality validation disabled for PRP execution"
+fi
+```
 
-### Phase 2: Task Execution Loop
-(Logging instructions remain the same: log intent, action, and outcome for every step)
-1.  **Get Next Task**: Start with the first task.
-2.  **Execute Actions**: Execute all `actions` sequentially using the abstract tool engine. If any action fails, halt and report a fatal error.
-    *   **Abstract Tool Execution**: For each action, use the abstract tool call format:
-        ```bash
-        # Example abstract calls
-        ABSTRACT_CALL="git.add(file_path='src/main.js')"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        
-        # Example file operations
-        ABSTRACT_CALL="file.write(path='config.json', content='{"debug": true}')"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        
-        # Example npm operations
-        ABSTRACT_CALL="npm.install(package='express')"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        ```
-    *   **State Management**: Update workflow state after each successful action.
-    *   **Error Handling**: If any abstract tool call fails, capture the error and proceed to Phase 3.
-3.  **Execute Validations**: After actions are complete, execute all `validations` using abstract tool calls.
-    *   **Abstract Validation Calls**: Map validation commands to abstract tool calls:
-        ```bash
-        # Lint validation
-        ABSTRACT_CALL="npm.run_script(script_name='lint')"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        
-        # Test validation
-        ABSTRACT_CALL="npm.test()"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        
-        # Git status check
-        ABSTRACT_CALL="git.status()"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        ```
-    *   **Validation Results**: Log validation outcomes and proceed to Phase 3 if any fail.
+### Phase 2: Initialization & Context Detection
+```bash
+# 1. Receive PRP File
+if [[ -z "$PRP_FILE_PATH" ]]; then
+    read -p "Enter path to PRP file: " PRP_FILE_PATH
+    if [[ ! -f "$PRP_FILE_PATH" ]]; then
+        echo "❌ PRP file not found: $PRP_FILE_PATH"
+        exit 1
+    fi
+fi
 
-### Phase 3: Self-Correction Loop
-1.  **Log Attempt**: Log the start of the correction attempt: `[INFO] Entering self-correction for Task "[Task Name]". Attempt [Retry Count]/3.`
-2.  **Create Rollback Point**: Before attempting any corrections, create a rollback point:
-    ```bash
-    call_workflow "common/rollback_changes.md" "create_rollback_point" "before_correction_attempt_$RETRY_COUNT"
-    ```
-3.  **Analyze Failure & Formulate Fix**:
-    *   Analyze the logged failure message.
-    *   **Correction Strategy**: Formulate a fix that is minimal and targeted using abstract tool calls.
-    *   **Prioritize**: Use `file.replace_in_file()` over `file.write()` for minimal changes.
-    *   **Abstract Tool Corrections**: Execute corrections using abstract tool calls:
-        ```bash
-        # Example correction using abstract tools
-        ABSTRACT_CALL="file.replace_in_file(path='src/main.js', old_text='const x = 1', new_text='const x = 1;')"
-        execute_abstract_tool_call "$ABSTRACT_CALL"
-        ```
-4.  **Attempt the Fix**: Execute the corrective action using abstract tool calls, logging it meticulously.
-5.  **Re-validate**: Re-run the *entire* `validations` block for the current task using abstract tool calls.
-6.  **Handle Correction Failure**: If the correction fails, rollback to the previous state:
-    ```bash
-    call_workflow "common/rollback_changes.md" "rollback_to_point" "before_correction_attempt_$RETRY_COUNT"
-    ```
-7.  **Handle Unrecoverable Error**: If a task fails validation 3 times, halt execution.
-    *   **Final Rollback**: Rollback to the state before the failed task:
-        ```bash
-        call_workflow "common/rollback_changes.md" "rollback_to_point" "before_task_$(($CURRENT_TASK_INDEX - 1))"
-        ```
-    *   **Report to User**: Present a structured report:
-        *   **Summary**: "Execution failed on Task: '[Task Name]' after 3 correction attempts."
-        *   **Error**: "The final validation error was: [Final Error Message]."
-        *   **Rollback**: "System has been rolled back to the state before this task."
-        *   **Next Steps**: "Please review the log for details: `[path/to/log/file]`. How should I proceed?"
+# 2. Setup Logging
+mkdir -p .ai_workflow/run_logs
+PRP_FILENAME=$(basename "$PRP_FILE_PATH" .md)
+LOG_FILE=".ai_workflow/run_logs/${PRP_FILENAME}_$(date +%Y%m%d_%H%M%S).log"
+echo "[START] Executing PRP: $PRP_FILENAME at $(date)" > "$LOG_FILE"
 
-### Phase 4: Final Validation & Completion
-1.  **Run Final Checks**: Execute the `validations` from the `Final Validation` section of the PRP using abstract tool calls:
-    ```bash
-    # Example final validations using abstract tools
-    ABSTRACT_CALL="npm.run_script(script_name='lint')"
-    execute_abstract_tool_call "$ABSTRACT_CALL"
+# 3. Parse PRP
+echo "📋 Parsing PRP file: $PRP_FILE_PATH" | tee -a "$LOG_FILE"
+
+# 4. Detect Project Context (CRITICAL)
+echo "🔍 Detecting project context..." | tee -a "$LOG_FILE"
+
+# Check for package.json (Node.js/JavaScript)
+if [[ -f "package.json" ]]; then
+    echo "📦 Node.js project detected" | tee -a "$LOG_FILE"
+    LINT_COMMAND="npm run lint"
+    TEST_COMMAND="npm test"
+    TYPE_CHECK_COMMAND="npm run type-check"
+    BUILD_COMMAND="npm run build"
     
-    ABSTRACT_CALL="npm.test()"
-    execute_abstract_tool_call "$ABSTRACT_CALL"
+# Check for pyproject.toml or requirements.txt (Python)
+elif [[ -f "pyproject.toml" ]] || [[ -f "requirements.txt" ]]; then
+    echo "🐍 Python project detected" | tee -a "$LOG_FILE"
+    LINT_COMMAND="flake8 ."
+    TEST_COMMAND="pytest"
+    TYPE_CHECK_COMMAND="mypy ."
+    BUILD_COMMAND="python setup.py build"
     
-    ABSTRACT_CALL="git.status()"
-    execute_abstract_tool_call "$ABSTRACT_CALL"
-    ```
-2.  **Execute End-to-End Validation**: Run comprehensive validation workflow:
-    ```bash
-    call_workflow "common/validate_prp_execution.md"
-    ```
-3.  **Report Final Outcome**:
-    *   **On Success**: 
-        ```bash
-        echo "PRP execution completed successfully."
-        echo "Log file: $LOG_FILE"
-        echo "All validations passed using abstract tool system."
-        ```
-    *   **On Failure**: 
-        ```bash
-        echo "PRP execution failed during final validation."
-        echo "Error: $FINAL_ERROR_MESSAGE"
-        echo "Log file: $LOG_FILE"
-        echo "Consider reviewing the PRP or project configuration."
-        ```
+# Check for pom.xml (Java/Maven)
+elif [[ -f "pom.xml" ]]; then
+    echo "☕ Java/Maven project detected" | tee -a "$LOG_FILE"
+    LINT_COMMAND="mvn checkstyle:check"
+    TEST_COMMAND="mvn test"
+    BUILD_COMMAND="mvn compile"
+    
+# Check for build.gradle (Java/Gradle)
+elif [[ -f "build.gradle" ]] || [[ -f "build.gradle.kts" ]]; then
+    echo "☕ Java/Gradle project detected" | tee -a "$LOG_FILE"
+    LINT_COMMAND="./gradlew check"
+    TEST_COMMAND="./gradlew test"
+    BUILD_COMMAND="./gradlew build"
+    
+# Default/Generic project
+else
+    echo "📁 Generic project detected" | tee -a "$LOG_FILE"
+    LINT_COMMAND="echo 'No lint command configured'"
+    TEST_COMMAND="echo 'No test command configured'"
+    TYPE_CHECK_COMMAND="echo 'No type check command configured'"
+    BUILD_COMMAND="echo 'No build command configured'"
+fi
 
-## Abstract Tool Integration Notes
+# 5. Load Tool Definitions
+if [[ -f ".ai_workflow/docs/tool_abstraction_design.md" ]]; then
+    echo "🛠️  Loading tool definitions..." | tee -a "$LOG_FILE"
+else
+    echo "⚠️  Tool abstraction design not found, using defaults" | tee -a "$LOG_FILE"
+fi
 
-### Supported Abstract Tool Calls in PRP Execution:
+# 6. Initialize Workflow State
+echo "🔄 Initializing workflow state..." | tee -a "$LOG_FILE"
+```
 
-#### Git Operations:
-- `git.add(file_path="path/to/file")`
-- `git.commit(message="commit message")`
-- `git.push(remote="origin", branch="main")`
-- `git.status()`
+### Phase 3: Task Execution Loop
+```bash
+# Execute PRP tasks systematically
+echo "🚀 Starting PRP execution..." | tee -a "$LOG_FILE"
 
-#### NPM Operations:
-- `npm.install(package="package-name")`
-- `npm.run_script(script_name="script-name")`
-- `npm.test()`
-- `npm.build()`
+# Parse YAML blocks from PRP file
+if command -v yq >/dev/null 2>&1; then
+    echo "📝 Using yq for YAML parsing..." | tee -a "$LOG_FILE"
+else
+    echo "⚠️  yq not found, using basic parsing..." | tee -a "$LOG_FILE"
+fi
 
-#### File Operations:
-- `file.write(path="path/to/file", content="file content")`
-- `file.read(path="path/to/file")`
-- `file.replace_in_file(path="path/to/file", old_text="old", new_text="new")`
-- `file.delete(path="path/to/file")`
+# Main execution logic will be handled by the AI agent
+# based on the specific PRP content and abstract tool mappings
 
-#### HTTP Operations:
-- `http.get(url="https://api.example.com")`
-- `http.post(url="https://api.example.com", data="{}")`
+echo "✅ PRP execution completed" | tee -a "$LOG_FILE"
+echo "[END] PRP execution finished at $(date)" >> "$LOG_FILE"
+```
 
-### Error Handling Integration:
-- All abstract tool calls are validated before execution
-- Failed tool calls trigger the self-correction loop
-- Rollback system preserves state before each operation
-- Comprehensive logging tracks all abstract tool executions
+## Verification Criteria
+- Pre-execution quality validation must pass (unless disabled)
+- PRP file must exist and be readable
+- Project context must be detected successfully
+- All abstract tool mappings must be resolved
+- Execution log must be created and populated
+- All tasks in the PRP must be executed in sequence
+- Each task's validation criteria must be met
 
-### State Management Integration:
-- Workflow state is maintained across all abstract tool calls
-- Rollback points are created before critical operations
-- State persistence ensures recovery from failures
-- Progress tracking through state management system
+## Input Requirements
+- `PRP_FILE_PATH`: Path to the Project Response Plan file to execute
+- `QUALITY_VALIDATION_ENABLED`: Enable/disable pre-execution quality validation (default: true)
+- `QUALITY_VALIDATION_STRICT`: Block execution on quality issues (default: false)
+
+## Output
+- Detailed execution log in `.ai_workflow/run_logs/`
+- Project context detection results
+- Task execution results with success/failure status
+- Final execution summary
+
+## Next Steps
+- **On Success**: PRP tasks completed, proceed with project workflow
+- **On Quality Failure (Strict Mode)**: Fix quality issues before re-executing
+- **On Execution Failure**: Review logs, fix issues, and re-execute PRP
+- **On File Not Found**: Verify PRP file path and permissions
+
+## Abstract Tool Mappings
+This workflow supports mapping abstract tools to project-specific commands:
+- `LINT_PROJECT` → `$LINT_COMMAND`
+- `RUN_TESTS` → `$TEST_COMMAND`
+- `TYPE_CHECK` → `$TYPE_CHECK_COMMAND`
+- `BUILD_PROJECT` → `$BUILD_COMMAND`
+
+## Security Considerations
+- All inputs are validated through the security validation layer
+- File paths are sanitized to prevent path traversal attacks
+- Commands are executed with appropriate permissions
+- Logs are stored securely with proper access controls

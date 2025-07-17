@@ -1,0 +1,100 @@
+name: Framework CI Pipeline
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  framework-validation:
+    runs-on: ubuntu-latest
+    name: Framework Validation & Quality Gates
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Environment
+      run: |
+        chmod +x ./ai-dev
+        echo "Framework CI Pipeline Starting..."
+        
+        # Initialize circuit breakers for safe execution
+        source .ai_workflow/workflows/common/safe_execution_wrapper.md
+        
+        # Check for emergency stop
+        if ! check_emergency_stop; then
+          echo "🚨 Emergency stop active - CI pipeline blocked"
+          exit 1
+        fi
+        
+    - name: Framework Diagnostic
+      run: |
+        echo "🔍 Running framework diagnostic..."
+        source .ai_workflow/workflows/common/safe_execution_wrapper.md
+        safe_diagnose || {
+          echo "❌ Framework diagnostic failed"
+          exit 1
+        }
+        
+    - name: Security Audit
+      run: |
+        echo "🛡️ Running security audit..."
+        source .ai_workflow/workflows/common/safe_execution_wrapper.md
+        safe_audit || {
+          echo "❌ Security audit failed"
+          exit 1
+        }
+        
+    - name: Pre-commit Validation
+      run: |
+        echo "✅ Running pre-commit validation..."
+        source .ai_workflow/workflows/common/safe_execution_wrapper.md
+        safe_precommit validate || {
+          echo "❌ Pre-commit validation failed"
+          exit 1
+        }
+        
+    - name: Quality Check
+      run: |
+        echo "📊 Running quality check..."
+        source .ai_workflow/workflows/common/safe_execution_wrapper.md
+        safe_quality . || {
+          echo "❌ Quality check failed"
+          exit 1
+        }
+        
+    - name: Framework Status
+      run: |
+        echo "📋 Framework status:"
+        ./ai-dev status
+        
+    - name: Generate CI Report
+      if: always()
+      run: |
+        echo "📊 Generating CI report..."
+        mkdir -p .github/reports
+        cat > .github/reports/ci-report.md << EOF
+        # CI Pipeline Report
+        **Date**: $(date)
+        **Branch**: ${{ github.ref }}
+        **Commit**: ${{ github.sha }}
+        
+        ## Validation Results
+        - Framework Diagnostic: ${{ job.status }}
+        - Security Audit: ${{ job.status }}
+        - Pre-commit Validation: ${{ job.status }}
+        - Quality Check: ${{ job.status }}
+        
+        ## Next Steps
+        - All validations must pass before merge
+        - Review any failed checks above
+        - Ensure all tokens are optimized
+        EOF
+        
+    - name: Upload Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ci-report
+        path: .github/reports/ci-report.md

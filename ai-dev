@@ -51,7 +51,149 @@ info() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
 }
 
-# --- Validation Functions ---
+# --- Enhanced UX Functions ---
+show_progress() {
+    local message="$1"
+    local step="$2"
+    local total="$3"
+    
+    if [[ -n "$step" && -n "$total" ]]; then
+        local percentage=$(( (step * 100) / total ))
+        printf "\r🔄 %s [%d/%d] %d%%" "$message" "$step" "$total" "$percentage"
+    else
+        printf "\r🔄 %s..." "$message"
+    fi
+}
+
+complete_progress() {
+    local message="$1"
+    printf "\r✅ %s\n" "$message"
+}
+
+confirm_action() {
+    local message="$1"
+    local default="$2"
+    
+    if [[ "${FORCE:-false}" == "true" ]]; then
+        echo "🚀 Force mode: $message - proceeding"
+        return 0
+    fi
+    
+    local prompt="$message"
+    if [[ "$default" == "y" ]]; then
+        prompt="$prompt [Y/n]"
+    else
+        prompt="$prompt [y/N]"
+    fi
+    
+    # Use environment variable or default behavior for automation
+    if [[ -n "${AUTO_CONFIRM:-}" ]]; then
+        REPLY="$AUTO_CONFIRM"
+        echo "$message: $REPLY (automated)"
+    else
+        read -p "$prompt: " -n 1 -r
+        echo
+    fi
+    
+    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$default" == "y" ]]); then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# --- Enhanced Configuration Functions ---
+load_configuration() {
+    local config_file="$1"
+    
+    # Create default configuration if not exists
+    if [[ ! -f "$config_file" ]]; then
+        create_default_config "$config_file"
+    fi
+    
+    # Load configuration with validation
+    if command -v jq >/dev/null 2>&1; then
+        if jq empty "$config_file" >/dev/null 2>&1; then
+            # Load configuration values
+            QUALITY_VALIDATION_ENABLED=$(jq -r '.quality.validation_enabled // "true"' "$config_file")
+            QUALITY_VALIDATION_STRICT=$(jq -r '.quality.strict_mode // "false"' "$config_file")
+            LOG_LEVEL=$(jq -r '.logging.level // "info"' "$config_file")
+            AUTO_CLEANUP_ENABLED=$(jq -r '.maintenance.auto_cleanup // "true"' "$config_file")
+        else
+            warning "Invalid JSON in configuration file: $config_file"
+            create_default_config "$config_file"
+        fi
+    else
+        warning "jq not found - using default configuration"
+        set_default_config_values
+    fi
+}
+
+create_default_config() {
+    local config_file="$1"
+    
+    cat > "$config_file" << 'EOF'
+{
+  "framework": {
+    "version": "v0.4.1-beta",
+    "name": "AI Development Framework"
+  },
+  "quality": {
+    "validation_enabled": true,
+    "strict_mode": false,
+    "threshold": 80,
+    "auto_fix": false
+  },
+  "logging": {
+    "level": "info",
+    "file": ".ai_workflow/cache/ai-dev.log"
+  },
+  "maintenance": {
+    "auto_cleanup": true,
+    "cleanup_threshold_days": 30
+  },
+  "user": {
+    "name": "",
+    "email": "",
+    "preferences": {}
+  }
+}
+EOF
+    
+    success "Created default configuration: $config_file"
+}
+
+set_default_config_values() {
+    QUALITY_VALIDATION_ENABLED="true"
+    QUALITY_VALIDATION_STRICT="false"
+    LOG_LEVEL="info"
+    AUTO_CLEANUP_ENABLED="true"
+}
+
+# --- Enhanced Validation Functions ---
+validate_command() {
+    local command="$1"
+    local valid_commands=(
+        "setup" "generate" "run" "optimize" "audit" "sync" "configure" 
+        "diagnose" "quality" "precommit" "generate-architecture" 
+        "update-architecture" "cleanup" "update-gitignore" "maintenance"
+        "help" "version" "status" "detect-manual"
+    )
+    
+    # Check if command exists
+    if [[ ! " ${valid_commands[*]} " =~ " ${command} " ]]; then
+        error "Unknown command: '$command'"
+        echo ""
+        echo "📋 Available commands:"
+        printf '%s\n' "${valid_commands[@]}" | sort | sed 's/^/  /'
+        echo ""
+        echo "💡 Use './ai-dev help' for detailed information"
+        return 1
+    fi
+    
+    return 0
+}
+
 validate_environment() {
     log "Validating environment"
     
@@ -62,6 +204,11 @@ validate_environment() {
     if [ ! -d "$AI_WORKFLOW_DIR" ]; then
         error "Not in an AI Development Framework directory"
         error "Expected to find .ai_workflow/ directory"
+        echo ""
+        echo "💡 Suggestions:"
+        echo "  - Initialize framework: ./ai-dev setup"
+        echo "  - Navigate to framework directory"
+        echo "  - Check if .ai_workflow/ directory exists"
         exit 1
     fi
     
@@ -540,6 +687,11 @@ if [ -z "$COMMAND" ]; then
     exit 1
 fi
 
+# Validate command
+if ! validate_command "$COMMAND"; then
+    exit 1
+fi
+
 # Shift to process arguments for the specific command
 shift
 
@@ -552,6 +704,9 @@ if [ "$FORCE" != "true" ]; then
     validate_environment
     auto_install_precommit
 fi
+
+# Load configuration
+load_configuration "$CONFIG_FILE"
 
 # Execute workflow with error handling
 execute_workflow() {

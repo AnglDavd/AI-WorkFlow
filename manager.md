@@ -10,11 +10,14 @@ Welcome to the AI Development Framework, a comprehensive system for building and
 
 **📋 For complete version information and development status, see [ARCHITECTURE.md - Framework Status](ARCHITECTURE.md#framework-status)**
 
-**Current Version:** v0.4.1-beta (Beta Phase with Quality Integration)
+**Current Version:** v0.4.2-beta (Beta Phase with Advanced Features)
 **Key Features:**
 - ✅ Automatic quality validation with adaptive language support
 - ✅ Zero-friction automation philosophy
 - ✅ Multi-language project compatibility (30+ languages)
+- ✅ Enhanced CLI system with production-ready UX
+- ✅ External feedback integration and community synchronization
+- ✅ Framework-level task management with organized feedback processing
 
 ## Key Principles
 
@@ -62,8 +65,10 @@ The primary way to interact with this framework is through the `ai-dev` command-
 -   **`./ai-dev optimize <prompt_file>`**
     -   Optimizes prompt files using best practices and token economy analysis.
 
--   **`./ai-dev sync`**
+-   **`./ai-dev sync <subcommand>`**
     -   Synchronizes framework with updates and community improvements.
+    -   **`./ai-dev sync feedback`** - Integrate external community feedback from GitHub issues/PRs
+    -   **`./ai-dev sync framework`** - Synchronize framework updates (planned)
 
 -   **`./ai-dev configure`**
     -   Interactive configuration management for framework settings.
@@ -96,6 +101,12 @@ The primary way to interact with this framework is through the `ai-dev` command-
 
 -   **If the user wants to run security audit:**
     -   **Action:** Propose and execute `bash ./ai-dev audit`.
+
+-   **If the user wants to integrate community feedback:**
+    -   **Action:** Propose and execute `bash ./ai-dev sync feedback`.
+
+-   **If the user wants to synchronize framework updates:**
+    -   **Action:** Propose and execute `bash ./ai-dev sync framework`.
 
 -   **If the user wants to configure the framework:**
     -   **Action:** Propose and execute `bash ./ai-dev configure`.

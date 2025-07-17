@@ -8,7 +8,7 @@ This is an **AI-Assisted Development Framework** repository - a comprehensive sy
 
 ## Framework Version Status
 
-**Current Version:** v0.4.1-beta (Beta Phase with Quality Integration)
+**Current Version:** v0.4.2-beta (Beta Phase with Advanced Features)
 **Key Features:** 
 - ✅ Complete Alpha v0.3.0 core functionality
 - ✅ Automatic quality validation with adaptive language support
@@ -16,6 +16,9 @@ This is an **AI-Assisted Development Framework** repository - a comprehensive sy
 - ✅ Zero-friction automation philosophy
 - ✅ Multi-language project compatibility (30+ languages)
 - ✅ Comprehensive CLI integration
+- ✅ Enhanced CLI system with production-ready UX
+- ✅ External feedback integration and community synchronization
+- ✅ Framework-level task management
 
 ## Core Architecture
 
@@ -32,6 +35,11 @@ The framework operates through a unified CLI interface:
   - `quality <path>` - Run quality validation with adaptive language support
   - `audit` - Run security audit
   - `precommit` - Pre-commit validation and quality assurance
+  - `sync <subcommand>` - Framework synchronization and external feedback
+    - `sync feedback` - Integrate community feedback from GitHub
+    - `sync framework` - Synchronize framework updates (planned)
+  - `configure` - Interactive configuration management
+  - `diagnose` - Framework health and diagnostic reporting
 
 ### Template-Based Methodology
 
