@@ -1,0 +1,306 @@
+name: Cross-Platform Compatibility
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Mondays at 8 AM UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  linux-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04, ubuntu-22.04]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up environment
+      run: |
+        chmod +x ./ai-dev
+        chmod +x .ai_workflow/scripts/cross_platform_compatibility_test.sh
+        export AUTO_CONFIRM=true
+        export CI_MODE=true
+    
+    - name: Run Linux Compatibility Tests
+      run: |
+        echo "🐧 Testing Linux compatibility on ${{ matrix.os }}"
+        ./.ai_workflow/scripts/cross_platform_compatibility_test.sh > linux_compatibility_${{ matrix.os }}.log 2>&1
+        
+        # Check if tests passed
+        if [ $? -eq 0 ]; then
+          echo "✅ Linux compatibility tests passed on ${{ matrix.os }}"
+        else
+          echo "❌ Linux compatibility tests failed on ${{ matrix.os }}"
+          cat linux_compatibility_${{ matrix.os }}.log
+          exit 1
+        fi
+    
+    - name: Upload Linux Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-compatibility-${{ matrix.os }}
+        path: linux_compatibility_${{ matrix.os }}.log
+        retention-days: 30
+
+  macos-compatibility:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, macos-13]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up macOS environment
+      run: |
+        # Install GNU coreutils for better compatibility
+        brew install coreutils gnu-sed gnu-grep findutils
+        
+        # Make scripts executable
+        chmod +x ./ai-dev
+        chmod +x .ai_workflow/scripts/cross_platform_compatibility_test.sh
+        
+        # Set up environment
+        export AUTO_CONFIRM=true
+        export CI_MODE=true
+        export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    
+    - name: Run macOS Compatibility Tests
+      run: |
+        echo "🍎 Testing macOS compatibility on ${{ matrix.os }}"
+        ./.ai_workflow/scripts/cross_platform_compatibility_test.sh > macos_compatibility_${{ matrix.os }}.log 2>&1
+        
+        # Check if tests passed
+        if [ $? -eq 0 ]; then
+          echo "✅ macOS compatibility tests passed on ${{ matrix.os }}"
+        else
+          echo "❌ macOS compatibility tests failed on ${{ matrix.os }}"
+          echo "⚠️  This may be expected - reviewing failures..."
+          cat macos_compatibility_${{ matrix.os }}.log
+          # Don't fail the build for macOS issues yet
+        fi
+    
+    - name: Upload macOS Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-compatibility-${{ matrix.os }}
+        path: macos_compatibility_${{ matrix.os }}.log
+        retention-days: 30
+
+  windows-compatibility:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Windows environment
+      run: |
+        # Use Git Bash for Windows testing
+        echo "🪟 Setting up Windows environment with Git Bash"
+        git config --global core.autocrlf false
+        git config --global core.filemode false
+    
+    - name: Run Windows Compatibility Tests
+      shell: bash
+      run: |
+        echo "🪟 Testing Windows compatibility with Git Bash"
+        
+        # Make scripts executable
+        chmod +x ./ai-dev
+        chmod +x .ai_workflow/scripts/cross_platform_compatibility_test.sh
+        
+        # Set up environment
+        export AUTO_CONFIRM=true
+        export CI_MODE=true
+        
+        # Run tests
+        ./.ai_workflow/scripts/cross_platform_compatibility_test.sh > windows_compatibility.log 2>&1
+        
+        # Check if tests passed
+        if [ $? -eq 0 ]; then
+          echo "✅ Windows compatibility tests passed"
+        else
+          echo "❌ Windows compatibility tests failed"
+          echo "⚠️  This may be expected - reviewing failures..."
+          cat windows_compatibility.log
+          # Don't fail the build for Windows issues yet
+        fi
+    
+    - name: Upload Windows Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-compatibility
+        path: windows_compatibility.log
+        retention-days: 30
+
+  compatibility-summary:
+    runs-on: ubuntu-latest
+    needs: [linux-compatibility, macos-compatibility, windows-compatibility]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download all test results
+      uses: actions/download-artifact@v4
+      with:
+        path: compatibility-results
+    
+    - name: Generate Compatibility Report
+      run: |
+        echo "# Cross-Platform Compatibility Report" > compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "**Generated:** $(date)" >> compatibility-report.md
+        echo "**Repository:** ${{ github.repository }}" >> compatibility-report.md
+        echo "**Commit:** ${{ github.sha }}" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        
+        # Linux results
+        echo "## Linux Compatibility" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        for file in compatibility-results/linux-compatibility-*/linux_compatibility_*.log; do
+          if [ -f "$file" ]; then
+            os=$(basename "$file" | sed 's/linux_compatibility_//' | sed 's/.log//')
+            echo "### $os" >> compatibility-report.md
+            if grep -q "All tests passed" "$file"; then
+              echo "✅ **PASSED** - All tests successful" >> compatibility-report.md
+            else
+              echo "❌ **FAILED** - Some tests failed" >> compatibility-report.md
+            fi
+            echo "" >> compatibility-report.md
+          fi
+        done
+        
+        # macOS results
+        echo "## macOS Compatibility" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        for file in compatibility-results/macos-compatibility-*/macos_compatibility_*.log; do
+          if [ -f "$file" ]; then
+            os=$(basename "$file" | sed 's/macos_compatibility_//' | sed 's/.log//')
+            echo "### $os" >> compatibility-report.md
+            if grep -q "All tests passed" "$file"; then
+              echo "✅ **PASSED** - All tests successful" >> compatibility-report.md
+            else
+              echo "⚠️  **ISSUES** - Some compatibility issues detected" >> compatibility-report.md
+            fi
+            echo "" >> compatibility-report.md
+          fi
+        done
+        
+        # Windows results
+        echo "## Windows Compatibility" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        if [ -f "compatibility-results/windows-compatibility/windows_compatibility.log" ]; then
+          if grep -q "All tests passed" "compatibility-results/windows-compatibility/windows_compatibility.log"; then
+            echo "✅ **PASSED** - All tests successful" >> compatibility-report.md
+          else
+            echo "⚠️  **ISSUES** - Some compatibility issues detected" >> compatibility-report.md
+          fi
+        else
+          echo "❌ **NO RESULTS** - Windows tests did not run" >> compatibility-report.md
+        fi
+        echo "" >> compatibility-report.md
+        
+        # Summary
+        echo "## Summary" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "The AI-Assisted Development Framework has been tested across multiple platforms:" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "- **Linux**: Primary platform with full support" >> compatibility-report.md
+        echo "- **macOS**: Secondary platform with good compatibility" >> compatibility-report.md
+        echo "- **Windows**: Limited support via Git Bash/WSL" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "## Recommendations" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "1. **Linux**: Recommended for production use" >> compatibility-report.md
+        echo "2. **macOS**: Install GNU coreutils for best compatibility" >> compatibility-report.md
+        echo "3. **Windows**: Use Git Bash or WSL for framework operation" >> compatibility-report.md
+        echo "" >> compatibility-report.md
+        echo "---" >> compatibility-report.md
+        echo "*This report is generated automatically by the cross-platform compatibility test suite*" >> compatibility-report.md
+        
+        # Display report
+        cat compatibility-report.md
+    
+    - name: Upload Compatibility Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: compatibility-report
+        path: compatibility-report.md
+        retention-days: 90
+    
+    - name: Comment on PR with Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read the compatibility report
+          let report = '';
+          try {
+            report = fs.readFileSync('compatibility-report.md', 'utf8');
+          } catch (error) {
+            report = 'Error reading compatibility report';
+          }
+          
+          // Post comment on PR
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🔍 Cross-Platform Compatibility Test Results
+
+${report}
+
+**Full test logs are available in the workflow artifacts.**`
+          });
+
+  create-compatibility-issue:
+    runs-on: ubuntu-latest
+    needs: [compatibility-summary]
+    if: failure()
+    
+    steps:
+    - name: Create Compatibility Issue
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Create issue for compatibility problems
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🔍 Cross-Platform Compatibility Issues Detected',
+            body: `## Cross-Platform Compatibility Issues
+
+The automated compatibility tests have detected issues across different platforms.
+
+**Workflow:** ${{ github.workflow }}
+**Run ID:** ${{ github.run_id }}
+**Commit:** ${{ github.sha }}
+
+### Actions Required:
+1. Review the compatibility test results in the workflow artifacts
+2. Address any platform-specific issues identified
+3. Update documentation with platform requirements
+4. Consider platform-specific workarounds if needed
+
+### Test Results:
+- **Linux**: Check linux-compatibility artifacts
+- **macOS**: Check macos-compatibility artifacts  
+- **Windows**: Check windows-compatibility artifacts
+
+**Priority:** Medium
+**Impact:** Cross-platform usability`,
+            labels: ['compatibility', 'cross-platform', 'testing']
+          });

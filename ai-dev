@@ -6,6 +6,9 @@
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
+# Load platform adapter for cross-platform compatibility
+source "$(dirname "${BASH_SOURCE[0]}")/.ai_workflow/scripts/platform_adapter.sh"
+
 # --- Global Variables ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly AI_WORKFLOW_DIR="${SCRIPT_DIR}/.ai_workflow"
@@ -177,7 +180,7 @@ validate_command() {
         "setup" "generate" "run" "optimize" "performance" "audit" "sync" "configure" 
         "diagnose" "quality" "precommit" "generate-architecture" 
         "update-architecture" "cleanup" "update-gitignore" "maintenance"
-        "help" "version" "status" "detect-manual"
+        "help" "version" "status" "detect-manual" "platform"
     )
     
     # Check if command exists
@@ -503,6 +506,7 @@ ${GREEN}Maintenance Commands:${NC}
   cleanup [options]        Manage obsolete files and repository cleanup
   update-gitignore         Update .gitignore with latest patterns
   maintenance [level]      Run periodic repository maintenance
+  platform                 Show platform compatibility information
 
 ${GREEN}Utility Commands:${NC}
   help                     Show this help message
@@ -1181,6 +1185,7 @@ EOF
         echo "AI Development Framework CLI v2.0"
         echo "Enhanced with robust validation, integration testing, and pre-commit system"
         echo "Framework Version: v1.0.0"
+        echo "Platform: $PLATFORM ($(uname -s))"
         if [ -f "${AI_WORKFLOW_DIR}/VERSION" ]; then
             echo "Additional Version Info: $(cat "${AI_WORKFLOW_DIR}/VERSION")"
         fi
@@ -1188,6 +1193,10 @@ EOF
 
     help|--help|-h)
         show_help
+        ;;
+    
+    platform)
+        show_platform_info
         ;;
 
     test-workflow-calling)
@@ -1397,7 +1406,7 @@ EOF
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual"
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform"
         show_help
         exit 1
         ;;
