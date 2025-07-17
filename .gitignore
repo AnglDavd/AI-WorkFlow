@@ -49,6 +49,9 @@ backup_*
 consolidation_*.md
 
 # === TESTING/TEMPORARY FILES ===
+# Test production directory (internal development only)
+test_production/
+
 # Basic test files (keep integration tests)
 .ai_workflow/testing/test_*.md
 .ai_workflow/testing/simple_*.md
@@ -56,9 +59,17 @@ consolidation_*.md
 !.ai_workflow/testing/integration_test*.md
 !.ai_workflow/testing/edge_cases_test*.md
 
-# Generated reports
+# Generated reports (exclude from repository)
 integration_test_report.md
 *_test_report*.md
+.ai_workflow/reports/feedback_integration_*.md
+.ai_workflow/progress_report.md
+*_report_*.md
+
+# Development backup files
+ai-dev.original
+*.original
+*_backup_*
 
 # === CAPTURES AND MEDIA ===
 # Screenshots and captures
