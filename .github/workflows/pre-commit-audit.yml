@@ -1,0 +1,208 @@
+name: Pre-commit Code Audit
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  pre-commit-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up environment
+      run: |
+        chmod +x ./ai-dev
+        chmod +x ./.ai_workflow/scripts/*.sh
+        
+        # Enable automation mode
+        export AUTO_CONFIRM=true
+        export CI_MODE=true
+        export GITHUB_ACTIONS=true
+    
+    - name: Get changed files
+      id: changed-files
+      run: |
+        # Get list of changed files in PR
+        git diff --name-only origin/main...HEAD > changed_files.txt
+        echo "Changed files:"
+        cat changed_files.txt
+        
+        # Store changed files for later use
+        echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+        cat changed_files.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+    
+    - name: Run Pre-commit Validation on Changed Files
+      run: |
+        echo "🔍 Running pre-commit validation on changed files..."
+        
+        # Run pre-commit validation only on changed files
+        ./ai-dev precommit validate --changed-files --verbose > precommit-results.txt
+        
+        # Generate JSON report
+        ./ai-dev precommit report --format=json > precommit-report.json
+    
+    - name: Run Quality Check on Changed Files
+      run: |
+        echo "📊 Running quality check on changed files..."
+        
+        # Create temporary file with changed files
+        echo "$CHANGED_FILES" > changed_files.txt
+        
+        # Run quality validation on changed files only
+        while IFS= read -r file; do
+          if [ -f "$file" ]; then
+            echo "Checking: $file"
+            ./ai-dev quality "$file" --verbose >> quality-results.txt
+          fi
+        done < changed_files.txt
+    
+    - name: Security Scan Changed Files
+      run: |
+        echo "🛡️ Running security scan on changed files..."
+        
+        # Run security audit focused on changed files
+        ./ai-dev audit --focus=changed-files --verbose > security-results.txt
+    
+    - name: Analyze Results
+      id: analyze
+      run: |
+        echo "📊 Analyzing audit results..."
+        
+        # Initialize counters
+        security_issues=0
+        quality_issues=0
+        precommit_issues=0
+        
+        # Check security results
+        if [ -f "security-results.txt" ]; then
+          security_issues=$(grep -c "CRITICAL\|HIGH\|MEDIUM" security-results.txt || echo "0")
+        fi
+        
+        # Check quality results
+        if [ -f "quality-results.txt" ]; then
+          quality_issues=$(grep -c "FAIL\|ERROR" quality-results.txt || echo "0")
+        fi
+        
+        # Check pre-commit results
+        if [ -f "precommit-results.txt" ]; then
+          precommit_issues=$(grep -c "VIOLATION\|BLOCKING" precommit-results.txt || echo "0")
+        fi
+        
+        # Set outputs
+        echo "security_issues=$security_issues" >> $GITHUB_OUTPUT
+        echo "quality_issues=$quality_issues" >> $GITHUB_OUTPUT
+        echo "precommit_issues=$precommit_issues" >> $GITHUB_OUTPUT
+        
+        # Determine overall status
+        total_issues=$((security_issues + quality_issues + precommit_issues))
+        if [ $total_issues -eq 0 ]; then
+          echo "status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failed" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Total issues found: $total_issues"
+    
+    - name: Generate PR Comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read analysis results
+          const securityIssues = '${{ steps.analyze.outputs.security_issues }}';
+          const qualityIssues = '${{ steps.analyze.outputs.quality_issues }}';
+          const precommitIssues = '${{ steps.analyze.outputs.precommit_issues }}';
+          const status = '${{ steps.analyze.outputs.status }}';
+          
+          // Create comment header
+          let comment = '## 🔍 Pre-commit Code Audit Results\n\n';
+          
+          if (status === 'passed') {
+            comment += '✅ **All checks passed!** Your code meets quality standards.\n\n';
+          } else {
+            comment += '❌ **Issues found** that need attention before merge.\n\n';
+          }
+          
+          // Add summary table
+          comment += '| Audit Type | Issues Found |\n';
+          comment += '|------------|-------------|\n';
+          comment += `| 🛡️ Security | ${securityIssues} |\n`;
+          comment += `| 📊 Quality | ${qualityIssues} |\n`;
+          comment += `| 🔧 Pre-commit | ${precommitIssues} |\n`;
+          comment += '\n';
+          
+          // Add detailed results if available
+          try {
+            if (fs.existsSync('precommit-results.txt')) {
+              const precommitResults = fs.readFileSync('precommit-results.txt', 'utf8');
+              if (precommitResults.trim()) {
+                comment += '<details>\n<summary>📋 Pre-commit Details</summary>\n\n```\n';
+                comment += precommitResults.substring(0, 2000); // Limit length
+                comment += '\n```\n</details>\n\n';
+              }
+            }
+          } catch (error) {
+            console.log('Error reading precommit results:', error);
+          }
+          
+          comment += '📋 **Full audit reports available in workflow artifacts**\n';
+          comment += `🔗 [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n`;
+          
+          // Create or update comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const existingComment = comments.find(comment => 
+            comment.body.includes('🔍 Pre-commit Code Audit Results')
+          );
+          
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+          }
+    
+    - name: Upload Audit Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: precommit-audit-results-${{ github.run_number }}
+        path: |
+          precommit-results.txt
+          quality-results.txt
+          security-results.txt
+          precommit-report.json
+          changed_files.txt
+        retention-days: 30
+    
+    - name: Set PR Status
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ "${{ steps.analyze.outputs.status }}" = "failed" ]; then
+          echo "❌ Pre-commit audit failed"
+          exit 1
+        else
+          echo "✅ Pre-commit audit passed"
+        fi
