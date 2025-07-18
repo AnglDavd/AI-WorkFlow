@@ -80,7 +80,7 @@ configure_github_actions() {
     for workflow in "$WORKFLOWS_DIR"/*.yml; do
         if [ -f "$workflow" ]; then
             # Update ai-dev path to use framework path
-            sed -i.bak 's|./ai-dev|./.ai_framework/ai-dev|g' "$workflow"
+            sed -i.bak 's|./ai-dev|./.ai_workflow/ai-dev|g' "$workflow"
             rm -f "${workflow}.bak"
             echo "Updated paths in $(basename "$workflow")"
         fi
@@ -166,7 +166,7 @@ deploy_protection() {
             ;;
         4)
             echo "ℹ️  Protection deployment skipped"
-            echo "💡 To enable later: $TARGET_DIR/.ai_framework/scripts/deploy_protection.sh"
+            echo "💡 To enable later: $TARGET_DIR/.ai_workflow/scripts/deploy_protection.sh"
             ;;
         *)
             echo "ℹ️  Invalid choice - defaulting to production mode"

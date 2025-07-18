@@ -41,7 +41,7 @@ detect_context() {
         custom_rules=$(jq -r '.workflow_customizations.custom_validation_rules | length' ".ai_workflow/config/project_config.json" 2>/dev/null || echo 0)
         if [ "$custom_rules" -gt 0 ]; then
             experience_level="advanced"
-        elif [ -f "$HOME/.ai_framework/user_config.json" ]; then
+        elif [ -f "$HOME/.ai_workflow/user_config.json" ]; then
             experience_level="intermediate"
         fi
     fi
@@ -628,7 +628,7 @@ show_topic_specific_help() {
             echo "Configuration files:"
             echo "  Global: .ai_workflow/config/framework.json"
             echo "  Project: .ai_workflow/config/project_config.json"
-            echo "  User: ~/.ai_framework/user_config.json"
+            echo "  User: ~/.ai_workflow/user_config.json"
             echo ""
             echo "Commands:"
             echo "  ./ai-dev configure --interactive"

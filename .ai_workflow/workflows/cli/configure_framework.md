@@ -453,7 +453,7 @@ smart_configuration_assistant() {
 ### User-Level Configuration
 ```bash
 # User-specific settings (overrides global)
-USER_CONFIG_DIR="${HOME}/.ai_framework"
+USER_CONFIG_DIR="${HOME}/.ai_workflow"
 USER_CONFIG_FILE="${USER_CONFIG_DIR}/user_config.json"
 
 create_user_config() {

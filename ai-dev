@@ -2076,12 +2076,29 @@ EOF
         
         # Generate dashboard if requested
         if [[ "$GENERATE_FIRST" == "true" ]]; then
-            info "📊 Generating dashboard first..."
+            info "📊 Generating dashboard with real data..."
+            
+            # Generate dashboard data first
+            DATA_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_dashboard_data.sh"
+            if [[ -f "$DATA_SCRIPT" ]]; then
+                bash "$DATA_SCRIPT"
+            else
+                warning "Dashboard data script not found, generating basic dashboard"
+            fi
+            
+            # Generate visualizations
             VIZ_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_visualizations.sh"
             if [[ -f "$VIZ_SCRIPT" ]]; then
                 bash "$VIZ_SCRIPT"
             else
                 warning "Visualization script not found, using existing dashboard"
+            fi
+        else
+            # Always refresh data when opening dashboard
+            info "📊 Refreshing dashboard data..."
+            DATA_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_dashboard_data.sh"
+            if [[ -f "$DATA_SCRIPT" ]]; then
+                bash "$DATA_SCRIPT" >/dev/null 2>&1
             fi
         fi
         

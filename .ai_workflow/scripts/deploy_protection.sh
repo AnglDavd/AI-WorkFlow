@@ -26,7 +26,7 @@ if [ ! -d "$FRAMEWORK_DIR" ]; then
 fi
 
 # Create protection directory in target
-PROTECTION_DIR="$TARGET_DIR/.ai_framework/protection"
+PROTECTION_DIR="$TARGET_DIR/.ai_workflow/protection"
 mkdir -p "$PROTECTION_DIR"
 
 # Copy protection scripts
@@ -137,7 +137,7 @@ cd "$TARGET_DIR"
 echo "📋 Creating user-friendly commands..."
 
 # Create protection toggle script
-cat > "$TARGET_DIR/.ai_framework/protection_toggle.sh" << 'EOF'
+cat > "$TARGET_DIR/.ai_workflow/protection_toggle.sh" << 'EOF'
 #!/bin/bash
 
 # User-friendly protection toggle
@@ -175,11 +175,11 @@ case "$1" in
 esac
 EOF
 
-chmod +x "$TARGET_DIR/.ai_framework/protection_toggle.sh"
+chmod +x "$TARGET_DIR/.ai_workflow/protection_toggle.sh"
 
 # Update ai-dev script to use protection
 echo "🔧 Updating ai-dev script for protection..."
-AI_DEV_SCRIPT="$TARGET_DIR/.ai_framework/ai-dev"
+AI_DEV_SCRIPT="$TARGET_DIR/.ai_workflow/ai-dev"
 
 if [ -f "$AI_DEV_SCRIPT" ]; then
     # Backup original
@@ -266,7 +266,7 @@ EOF
             ;;
         2)
             echo "ℹ️  Protection available but disabled"
-            echo "    To enable: $TARGET_DIR/.ai_framework/protection_toggle.sh on"
+            echo "    To enable: $TARGET_DIR/.ai_workflow/protection_toggle.sh on"
             ;;
         3)
             echo "📋 Available modes:"
@@ -294,9 +294,9 @@ echo ""
 echo "🎉 Circuit Breaker Protection Deployment Complete!"
 echo ""
 echo "📋 User Commands:"
-echo "  $TARGET_DIR/.ai_framework/protection_toggle.sh on/off"
-echo "  $TARGET_DIR/.ai_framework/ai-dev protection status"
-echo "  $TARGET_DIR/.ai_framework/ai-dev protection mode list"
+echo "  $TARGET_DIR/.ai_workflow/protection_toggle.sh on/off"
+echo "  $TARGET_DIR/.ai_workflow/ai-dev protection status"
+echo "  $TARGET_DIR/.ai_workflow/ai-dev protection mode list"
 echo ""
 echo "📊 Protection Status:"
 if [ -f "$PROTECTION_SCRIPT" ]; then

@@ -337,7 +337,7 @@ fi
 # User configuration
 echo ""
 echo "👤 User Configuration:"
-user_config="$HOME/.ai_framework/user_config.json"
+user_config="$HOME/.ai_workflow/user_config.json"
 if [ -f "$user_config" ]; then
     if jq empty "$user_config" 2>/dev/null; then
         echo "  ✅ User config (valid JSON)"
