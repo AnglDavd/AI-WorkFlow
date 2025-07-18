@@ -24,11 +24,22 @@ elif [ "${AUTO_CONFIRM:-}" = "true" ]; then
     echo "Auto-confirmation enabled, using default project name: $PROJECT_NAME"
 else
     echo -n 'Enter your new project name (e.g., my-awesome-app): '
-    read PROJECT_NAME
+    
+    # Debug: Check if we're in interactive mode
+    if [ -t 0 ]; then
+        echo "[DEBUG] Interactive terminal detected, waiting for input..."
+        read PROJECT_NAME
+    else
+        echo "[DEBUG] Non-interactive terminal detected, using default..."
+        PROJECT_NAME="my-awesome-app"
+    fi
+    
     if [ -z "$PROJECT_NAME" ]; then
         # Fallback to directory name if user just presses Enter
         PROJECT_NAME=$(basename "$(pwd)")
         echo "Using directory name as project name: $PROJECT_NAME"
+    else
+        echo "Project name entered: $PROJECT_NAME"
     fi
 fi
 

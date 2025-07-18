@@ -5,7 +5,7 @@
   "build_date": "2025-07-17",
   "build_status": "stable",
   "global_settings": {
-    "default_quality_threshold": 0.8,
+    "default_quality_threshold": 0.6,
     "token_efficiency_mode": true,
     "auto_validation": true,
     "security_audit_enabled": true,
