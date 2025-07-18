@@ -34,10 +34,10 @@ Every great feature starts with a clear understanding of the problem and the des
 ```mermaid
 graph TD
     A[User Idea/Concept] --> B{Execute manager.sh new-prd}
-    B --> C[AI Agent (Role: Senior Technical Product Manager)]
-    C --&gt; D{Interactive Q&A with User}
-    D --&gt; E[Generated PRD (.ai_workflow/PRPs/generated/prd-*.md)]
-    E --&gt; F[Review & Approval by User]
+    B --> C[AI Agent - Senior Technical Product Manager]
+    C --> D{Interactive Q&A with User}
+    D --> E[Generated PRD in .ai_workflow/PRPs/generated/]
+    E --> F[Review & Approval by User]
 ```
 
 ### 📝 Step 2: Task Breakdown & Planning
@@ -50,10 +50,10 @@ Once the PRD is approved, the next step is to break down the high-level requirem
 
 ```mermaid
 graph TD
-    A[Approved PRD] --> B{AI Agent (Role: Senior Technical Lead)}
-    B --&gt; C[Analyzes PRD & Codebase]
-    C --&gt; D[Generates Task List (.ai_workflow/PRPs/checklist.md)]
-    D --&gt; E[Review & Approval by User]
+    A[Approved PRD] --> B[AI Agent - Senior Technical Lead]
+    B --> C[Analyzes PRD & Codebase]
+    C --> D[Generates Task List in .ai_workflow/PRPs/]
+    D --> E[Review & Approval by User]
 ```
 
 ### 🛠️ Step 3: Code Implementation & Execution
@@ -66,11 +66,11 @@ With a clear task list in hand, the AI agent can now proceed with implementing t
 
 ```mermaid
 graph TD
-    A[Approved Task List] --> B{Execute manager.sh run --prp .ai_workflow/PRPs/checklist.md}
-    B --> C[AI Agent (Role: Detail-Oriented Software Engineer)]
-    C --&gt; D{Executes Tasks & Validates Each Step}
-    D --&gt; E[Working Codebase + Updated Task List]
-    E --&gt; F[Final Review & Approval by User]
+    A[Approved Task List] --> B{Execute manager.sh run --prp checklist.md}
+    B --> C[AI Agent - Detail-Oriented Software Engineer]
+    C --> D{Executes Tasks & Validates Each Step}
+    D --> E[Working Codebase + Updated Task List]
+    E --> F[Final Review & Approval by User]
 ```
 
 ### 🔄 Step 4: Review & Refactor (Continuous Improvement)
@@ -83,12 +83,12 @@ After significant development, it's crucial to review the codebase for technical
 
 ```mermaid
 graph TD
-    A[Working Codebase] --> B{AI Agent (Role: Senior Software Architect)}
-    B --&gt; C[Analyzes Codebase]
-    C --&gt; D[Generates Refactoring Report & Proposed Tasks]
-    D --&gt; E[Review & Approval by User]
-    E --&gt; F[New Refactoring Tasks Added to Checklist]
-    F --&gt; A
+    A[Working Codebase] --> B[AI Agent - Senior Software Architect]
+    B --> C[Analyzes Codebase]
+    C --> D[Generates Refactoring Report & Proposed Tasks]
+    D --> E[Review & Approval by User]
+    E --> F[New Refactoring Tasks Added to Checklist]
+    F --> A
 ```
 
 ## ⚙️ Specialized Workflows & Commands
