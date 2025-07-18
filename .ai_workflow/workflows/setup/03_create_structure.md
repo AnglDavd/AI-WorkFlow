@@ -119,6 +119,46 @@ EOF
     echo "--- End GitHub Actions Configuration ---"
 }
 
+# Function to create PRPs directory structure
+create_prps_structure() {
+    TARGET_DIR=$1
+    echo "--- Creating PRPs Directory Structure in $TARGET_DIR ---"
+    
+    # Create PRPs directory structure
+    PRPS_DIR="$TARGET_DIR/.ai_workflow/PRPs"
+    mkdir -p "$PRPS_DIR/generated"
+    mkdir -p "$PRPS_DIR/templates"
+    mkdir -p "$PRPS_DIR/archive"
+    
+    # Copy PRP templates if they exist
+    if [ -d ".ai_workflow/PRPs/templates" ]; then
+        echo "Copying PRP templates..."
+        cp -r .ai_workflow/PRPs/templates/* "$PRPS_DIR/templates/" 2>/dev/null || {
+            echo "⚠️  No PRP templates found in framework"
+        }
+    fi
+    
+    # Create README for PRPs directory
+    cat > "$PRPS_DIR/README.md" << 'EOF'
+# PRPs Directory
+
+This directory contains Project Response Plans (PRPs) for your project.
+
+## Structure
+- `generated/` - Auto-generated PRPs from PRDs
+- `templates/` - PRP templates for different project types
+- `archive/` - Completed or obsolete PRPs
+
+## Usage
+Use `./ai-dev generate <prd_file>` to create new PRPs from PRDs.
+Use `./ai-dev run <prp_file>` to execute existing PRPs.
+EOF
+    
+    echo "✅ PRPs directory structure created successfully"
+    echo "📋 Directories: generated/, templates/, archive/"
+    echo "--- End PRPs Directory Structure ---"
+}
+
 # Function to deploy circuit breaker protection to user project
 deploy_protection() {
     TARGET_DIR=$1
@@ -202,6 +242,9 @@ if [ -n "$PROJECT_DIR" ] && [ "$PROJECT_DIR" != "." ]; then
     # Configure GitHub Actions for the user project
     configure_github_actions "$PROJECT_DIR"
 
+    # Create PRPs directory structure
+    create_prps_structure "$PROJECT_DIR"
+
     # Deploy circuit breaker protection for the user project
     deploy_protection "$PROJECT_DIR"
 
@@ -223,6 +266,9 @@ else
 
     # Configure GitHub Actions for the user project
     configure_github_actions "."
+
+    # Create PRPs directory structure
+    create_prps_structure "."
 
     # Deploy circuit breaker protection for the user project
     deploy_protection "."
