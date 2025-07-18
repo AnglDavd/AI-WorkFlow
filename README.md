@@ -94,10 +94,10 @@ mkdir my-awesome-project
 cd my-awesome-project
 
 # 2. Clone the framework as a hidden subdirectory
-git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
+git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_workflow
 
 # 3. Start using the framework
-./.ai_framework/ai-dev setup
+./.ai_workflow/ai-dev setup
 ```
 
 ### 📋 System Requirements
@@ -155,8 +155,8 @@ Check your repository's GitHub Actions status:
 #### 🐧 **Linux** (Recommended)
 ```bash
 # Ready to use out of the box
-git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
-./.ai_framework/ai-dev setup
+git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_workflow
+./.ai_workflow/ai-dev setup
 ```
 
 #### 🍎 **macOS**
@@ -168,16 +168,16 @@ brew install coreutils gnu-sed gnu-grep findutils
 export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
 
 # Then proceed with installation
-git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
-./.ai_framework/ai-dev setup
+git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_workflow
+./.ai_workflow/ai-dev setup
 ```
 
 #### 🪟 **Windows**
 ```bash
 # Option 1: Git Bash (Recommended)
 # Install Git for Windows, then in Git Bash:
-git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
-./.ai_framework/ai-dev setup
+git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_workflow
+./.ai_workflow/ai-dev setup
 
 # Option 2: WSL (Windows Subsystem for Linux)
 # Enable WSL, then follow Linux instructions
