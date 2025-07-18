@@ -17,14 +17,19 @@ This node starts the project setup process by gathering the new project's name f
 ./.ai_workflow/workflows/common/log_work_journal.md "INFO" "Starting Project Setup workflow."
 
 # Use environment variable or interactive prompt with auto-confirmation support
-if [ -n "$PROJECT_NAME" ]; then
+if [ -n "${PROJECT_NAME:-}" ]; then
     echo "Using PROJECT_NAME from environment: $PROJECT_NAME"
-elif [ "$AUTO_CONFIRM" = "true" ]; then
+elif [ "${AUTO_CONFIRM:-}" = "true" ]; then
     PROJECT_NAME="my-awesome-app"
     echo "Auto-confirmation enabled, using default project name: $PROJECT_NAME"
 else
     echo -n 'Enter your new project name (e.g., my-awesome-app): '
     read PROJECT_NAME
+    if [ -z "$PROJECT_NAME" ]; then
+        # Fallback to directory name if user just presses Enter
+        PROJECT_NAME=$(basename "$(pwd)")
+        echo "Using directory name as project name: $PROJECT_NAME"
+    fi
 fi
 
 if [ -z "$PROJECT_NAME" ]; then
