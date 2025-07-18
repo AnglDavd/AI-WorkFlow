@@ -25,8 +25,11 @@ elif [ "${AUTO_CONFIRM:-}" = "true" ]; then
 else
     echo -n 'Enter your new project name (e.g., my-awesome-app): '
     
-    # Debug: Check if we're in interactive mode
-    if [ -t 0 ]; then
+    # Force interactive mode by using /dev/tty
+    if [ -r /dev/tty ]; then
+        echo "[DEBUG] Using /dev/tty for interactive input..."
+        read PROJECT_NAME < /dev/tty
+    elif [ -t 0 ]; then
         echo "[DEBUG] Interactive terminal detected, waiting for input..."
         read PROJECT_NAME
     else
