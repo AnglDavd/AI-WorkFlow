@@ -916,7 +916,7 @@ EOF
         
         info "Generating tasks from: $PRD_FILE"
         export PRD_FILE_PATH="$PRD_FILE"
-        execute_workflow "${AI_WORKFLOW_DIR}/generate-tasks.md" "Task Generation"
+        execute_workflow "${AI_WORKFLOW_DIR}/workflows/prd/generate-tasks.md" "Task Generation"
         ;;
 
     run)
