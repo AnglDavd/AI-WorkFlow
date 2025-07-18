@@ -1,0 +1,83 @@
+flowchart TD
+    subgraph "📥 Input Sources"
+        USER[👤 User Commands<br/>CLI Input]
+        FILES[📄 Config Files<br/>CLAUDE.md, manager.md]
+        GIT[📦 Git Repository<br/>Version Control]
+        API[🔗 External APIs<br/>GitHub, Tools]
+        FEEDBACK[💬 User Feedback<br/>Issues, PRs]
+    end
+    
+    subgraph "⚙️ Processing Pipeline"
+        PARSE[🔍 Parser<br/>Command Analysis]
+        VALIDATE[✅ Validator<br/>Security & Syntax]
+        ROUTE[🚦 Router<br/>Workflow Selection]
+        EXECUTE[🏃 Executor<br/>Task Processing]
+        MONITOR[📊 Monitor<br/>Performance Tracking]
+    end
+    
+    subgraph "💾 Data Storage"
+        CONFIG[⚙️ Configuration<br/>Settings & Preferences]
+        STATE[🔄 State Management<br/>Session & Progress]
+        LOGS[📝 Logs & Metrics<br/>Performance Data]
+        CACHE[⚡ Cache<br/>Optimization]
+        BACKUP[💾 Backup<br/>Safety & Recovery]
+    end
+    
+    subgraph "📤 Output Systems"
+        CONSOLE[🖥️ Console Output<br/>User Interface]
+        REPORTS[📊 Reports<br/>Analytics & Status]
+        GITHUB[🤖 GitHub Actions<br/>Automation]
+        NOTIFY[🔔 Notifications<br/>Alerts & Updates]
+        FILES_OUT[📄 Generated Files<br/>PRDs, PRPs, Docs]
+    end
+    
+    %% Input Flow
+    USER --> PARSE
+    FILES --> PARSE
+    GIT --> VALIDATE
+    API --> VALIDATE
+    FEEDBACK --> VALIDATE
+    
+    %% Processing Flow
+    PARSE --> VALIDATE
+    VALIDATE --> ROUTE
+    ROUTE --> EXECUTE
+    EXECUTE --> MONITOR
+    
+    %% Storage Interactions
+    VALIDATE <--> CONFIG
+    ROUTE <--> STATE
+    EXECUTE <--> STATE
+    EXECUTE <--> CACHE
+    MONITOR --> LOGS
+    EXECUTE --> BACKUP
+    
+    %% Output Flow
+    EXECUTE --> CONSOLE
+    MONITOR --> REPORTS
+    EXECUTE --> GITHUB
+    MONITOR --> NOTIFY
+    EXECUTE --> FILES_OUT
+    
+    %% Feedback Loops
+    REPORTS --> CONFIG
+    LOGS --> VALIDATE
+    NOTIFY --> USER
+    GITHUB --> LOGS
+    
+    %% Data Volume Indicators
+    USER -.->|High Volume| PARSE
+    EXECUTE -.->|High Volume| STATE
+    MONITOR -.->|Continuous| LOGS
+    GITHUB -.->|Automated| REPORTS
+    
+    %% Styling
+    classDef inputStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef processStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef storageStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef outputStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class USER,FILES,GIT,API,FEEDBACK inputStyle
+    class PARSE,VALIDATE,ROUTE,EXECUTE,MONITOR processStyle
+    class CONFIG,STATE,LOGS,CACHE,BACKUP storageStyle
+    class CONSOLE,REPORTS,GITHUB,NOTIFY,FILES_OUT outputStyle

@@ -1,0 +1,390 @@
+name: Distribute Actions to Users
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      distribution_type:
+        description: 'Type of distribution'
+        required: false
+        default: 'template'
+        type: choice
+        options:
+          - template
+          - reusable
+          - composite
+          - marketplace
+
+jobs:
+  create-user-templates:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create User Action Templates
+        run: |
+          echo "📦 Creating user-friendly GitHub Actions templates..."
+          
+          # Create templates directory
+          mkdir -p .github/templates/user-actions
+          
+          # Create basic health check template for users
+          cat > .github/templates/user-actions/ai-framework-health-check.yml << 'EOF'
+          name: AI Framework Health Check
+          
+          on:
+            schedule:
+              - cron: '0 8 * * *'  # Daily at 8 AM UTC
+            workflow_dispatch:
+          
+          jobs:
+            framework-health:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - name: Checkout code
+                  uses: actions/checkout@v4
+                
+                - name: Run Framework Health Check
+                  run: |
+                    if [ -f ".ai_framework/ai-dev" ]; then
+                      chmod +x .ai_framework/ai-dev
+                      .ai_framework/ai-dev diagnose
+                    else
+                      echo "❌ AI Framework not found. Please ensure it's installed in .ai_framework/"
+                      exit 1
+                    fi
+          EOF
+          
+          # Create performance monitoring template
+          cat > .github/templates/user-actions/ai-framework-performance.yml << 'EOF'
+          name: AI Framework Performance Check
+          
+          on:
+            schedule:
+              - cron: '0 6 * * *'  # Daily at 6 AM UTC
+            workflow_dispatch:
+          
+          jobs:
+            performance-check:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - name: Checkout code
+                  uses: actions/checkout@v4
+                
+                - name: Run Performance Check
+                  run: |
+                    if [ -f ".ai_framework/ai-dev" ]; then
+                      chmod +x .ai_framework/ai-dev
+                      
+                      # Test command performance
+                      echo "🚀 Testing framework performance..."
+                      START_TIME=$(date +%s.%N)
+                      timeout 30 .ai_framework/ai-dev status
+                      END_TIME=$(date +%s.%N)
+                      DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
+                      
+                      echo "📊 Framework response time: ${DURATION}s"
+                      
+                      # Performance threshold check
+                      if (( $(echo "$DURATION > 5.0" | bc -l) )); then
+                        echo "⚠️ Performance issue detected: ${DURATION}s > 5.0s"
+                        exit 1
+                      fi
+                    else
+                      echo "❌ AI Framework not found"
+                      exit 1
+                    fi
+          EOF
+          
+          # Create update notification template
+          cat > .github/templates/user-actions/ai-framework-update-check.yml << 'EOF'
+          name: AI Framework Update Check
+          
+          on:
+            schedule:
+              - cron: '0 12 * * 1'  # Weekly on Mondays at 12 PM UTC
+            workflow_dispatch:
+          
+          jobs:
+            update-check:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - name: Checkout code
+                  uses: actions/checkout@v4
+                
+                - name: Check for Framework Updates
+                  run: |
+                    if [ -d ".ai_framework" ]; then
+                      cd .ai_framework
+                      
+                      # Get current version
+                      CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "unknown")
+                      
+                      # Check for updates
+                      git fetch origin main
+                      LATEST_VERSION=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo "unknown")
+                      
+                      echo "📊 Current version: $CURRENT_VERSION"
+                      echo "📊 Latest version: $LATEST_VERSION"
+                      
+                      if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+                        echo "🚀 Framework update available: $LATEST_VERSION"
+                        echo "Run: .ai_framework/ai-dev update"
+                        
+                        # Create update notification issue
+                        echo "Creating update notification..."
+                      else
+                        echo "✅ Framework is up to date"
+                      fi
+                    else
+                      echo "❌ AI Framework not found"
+                      exit 1
+                    fi
+          EOF
+          
+          echo "✅ User action templates created"
+      
+      - name: Create Installation Guide
+        run: |
+          echo "📚 Creating installation guide for users..."
+          
+          cat > .github/templates/GITHUB_ACTIONS_SETUP.md << 'EOF'
+          # GitHub Actions Setup for AI Framework Users
+          
+          ## 🚀 Quick Setup
+          
+          Add these GitHub Actions to your project to get automated monitoring and updates for the AI Framework.
+          
+          ### 1. Copy Templates
+          
+          Copy the desired action files from this repository to your project:
+          
+          ```bash
+          # In your project directory
+          mkdir -p .github/workflows
+          
+          # Copy the actions you want
+          cp .ai_framework/.github/templates/user-actions/ai-framework-health-check.yml .github/workflows/
+          cp .ai_framework/.github/templates/user-actions/ai-framework-performance.yml .github/workflows/
+          cp .ai_framework/.github/templates/user-actions/ai-framework-update-check.yml .github/workflows/
+          ```
+          
+          ### 2. Available Actions
+          
+          | Action | Purpose | Schedule |
+          |--------|---------|----------|
+          | `ai-framework-health-check.yml` | Health monitoring | Daily 8 AM UTC |
+          | `ai-framework-performance.yml` | Performance monitoring | Daily 6 AM UTC |
+          | `ai-framework-update-check.yml` | Update notifications | Weekly Monday 12 PM UTC |
+          
+          ### 3. Customization
+          
+          #### Change Schedule
+          ```yaml
+          on:
+            schedule:
+              - cron: '0 9 * * *'  # Change to 9 AM UTC
+          ```
+          
+          #### Add Notifications
+          ```yaml
+          - name: Notify on Issues
+            if: failure()
+            uses: actions/github-script@v7
+            with:
+              script: |
+                github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: 'AI Framework Issue Detected',
+                  body: 'Automated monitoring detected an issue with the AI Framework.',
+                  labels: ['ai-framework', 'automated']
+                });
+          ```
+          
+          ## 🔧 Advanced Setup
+          
+          ### Reusable Workflows
+          
+          For more advanced users, you can use reusable workflows:
+          
+          ```yaml
+          name: AI Framework Monitoring
+          
+          on:
+            schedule:
+              - cron: '0 8 * * *'
+            workflow_dispatch:
+          
+          jobs:
+            monitoring:
+              uses: AnglDavd/AI-WorkFlow/.github/workflows/reusable-health-check.yml@main
+              with:
+                framework_path: '.ai_framework'
+                performance_threshold: 5.0
+          ```
+          
+          ### Environment Variables
+          
+          You can configure the actions using environment variables:
+          
+          ```yaml
+          env:
+            AI_FRAMEWORK_PATH: '.ai_framework'
+            PERFORMANCE_THRESHOLD: '5.0'
+            HEALTH_CHECK_ENABLED: 'true'
+          ```
+          
+          ## 📊 Benefits
+          
+          ### For Your Project
+          - ✅ **Automated Health Monitoring** - Know when the framework has issues
+          - ✅ **Performance Tracking** - Monitor framework response times
+          - ✅ **Update Notifications** - Get alerted when updates are available
+          - ✅ **Zero Configuration** - Works out of the box
+          
+          ### Integration with Your Workflow
+          - Works alongside your existing CI/CD
+          - Doesn't interfere with your project's actions
+          - Provides valuable insights about framework health
+          - Helps maintain project stability
+          
+          ## 🔗 Links
+          
+          - [AI Framework Documentation](https://github.com/AnglDavd/AI-WorkFlow)
+          - [GitHub Actions Documentation](https://docs.github.com/en/actions)
+          - [Cron Schedule Examples](https://crontab.guru/)
+          EOF
+          
+          echo "✅ Installation guide created"
+      
+      - name: Create Reusable Workflows
+        run: |
+          echo "🔄 Creating reusable workflows..."
+          
+          # Create reusable health check workflow
+          cat > .github/workflows/reusable-health-check.yml << 'EOF'
+          name: Reusable AI Framework Health Check
+          
+          on:
+            workflow_call:
+              inputs:
+                framework_path:
+                  description: 'Path to AI Framework installation'
+                  required: false
+                  type: string
+                  default: '.ai_framework'
+                performance_threshold:
+                  description: 'Performance threshold in seconds'
+                  required: false
+                  type: number
+                  default: 5.0
+                create_issue_on_failure:
+                  description: 'Create issue if health check fails'
+                  required: false
+                  type: boolean
+                  default: true
+          
+          jobs:
+            health-check:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - name: Checkout code
+                  uses: actions/checkout@v4
+                
+                - name: AI Framework Health Check
+                  run: |
+                    FRAMEWORK_PATH="${{ inputs.framework_path }}"
+                    THRESHOLD="${{ inputs.performance_threshold }}"
+                    
+                    echo "🔍 Checking AI Framework health..."
+                    echo "📁 Framework path: $FRAMEWORK_PATH"
+                    echo "⏱️ Performance threshold: ${THRESHOLD}s"
+                    
+                    if [ -f "$FRAMEWORK_PATH/ai-dev" ]; then
+                      chmod +x "$FRAMEWORK_PATH/ai-dev"
+                      
+                      # Health check
+                      echo "🏥 Running health check..."
+                      if ! "$FRAMEWORK_PATH/ai-dev" diagnose; then
+                        echo "❌ Health check failed"
+                        exit 1
+                      fi
+                      
+                      # Performance check
+                      echo "🚀 Running performance check..."
+                      START_TIME=$(date +%s.%N)
+                      timeout 30 "$FRAMEWORK_PATH/ai-dev" status
+                      END_TIME=$(date +%s.%N)
+                      DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
+                      
+                      echo "📊 Performance: ${DURATION}s"
+                      
+                      if (( $(echo "$DURATION > $THRESHOLD" | bc -l) )); then
+                        echo "⚠️ Performance issue: ${DURATION}s > ${THRESHOLD}s"
+                        exit 1
+                      fi
+                      
+                      echo "✅ AI Framework is healthy"
+                    else
+                      echo "❌ AI Framework not found at $FRAMEWORK_PATH"
+                      exit 1
+                    fi
+                
+                - name: Create Issue on Failure
+                  if: failure() && inputs.create_issue_on_failure
+                  uses: actions/github-script@v7
+                  with:
+                    script: |
+                      github.rest.issues.create({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        title: '🚨 AI Framework Health Check Failed',
+                        body: `
+                        # AI Framework Health Check Failed
+                        
+                        **Framework Path**: ${{ inputs.framework_path }}
+                        **Performance Threshold**: ${{ inputs.performance_threshold }}s
+                        **Check Time**: ${new Date().toISOString()}
+                        
+                        ## 🔍 Issue Details
+                        
+                        The automated health check for the AI Framework has failed. This could indicate:
+                        
+                        - Framework installation issues
+                        - Performance degradation
+                        - Configuration problems
+                        - Missing dependencies
+                        
+                        ## 🔧 Next Steps
+                        
+                        1. Check the workflow logs for detailed error information
+                        2. Verify the framework is properly installed at ${{ inputs.framework_path }}
+                        3. Run manual health check: \`${{ inputs.framework_path }}/ai-dev diagnose\`
+                        4. Consider updating the framework if issues persist
+                        
+                        ---
+                        
+                        *This issue was created automatically by the AI Framework Health Check action.*
+                        `,
+                        labels: ['ai-framework', 'health-check', 'automated', 'urgent']
+                      });
+          EOF
+          
+          echo "✅ Reusable workflows created"
+      
+      - name: Upload Distribution Templates
+        uses: actions/upload-artifact@v4
+        with:
+          name: user-action-templates
+          path: .github/templates/
+          retention-days: 90

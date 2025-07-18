@@ -1,0 +1,894 @@
+name: Framework Health Check
+
+on:
+  schedule:
+    # Run health check daily at 8 AM UTC
+    - cron: '0 8 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.ai_workflow/**'
+      - 'ai-dev'
+      - 'CLAUDE.md'
+      - 'manager.md'
+      - '.github/workflows/framework-health-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.ai_workflow/**'
+      - 'ai-dev'
+      - 'CLAUDE.md'
+      - 'manager.md'
+  workflow_dispatch:
+    inputs:
+      health_check_type:
+        description: 'Type of health check to perform'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - structural
+          - functional
+          - security
+          - documentation
+      severity_threshold:
+        description: 'Minimum severity level to report'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+
+jobs:
+  structural-health:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.health_check_type == 'full' || github.event.inputs.health_check_type == 'structural' || github.event.inputs.health_check_type == ''
+    outputs:
+      structural_score: ${{ steps.structural.outputs.score }}
+      critical_issues: ${{ steps.structural.outputs.critical_issues }}
+      recommendations: ${{ steps.structural.outputs.recommendations }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Environment
+        run: |
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export HEALTH_CHECK_MODE=true
+      
+      - name: Structural Health Check
+        id: structural
+        run: |
+          echo "🏗️ Performing structural health check..."
+          
+          # Initialize results
+          SCORE=100
+          CRITICAL_ISSUES=0
+          RECOMMENDATIONS=()
+          
+          # Check required files
+          echo "📋 Checking required files..."
+          REQUIRED_FILES=(
+            "ai-dev"
+            "CLAUDE.md"
+            "manager.md"
+            ".ai_workflow/GLOBAL_AI_RULES.md"
+            ".ai_workflow/AGENT_GUIDE.md"
+            ".ai_workflow/FRAMEWORK_GUIDE.md"
+            ".ai_workflow/ARCHITECTURE.md"
+          )
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing required file: $file"
+              SCORE=$((SCORE - 10))
+              CRITICAL_ISSUES=$((CRITICAL_ISSUES + 1))
+              RECOMMENDATIONS+=("Restore missing file: $file")
+            else
+              echo "✅ Found: $file"
+            fi
+          done
+          
+          # Check directory structure
+          echo "📁 Checking directory structure..."
+          REQUIRED_DIRS=(
+            ".ai_workflow"
+            ".ai_workflow/workflows"
+            ".ai_workflow/workflows/setup"
+            ".ai_workflow/workflows/prd"
+            ".ai_workflow/workflows/prp"
+            ".ai_workflow/workflows/run"
+            ".ai_workflow/workflows/security"
+            ".ai_workflow/workflows/common"
+            ".ai_workflow/commands"
+            ".ai_workflow/PRPs"
+            ".ai_workflow/PRPs/templates"
+            ".ai_workflow/tools"
+            ".github"
+            ".github/workflows"
+          )
+          
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "❌ Missing directory: $dir"
+              SCORE=$((SCORE - 5))
+              RECOMMENDATIONS+=("Create missing directory: $dir")
+            else
+              echo "✅ Found: $dir"
+            fi
+          done
+          
+          # Check ai-dev permissions
+          echo "🔐 Checking ai-dev permissions..."
+          if [ ! -x "ai-dev" ]; then
+            echo "❌ ai-dev is not executable"
+            SCORE=$((SCORE - 15))
+            CRITICAL_ISSUES=$((CRITICAL_ISSUES + 1))
+            RECOMMENDATIONS+=("Make ai-dev executable: chmod +x ai-dev")
+          else
+            echo "✅ ai-dev is executable"
+          fi
+          
+          # Check workflow file count
+          echo "📊 Checking workflow completeness..."
+          WORKFLOW_COUNT=$(find .ai_workflow/workflows -name "*.md" | wc -l)
+          EXPECTED_MIN_WORKFLOWS=50
+          
+          if [ "$WORKFLOW_COUNT" -lt "$EXPECTED_MIN_WORKFLOWS" ]; then
+            echo "⚠️ Low workflow count: $WORKFLOW_COUNT (expected: >$EXPECTED_MIN_WORKFLOWS)"
+            SCORE=$((SCORE - 10))
+            RECOMMENDATIONS+=("Verify workflow completeness - found only $WORKFLOW_COUNT workflows")
+          else
+            echo "✅ Workflow count: $WORKFLOW_COUNT workflows"
+          fi
+          
+          # Check for broken symlinks
+          echo "🔗 Checking for broken symlinks..."
+          BROKEN_SYMLINKS=$(find . -type l ! -exec test -e {} \; -print | wc -l)
+          if [ "$BROKEN_SYMLINKS" -gt 0 ]; then
+            echo "❌ Found $BROKEN_SYMLINKS broken symlinks"
+            SCORE=$((SCORE - 5))
+            RECOMMENDATIONS+=("Fix broken symlinks found in repository")
+          else
+            echo "✅ No broken symlinks found"
+          fi
+          
+          # Check for large files
+          echo "📦 Checking for large files..."
+          LARGE_FILES=$(find . -type f -size +1M | wc -l)
+          if [ "$LARGE_FILES" -gt 0 ]; then
+            echo "⚠️ Found $LARGE_FILES files larger than 1MB"
+            SCORE=$((SCORE - 2))
+            RECOMMENDATIONS+=("Review large files - found $LARGE_FILES files >1MB")
+          else
+            echo "✅ No large files found"
+          fi
+          
+          # Set outputs
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "critical_issues=$CRITICAL_ISSUES" >> $GITHUB_OUTPUT
+          
+          # Format recommendations
+          RECOMMENDATIONS_STR=""
+          for rec in "${RECOMMENDATIONS[@]}"; do
+            RECOMMENDATIONS_STR="$RECOMMENDATIONS_STR- $rec\n"
+          done
+          
+          echo "recommendations<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$RECOMMENDATIONS_STR" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "🏗️ Structural health check completed"
+          echo "📊 Score: $SCORE/100"
+          echo "🚨 Critical issues: $CRITICAL_ISSUES"
+      
+      - name: Upload Structural Health Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: structural-health-results
+          path: |
+            structural-health-*.json
+            structural-health-*.md
+          retention-days: 30
+
+  functional-health:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.health_check_type == 'full' || github.event.inputs.health_check_type == 'functional' || github.event.inputs.health_check_type == ''
+    outputs:
+      functional_score: ${{ steps.functional.outputs.score }}
+      failed_commands: ${{ steps.functional.outputs.failed_commands }}
+      working_commands: ${{ steps.functional.outputs.working_commands }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Environment
+        run: |
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export HEALTH_CHECK_MODE=true
+      
+      - name: Functional Health Check
+        id: functional
+        run: |
+          echo "⚙️ Performing functional health check..."
+          
+          # Initialize results
+          SCORE=100
+          FAILED_COMMANDS=0
+          WORKING_COMMANDS=0
+          
+          # Test core commands
+          echo "🧪 Testing core commands..."
+          COMMANDS=(
+            "help"
+            "version"
+            "status"
+            "diagnose"
+            "platform"
+          )
+          
+          for cmd in "${COMMANDS[@]}"; do
+            echo "Testing: ./ai-dev $cmd"
+            if timeout 30 ./ai-dev "$cmd" > /dev/null 2>&1; then
+              echo "✅ $cmd: PASS"
+              WORKING_COMMANDS=$((WORKING_COMMANDS + 1))
+            else
+              echo "❌ $cmd: FAIL"
+              FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+              SCORE=$((SCORE - 15))
+            fi
+          done
+          
+          # Test workflow access
+          echo "📋 Testing workflow access..."
+          if [ -d ".ai_workflow/workflows/setup" ]; then
+            SETUP_WORKFLOWS=$(find .ai_workflow/workflows/setup -name "*.md" | wc -l)
+            if [ "$SETUP_WORKFLOWS" -gt 0 ]; then
+              echo "✅ Setup workflows accessible: $SETUP_WORKFLOWS files"
+              WORKING_COMMANDS=$((WORKING_COMMANDS + 1))
+            else
+              echo "❌ No setup workflows found"
+              FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+              SCORE=$((SCORE - 10))
+            fi
+          else
+            echo "❌ Setup workflows directory missing"
+            FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+            SCORE=$((SCORE - 20))
+          fi
+          
+          # Test configuration loading
+          echo "⚙️ Testing configuration loading..."
+          if [ -f ".ai_workflow/GLOBAL_AI_RULES.md" ]; then
+            if grep -q "GLOBAL_AI_RULES" ".ai_workflow/GLOBAL_AI_RULES.md"; then
+              echo "✅ Global AI rules loadable"
+              WORKING_COMMANDS=$((WORKING_COMMANDS + 1))
+            else
+              echo "❌ Global AI rules corrupted"
+              FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+              SCORE=$((SCORE - 10))
+            fi
+          else
+            echo "❌ Global AI rules missing"
+            FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+            SCORE=$((SCORE - 20))
+          fi
+          
+          # Test shell script syntax
+          echo "🔍 Testing shell script syntax..."
+          SHELL_SCRIPTS=$(find .ai_workflow -name "*.sh" | wc -l)
+          if [ "$SHELL_SCRIPTS" -gt 0 ]; then
+            SYNTAX_ERRORS=0
+            for script in $(find .ai_workflow -name "*.sh"); do
+              if ! bash -n "$script" 2>/dev/null; then
+                echo "❌ Syntax error in: $script"
+                SYNTAX_ERRORS=$((SYNTAX_ERRORS + 1))
+              fi
+            done
+            
+            if [ "$SYNTAX_ERRORS" -eq 0 ]; then
+              echo "✅ All shell scripts have valid syntax"
+              WORKING_COMMANDS=$((WORKING_COMMANDS + 1))
+            else
+              echo "❌ Found $SYNTAX_ERRORS shell scripts with syntax errors"
+              FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+              SCORE=$((SCORE - 10))
+            fi
+          else
+            echo "ℹ️ No shell scripts found to test"
+          fi
+          
+          # Test markdown file accessibility
+          echo "📄 Testing markdown file accessibility..."
+          MARKDOWN_FILES=$(find .ai_workflow -name "*.md" | wc -l)
+          READABLE_FILES=0
+          
+          for md_file in $(find .ai_workflow -name "*.md"); do
+            if [ -r "$md_file" ]; then
+              READABLE_FILES=$((READABLE_FILES + 1))
+            fi
+          done
+          
+          if [ "$READABLE_FILES" -eq "$MARKDOWN_FILES" ]; then
+            echo "✅ All markdown files readable: $READABLE_FILES/$MARKDOWN_FILES"
+            WORKING_COMMANDS=$((WORKING_COMMANDS + 1))
+          else
+            echo "❌ Some markdown files not readable: $READABLE_FILES/$MARKDOWN_FILES"
+            FAILED_COMMANDS=$((FAILED_COMMANDS + 1))
+            SCORE=$((SCORE - 5))
+          fi
+          
+          # Set outputs
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "failed_commands=$FAILED_COMMANDS" >> $GITHUB_OUTPUT
+          echo "working_commands=$WORKING_COMMANDS" >> $GITHUB_OUTPUT
+          
+          echo "⚙️ Functional health check completed"
+          echo "📊 Score: $SCORE/100"
+          echo "✅ Working commands: $WORKING_COMMANDS"
+          echo "❌ Failed commands: $FAILED_COMMANDS"
+      
+      - name: Upload Functional Health Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-health-results
+          path: |
+            functional-health-*.json
+            functional-health-*.md
+          retention-days: 30
+
+  security-health:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.health_check_type == 'full' || github.event.inputs.health_check_type == 'security' || github.event.inputs.health_check_type == ''
+    outputs:
+      security_score: ${{ steps.security.outputs.score }}
+      security_issues: ${{ steps.security.outputs.security_issues }}
+      vulnerabilities: ${{ steps.security.outputs.vulnerabilities }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Environment
+        run: |
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export HEALTH_CHECK_MODE=true
+      
+      - name: Security Health Check
+        id: security
+        run: |
+          echo "🔒 Performing security health check..."
+          
+          # Initialize results
+          SCORE=100
+          SECURITY_ISSUES=0
+          VULNERABILITIES=0
+          
+          # Check for sensitive files
+          echo "🔍 Checking for sensitive files..."
+          SENSITIVE_PATTERNS=(
+            "*.key"
+            "*.pem"
+            "*.p12"
+            "*.pfx"
+            "*.crt"
+            "*.cer"
+            "id_rsa"
+            "id_dsa"
+            "*.env"
+            "*.secret"
+            "*.password"
+            "*.credentials"
+          )
+          
+          for pattern in "${SENSITIVE_PATTERNS[@]}"; do
+            FOUND_FILES=$(find . -name "$pattern" -type f | wc -l)
+            if [ "$FOUND_FILES" -gt 0 ]; then
+              echo "⚠️ Found $FOUND_FILES files matching sensitive pattern: $pattern"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + FOUND_FILES))
+              SCORE=$((SCORE - 10))
+            fi
+          done
+          
+          # Check for hardcoded secrets
+          echo "🔐 Checking for hardcoded secrets..."
+          SECRET_PATTERNS=(
+            "password.*="
+            "api_key.*="
+            "secret.*="
+            "token.*="
+            "PRIVATE.*KEY"
+            "-----BEGIN.*KEY"
+          )
+          
+          for pattern in "${SECRET_PATTERNS[@]}"; do
+            FOUND_SECRETS=$(grep -r -i "$pattern" .ai_workflow/ 2>/dev/null | wc -l)
+            if [ "$FOUND_SECRETS" -gt 0 ]; then
+              echo "⚠️ Found $FOUND_SECRETS potential secrets matching: $pattern"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + FOUND_SECRETS))
+              SCORE=$((SCORE - 5))
+            fi
+          done
+          
+          # Check file permissions
+          echo "🔒 Checking file permissions..."
+          WORLD_WRITABLE=$(find . -type f -perm -o+w | wc -l)
+          if [ "$WORLD_WRITABLE" -gt 0 ]; then
+            echo "⚠️ Found $WORLD_WRITABLE world-writable files"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + WORLD_WRITABLE))
+            SCORE=$((SCORE - 5))
+          else
+            echo "✅ No world-writable files found"
+          fi
+          
+          # Check for dangerous commands
+          echo "⚠️ Checking for dangerous commands..."
+          DANGEROUS_COMMANDS=(
+            "rm -rf /"
+            "chmod 777"
+            "eval.*\\$"
+            "curl.*|.*sh"
+            "wget.*|.*sh"
+            "sudo.*su"
+          )
+          
+          for cmd in "${DANGEROUS_COMMANDS[@]}"; do
+            FOUND_DANGEROUS=$(grep -r "$cmd" .ai_workflow/ 2>/dev/null | wc -l)
+            if [ "$FOUND_DANGEROUS" -gt 0 ]; then
+              echo "⚠️ Found $FOUND_DANGEROUS instances of dangerous command: $cmd"
+              VULNERABILITIES=$((VULNERABILITIES + FOUND_DANGEROUS))
+              SCORE=$((SCORE - 15))
+            fi
+          done
+          
+          # Check for proper input validation
+          echo "🛡️ Checking for input validation..."
+          if grep -r "sanitize\|validate\|escape" .ai_workflow/ > /dev/null 2>&1; then
+            echo "✅ Input validation patterns found"
+          else
+            echo "⚠️ Limited input validation patterns found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            SCORE=$((SCORE - 10))
+          fi
+          
+          # Check for security documentation
+          echo "📄 Checking for security documentation..."
+          SECURITY_DOCS=$(find .ai_workflow -name "*security*" -o -name "*SECURITY*" | wc -l)
+          if [ "$SECURITY_DOCS" -gt 0 ]; then
+            echo "✅ Found $SECURITY_DOCS security documentation files"
+          else
+            echo "⚠️ No security documentation found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            SCORE=$((SCORE - 5))
+          fi
+          
+          # Check .gitignore effectiveness
+          echo "🙈 Checking .gitignore effectiveness..."
+          if [ -f ".gitignore" ]; then
+            if grep -E "(\\*.key|\\*.pem|\\*.env|\\*.secret)" ".gitignore" > /dev/null; then
+              echo "✅ .gitignore contains sensitive file patterns"
+            else
+              echo "⚠️ .gitignore missing sensitive file patterns"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+              SCORE=$((SCORE - 5))
+            fi
+          else
+            echo "⚠️ No .gitignore file found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            SCORE=$((SCORE - 10))
+          fi
+          
+          # Set outputs
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "security_issues=$SECURITY_ISSUES" >> $GITHUB_OUTPUT
+          echo "vulnerabilities=$VULNERABILITIES" >> $GITHUB_OUTPUT
+          
+          echo "🔒 Security health check completed"
+          echo "📊 Score: $SCORE/100"
+          echo "🚨 Security issues: $SECURITY_ISSUES"
+          echo "🔴 Vulnerabilities: $VULNERABILITIES"
+      
+      - name: Upload Security Health Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-health-results
+          path: |
+            security-health-*.json
+            security-health-*.md
+          retention-days: 30
+
+  documentation-health:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.health_check_type == 'full' || github.event.inputs.health_check_type == 'documentation' || github.event.inputs.health_check_type == ''
+    outputs:
+      documentation_score: ${{ steps.documentation.outputs.score }}
+      missing_docs: ${{ steps.documentation.outputs.missing_docs }}
+      outdated_docs: ${{ steps.documentation.outputs.outdated_docs }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Environment
+        run: |
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export HEALTH_CHECK_MODE=true
+      
+      - name: Documentation Health Check
+        id: documentation
+        run: |
+          echo "📚 Performing documentation health check..."
+          
+          # Initialize results
+          SCORE=100
+          MISSING_DOCS=0
+          OUTDATED_DOCS=0
+          
+          # Check required documentation
+          echo "📋 Checking required documentation..."
+          REQUIRED_DOCS=(
+            "README.md"
+            "CHANGELOG.md"
+            "LICENSE"
+            "CLAUDE.md"
+            "manager.md"
+            ".ai_workflow/GLOBAL_AI_RULES.md"
+            ".ai_workflow/AGENT_GUIDE.md"
+            ".ai_workflow/FRAMEWORK_GUIDE.md"
+            ".ai_workflow/ARCHITECTURE.md"
+          )
+          
+          for doc in "${REQUIRED_DOCS[@]}"; do
+            if [ ! -f "$doc" ]; then
+              echo "❌ Missing required documentation: $doc"
+              MISSING_DOCS=$((MISSING_DOCS + 1))
+              SCORE=$((SCORE - 10))
+            else
+              echo "✅ Found: $doc"
+            fi
+          done
+          
+          # Check documentation quality
+          echo "📊 Checking documentation quality..."
+          
+          # Check README completeness
+          if [ -f "README.md" ]; then
+            README_SECTIONS=(
+              "Getting Started"
+              "Installation"
+              "Commands"
+              "Features"
+              "Requirements"
+            )
+            
+            for section in "${README_SECTIONS[@]}"; do
+              if ! grep -i "$section" "README.md" > /dev/null; then
+                echo "⚠️ README missing section: $section"
+                MISSING_DOCS=$((MISSING_DOCS + 1))
+                SCORE=$((SCORE - 5))
+              fi
+            done
+          fi
+          
+          # Check for empty documentation files
+          echo "📄 Checking for empty documentation files..."
+          for doc in $(find .ai_workflow -name "*.md"); do
+            if [ ! -s "$doc" ]; then
+              echo "⚠️ Empty documentation file: $doc"
+              MISSING_DOCS=$((MISSING_DOCS + 1))
+              SCORE=$((SCORE - 5))
+            fi
+          done
+          
+          # Check for outdated documentation
+          echo "📅 Checking for outdated documentation..."
+          MAIN_SCRIPT_DATE=$(stat -c %Y "ai-dev" 2>/dev/null || echo "0")
+          
+          for doc in "${REQUIRED_DOCS[@]}"; do
+            if [ -f "$doc" ]; then
+              DOC_DATE=$(stat -c %Y "$doc" 2>/dev/null || echo "0")
+              if [ "$DOC_DATE" -lt "$MAIN_SCRIPT_DATE" ]; then
+                echo "⚠️ Potentially outdated documentation: $doc"
+                OUTDATED_DOCS=$((OUTDATED_DOCS + 1))
+                SCORE=$((SCORE - 3))
+              fi
+            fi
+          done
+          
+          # Check for documentation coverage
+          echo "📈 Checking documentation coverage..."
+          TOTAL_WORKFLOWS=$(find .ai_workflow/workflows -name "*.md" | wc -l)
+          DOCUMENTED_WORKFLOWS=0
+          
+          for workflow in $(find .ai_workflow/workflows -name "*.md"); do
+            if grep -q "^# " "$workflow" && grep -q "^## " "$workflow"; then
+              DOCUMENTED_WORKFLOWS=$((DOCUMENTED_WORKFLOWS + 1))
+            fi
+          done
+          
+          COVERAGE_PERCENTAGE=$((DOCUMENTED_WORKFLOWS * 100 / TOTAL_WORKFLOWS))
+          echo "📊 Documentation coverage: $COVERAGE_PERCENTAGE% ($DOCUMENTED_WORKFLOWS/$TOTAL_WORKFLOWS)"
+          
+          if [ "$COVERAGE_PERCENTAGE" -lt 80 ]; then
+            echo "⚠️ Low documentation coverage: $COVERAGE_PERCENTAGE%"
+            SCORE=$((SCORE - 10))
+          fi
+          
+          # Check for broken links
+          echo "🔗 Checking for broken internal links..."
+          BROKEN_LINKS=0
+          
+          for doc in $(find . -name "*.md"); do
+            # Extract markdown links
+            if grep -E "\\[.*\\]\\(.*\\)" "$doc" > /dev/null; then
+              while IFS= read -r link; do
+                # Extract the link target
+                target=$(echo "$link" | sed -E 's/.*\\[.*\\]\\(([^)]+)\\).*/\\1/')
+                
+                # Check if it's a local file reference
+                if [[ "$target" =~ ^[^:]+$ ]] && [[ "$target" =~ \\.(md|txt|json|yml|yaml|sh)$ ]]; then
+                  if [ ! -f "$target" ]; then
+                    echo "⚠️ Broken link in $doc: $target"
+                    BROKEN_LINKS=$((BROKEN_LINKS + 1))
+                  fi
+                fi
+              done < <(grep -E "\\[.*\\]\\(.*\\)" "$doc")
+            fi
+          done
+          
+          if [ "$BROKEN_LINKS" -gt 0 ]; then
+            echo "❌ Found $BROKEN_LINKS broken internal links"
+            SCORE=$((SCORE - 5))
+          else
+            echo "✅ No broken internal links found"
+          fi
+          
+          # Set outputs
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "missing_docs=$MISSING_DOCS" >> $GITHUB_OUTPUT
+          echo "outdated_docs=$OUTDATED_DOCS" >> $GITHUB_OUTPUT
+          
+          echo "📚 Documentation health check completed"
+          echo "📊 Score: $SCORE/100"
+          echo "📋 Missing docs: $MISSING_DOCS"
+          echo "📅 Outdated docs: $OUTDATED_DOCS"
+          echo "📈 Coverage: $COVERAGE_PERCENTAGE%"
+      
+      - name: Upload Documentation Health Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-health-results
+          path: |
+            documentation-health-*.json
+            documentation-health-*.md
+          retention-days: 30
+
+  generate-health-report:
+    needs: [structural-health, functional-health, security-health, documentation-health]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download All Health Results
+        uses: actions/download-artifact@v4
+        with:
+          path: health-results
+      
+      - name: Generate Comprehensive Health Report
+        run: |
+          echo "🏥 Generating comprehensive health report..."
+          
+          # Create report directory
+          mkdir -p reports
+          REPORT_FILE="reports/health-report-$(date +%Y%m%d-%H%M%S).md"
+          
+          # Calculate overall health score
+          STRUCTURAL_SCORE="${{ needs.structural-health.outputs.structural_score }}"
+          FUNCTIONAL_SCORE="${{ needs.functional-health.outputs.functional_score }}"
+          SECURITY_SCORE="${{ needs.security-health.outputs.security_score }}"
+          DOCUMENTATION_SCORE="${{ needs.documentation-health.outputs.documentation_score }}"
+          
+          # Default to 0 if any score is missing
+          STRUCTURAL_SCORE=${STRUCTURAL_SCORE:-0}
+          FUNCTIONAL_SCORE=${FUNCTIONAL_SCORE:-0}
+          SECURITY_SCORE=${SECURITY_SCORE:-0}
+          DOCUMENTATION_SCORE=${DOCUMENTATION_SCORE:-0}
+          
+          OVERALL_SCORE=$(((STRUCTURAL_SCORE + FUNCTIONAL_SCORE + SECURITY_SCORE + DOCUMENTATION_SCORE) / 4))
+          
+          # Determine health status
+          if [ "$OVERALL_SCORE" -ge 90 ]; then
+            HEALTH_STATUS="🟢 EXCELLENT"
+          elif [ "$OVERALL_SCORE" -ge 75 ]; then
+            HEALTH_STATUS="🟡 GOOD"
+          elif [ "$OVERALL_SCORE" -ge 60 ]; then
+            HEALTH_STATUS="🟠 FAIR"
+          else
+            HEALTH_STATUS="🔴 POOR"
+          fi
+          
+          # Generate report
+          cat > "$REPORT_FILE" << EOF
+          # Framework Health Report
+          
+          **Generated**: $(date -u)
+          **Overall Health**: $HEALTH_STATUS ($OVERALL_SCORE/100)
+          **Commit**: $(git rev-parse HEAD)
+          
+          ## 📊 Health Summary
+          
+          | Category | Score | Status |
+          |----------|-------|--------|
+          | **Structural** | $STRUCTURAL_SCORE/100 | $([ "$STRUCTURAL_SCORE" -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Attention") |
+          | **Functional** | $FUNCTIONAL_SCORE/100 | $([ "$FUNCTIONAL_SCORE" -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Attention") |
+          | **Security** | $SECURITY_SCORE/100 | $([ "$SECURITY_SCORE" -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Attention") |
+          | **Documentation** | $DOCUMENTATION_SCORE/100 | $([ "$DOCUMENTATION_SCORE" -ge 80 ] && echo "✅ Good" || echo "⚠️ Needs Attention") |
+          
+          ## 🏗️ Structural Health
+          
+          **Score**: $STRUCTURAL_SCORE/100
+          **Critical Issues**: ${{ needs.structural-health.outputs.critical_issues }}
+          
+          ### Recommendations:
+          ${{ needs.structural-health.outputs.recommendations }}
+          
+          ## ⚙️ Functional Health
+          
+          **Score**: $FUNCTIONAL_SCORE/100
+          **Working Commands**: ${{ needs.functional-health.outputs.working_commands }}
+          **Failed Commands**: ${{ needs.functional-health.outputs.failed_commands }}
+          
+          ## 🔒 Security Health
+          
+          **Score**: $SECURITY_SCORE/100
+          **Security Issues**: ${{ needs.security-health.outputs.security_issues }}
+          **Vulnerabilities**: ${{ needs.security-health.outputs.vulnerabilities }}
+          
+          ## 📚 Documentation Health
+          
+          **Score**: $DOCUMENTATION_SCORE/100
+          **Missing Docs**: ${{ needs.documentation-health.outputs.missing_docs }}
+          **Outdated Docs**: ${{ needs.documentation-health.outputs.outdated_docs }}
+          
+          ## 🎯 Action Items
+          
+          $(if [ "$OVERALL_SCORE" -lt 75 ]; then
+            echo "### High Priority:"
+            echo "- Address critical structural issues"
+            echo "- Fix failing functional tests"
+            echo "- Resolve security vulnerabilities"
+            echo "- Update missing documentation"
+            echo ""
+            echo "### Medium Priority:"
+            echo "- Improve documentation coverage"
+            echo "- Optimize performance bottlenecks"
+            echo "- Review and update outdated docs"
+          else
+            echo "### Maintenance:"
+            echo "- Continue monitoring health metrics"
+            echo "- Regular security audits"
+            echo "- Keep documentation updated"
+            echo ""
+            echo "### Optimization:"
+            echo "- Fine-tune performance where possible"
+            echo "- Enhance error handling"
+            echo "- Improve user experience"
+          fi)
+          
+          ## 📈 Trend Analysis
+          
+          - **Overall Trend**: $([ "$OVERALL_SCORE" -ge 80 ] && echo "Stable and Healthy" || echo "Needs Improvement")
+          - **Risk Level**: $([ "$OVERALL_SCORE" -ge 90 ] && echo "Low" || [ "$OVERALL_SCORE" -ge 75 ] && echo "Medium" || echo "High")
+          - **Recommendation**: $([ "$OVERALL_SCORE" -ge 80 ] && echo "Continue current practices" || echo "Implement improvement plan")
+          
+          ## 🔗 Related Resources
+          
+          - [Framework Documentation](.ai_workflow/FRAMEWORK_GUIDE.md)
+          - [Architecture Guide](.ai_workflow/ARCHITECTURE.md)
+          - [Security Guidelines](.ai_workflow/docs/SECURITY_GUIDELINES.md)
+          - [Troubleshooting Guide](.ai_workflow/docs/TROUBLESHOOTING.md)
+          
+          ---
+          
+          *Health check performed by Framework Health Check GitHub Action*
+          *Next scheduled check: $(date -d '+1 day' -u)*
+          EOF
+          
+          echo "✅ Health report generated successfully"
+          echo "📊 Overall health: $HEALTH_STATUS ($OVERALL_SCORE/100)"
+          echo "📄 Report saved to: $REPORT_FILE"
+      
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-health-report
+          path: reports/health-report-*.md
+          retention-days: 90
+      
+      - name: Create Health Alert Issue (if critical)
+        uses: actions/github-script@v7
+        if: ${{ needs.structural-health.outputs.critical_issues > 0 || needs.security-health.outputs.vulnerabilities > 0 }}
+        with:
+          script: |
+            const structuralScore = parseInt('${{ needs.structural-health.outputs.structural_score }}') || 0;
+            const functionalScore = parseInt('${{ needs.functional-health.outputs.functional_score }}') || 0;
+            const securityScore = parseInt('${{ needs.security-health.outputs.security_score }}') || 0;
+            const documentationScore = parseInt('${{ needs.documentation-health.outputs.documentation_score }}') || 0;
+            
+            const overallScore = Math.round((structuralScore + functionalScore + securityScore + documentationScore) / 4);
+            const criticalIssues = parseInt('${{ needs.structural-health.outputs.critical_issues }}') || 0;
+            const vulnerabilities = parseInt('${{ needs.security-health.outputs.vulnerabilities }}') || 0;
+            
+            const title = `🚨 Framework Health Alert - Critical Issues Detected`;
+            
+            const body = `
+            # Framework Health Alert
+            
+            ## 🚨 Critical Issues Detected
+            
+            **Overall Health Score**: ${overallScore}/100
+            **Critical Structural Issues**: ${criticalIssues}
+            **Security Vulnerabilities**: ${vulnerabilities}
+            
+            ## 📊 Health Breakdown
+            - **Structural**: ${structuralScore}/100
+            - **Functional**: ${functionalScore}/100  
+            - **Security**: ${securityScore}/100
+            - **Documentation**: ${documentationScore}/100
+            
+            ## 🔴 Immediate Action Required
+            
+            ${criticalIssues > 0 ? '### Structural Issues\n- Review and fix critical structural problems\n- Ensure all required files and directories exist\n- Fix file permissions and broken links\n' : ''}
+            
+            ${vulnerabilities > 0 ? '### Security Vulnerabilities\n- Address security vulnerabilities immediately\n- Review and fix dangerous command patterns\n- Implement proper input validation\n' : ''}
+            
+            ## 📋 Next Steps
+            1. Review the detailed health report in workflow artifacts
+            2. Address critical issues immediately
+            3. Run health check again after fixes
+            4. Monitor health metrics going forward
+            
+            ## 📊 Artifacts
+            Check the workflow artifacts for detailed health analysis and recommendations.
+            
+            ---
+            
+            *This alert was generated automatically by the Framework Health Check action.*
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['health-alert', 'critical', 'automated']
+            });
+
+  cleanup:
+    needs: [structural-health, functional-health, security-health, documentation-health, generate-health-report]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Cleanup Temporary Files
+        run: |
+          echo "🧹 Cleaning up temporary health check files..."
+          # Cleanup would be handled by GitHub automatically
+          echo "✅ Health check cleanup completed"

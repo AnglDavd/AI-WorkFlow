@@ -1,0 +1,675 @@
+name: Changelog Generator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.ai_workflow/**'
+      - 'ai-dev'
+      - 'CLAUDE.md'
+      - 'manager.md'
+      - 'README.md'
+  release:
+    types: [published, created]
+  workflow_dispatch:
+    inputs:
+      changelog_type:
+        description: 'Type of changelog to generate'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - release-notes
+          - developer-notes
+          - user-facing
+          - technical-changes
+      version_bump:
+        description: 'Version bump type'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+          - prerelease
+      include_commits:
+        description: 'Number of commits to analyze'
+        required: false
+        default: '50'
+        type: string
+      auto_update:
+        description: 'Automatically update CHANGELOG.md'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  analyze-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.analyze.outputs.changes_detected }}
+      version_bump: ${{ steps.analyze.outputs.version_bump }}
+      changelog_timestamp: ${{ steps.timestamp.outputs.timestamp }}
+      commit_count: ${{ steps.analyze.outputs.commit_count }}
+      breaking_changes: ${{ steps.analyze.outputs.breaking_changes }}
+      new_features: ${{ steps.analyze.outputs.new_features }}
+      bug_fixes: ${{ steps.analyze.outputs.bug_fixes }}
+      improvements: ${{ steps.analyze.outputs.improvements }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Changelog Environment
+        run: |
+          echo "📝 Setting up changelog generation environment..."
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export CHANGELOG_MODE=true
+          
+          # Create changelog results directory
+          mkdir -p changelog-results/{analysis,generation,updates}
+          mkdir -p changelog-artifacts/{reports,versions,commits}
+          
+          echo "✅ Changelog environment ready"
+      
+      - name: Set Changelog Timestamp
+        id: timestamp
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d_%H-%M-%S")
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "📅 Changelog timestamp: $TIMESTAMP"
+      
+      - name: Analyze Recent Changes
+        id: analyze
+        run: |
+          echo "🔍 Analyzing recent changes for changelog..."
+          
+          # Determine commit range
+          COMMIT_LIMIT="${{ github.event.inputs.include_commits }}"
+          if [ -z "$COMMIT_LIMIT" ]; then
+            COMMIT_LIMIT=50
+          fi
+          
+          # Get recent commits
+          COMMITS=$(git log --oneline -n "$COMMIT_LIMIT" | wc -l)
+          echo "📊 Analyzing $COMMITS commits (limit: $COMMIT_LIMIT)"
+          
+          # Initialize counters
+          BREAKING_CHANGES=0
+          NEW_FEATURES=0
+          BUG_FIXES=0
+          IMPROVEMENTS=0
+          DOCUMENTATION=0
+          CHORES=0
+          
+          # Analyze commit patterns
+          echo "📋 Analyzing commit patterns..."
+          
+          # Breaking changes
+          BREAKING_CHANGES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "breaking\|major\|BREAKING" | wc -l)
+          
+          # New features
+          NEW_FEATURES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "feat\|feature\|add\|new" | wc -l)
+          
+          # Bug fixes
+          BUG_FIXES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "fix\|bug\|patch\|resolve" | wc -l)
+          
+          # Improvements
+          IMPROVEMENTS=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "improve\|enhance\|update\|refactor" | wc -l)
+          
+          # Documentation
+          DOCUMENTATION=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "docs\|documentation\|readme" | wc -l)
+          
+          # Chores
+          CHORES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "chore\|cleanup\|maintenance\|ci" | wc -l)
+          
+          echo "📊 Change analysis:"
+          echo "  - Breaking changes: $BREAKING_CHANGES"
+          echo "  - New features: $NEW_FEATURES"
+          echo "  - Bug fixes: $BUG_FIXES"
+          echo "  - Improvements: $IMPROVEMENTS"
+          echo "  - Documentation: $DOCUMENTATION"
+          echo "  - Chores: $CHORES"
+          
+          # Determine version bump
+          VERSION_BUMP="${{ github.event.inputs.version_bump }}"
+          if [ "$VERSION_BUMP" = "auto" ] || [ -z "$VERSION_BUMP" ]; then
+            if [ "$BREAKING_CHANGES" -gt 0 ]; then
+              VERSION_BUMP="major"
+            elif [ "$NEW_FEATURES" -gt 0 ]; then
+              VERSION_BUMP="minor"
+            elif [ "$BUG_FIXES" -gt 0 ] || [ "$IMPROVEMENTS" -gt 0 ]; then
+              VERSION_BUMP="patch"
+            else
+              VERSION_BUMP="patch"
+            fi
+          fi
+          
+          echo "📊 Recommended version bump: $VERSION_BUMP"
+          
+          # Determine if significant changes detected
+          TOTAL_SIGNIFICANT=$((BREAKING_CHANGES + NEW_FEATURES + BUG_FIXES + IMPROVEMENTS))
+          CHANGES_DETECTED=false
+          
+          if [ "$TOTAL_SIGNIFICANT" -gt 0 ]; then
+            CHANGES_DETECTED=true
+          fi
+          
+          echo "📊 Significant changes detected: $CHANGES_DETECTED"
+          
+          # Create analysis file
+          cat > "changelog-results/analysis/change-analysis.json" << EOF
+          {
+            "timestamp": "${{ steps.timestamp.outputs.timestamp }}",
+            "commits_analyzed": $COMMITS,
+            "commit_limit": $COMMIT_LIMIT,
+            "changes": {
+              "breaking_changes": $BREAKING_CHANGES,
+              "new_features": $NEW_FEATURES,
+              "bug_fixes": $BUG_FIXES,
+              "improvements": $IMPROVEMENTS,
+              "documentation": $DOCUMENTATION,
+              "chores": $CHORES
+            },
+            "version_bump": {
+              "recommended": "$VERSION_BUMP",
+              "input": "${{ github.event.inputs.version_bump }}",
+              "auto_detected": $([ "${{ github.event.inputs.version_bump }}" = "auto" ] && echo "true" || echo "false")
+            },
+            "changes_detected": $CHANGES_DETECTED
+          }
+          EOF
+          
+          # Set outputs
+          echo "changes_detected=$CHANGES_DETECTED" >> $GITHUB_OUTPUT
+          echo "version_bump=$VERSION_BUMP" >> $GITHUB_OUTPUT
+          echo "commit_count=$COMMITS" >> $GITHUB_OUTPUT
+          echo "breaking_changes=$BREAKING_CHANGES" >> $GITHUB_OUTPUT
+          echo "new_features=$NEW_FEATURES" >> $GITHUB_OUTPUT
+          echo "bug_fixes=$BUG_FIXES" >> $GITHUB_OUTPUT
+          echo "improvements=$IMPROVEMENTS" >> $GITHUB_OUTPUT
+          
+          echo "✅ Change analysis completed"
+      
+      - name: Upload Analysis Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-analysis
+          path: changelog-results/analysis/
+          retention-days: 90
+
+  generate-changelog:
+    needs: analyze-changes
+    runs-on: ubuntu-latest
+    if: needs.analyze-changes.outputs.changes_detected == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Changelog Generation
+        run: |
+          echo "📝 Setting up changelog generation..."
+          chmod +x ./ai-dev
+          export AUTO_CONFIRM=true
+          export CI_MODE=true
+          export CHANGELOG_MODE=true
+          
+          # Create changelog generation directory
+          mkdir -p changelog-results/generation
+          
+          echo "✅ Changelog generation setup completed"
+      
+      - name: Generate Version Number
+        id: version
+        run: |
+          echo "🔢 Generating version number..."
+          
+          # Get current version from git tags or default
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "📊 Current version: $CURRENT_VERSION"
+          
+          # Remove 'v' prefix if present
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | sed 's/^v//')
+          
+          # Parse version components
+          MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+          
+          # Increment based on version bump type
+          VERSION_BUMP="${{ needs.analyze-changes.outputs.version_bump }}"
+          case "$VERSION_BUMP" in
+            "major")
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            "minor")
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            "patch")
+              PATCH=$((PATCH + 1))
+              ;;
+            "prerelease")
+              PATCH=$((PATCH + 1))
+              PRERELEASE="-rc.1"
+              ;;
+          esac
+          
+          # Generate new version
+          if [ "$VERSION_BUMP" = "prerelease" ]; then
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH$PRERELEASE"
+          else
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+          
+          echo "📊 New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_bump=$VERSION_BUMP" >> $GITHUB_OUTPUT
+      
+      - name: Generate Changelog Content
+        run: |
+          echo "📝 Generating changelog content..."
+          
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          CHANGELOG_TYPE="${{ github.event.inputs.changelog_type }}"
+          COMMIT_LIMIT="${{ github.event.inputs.include_commits }}"
+          
+          if [ -z "$CHANGELOG_TYPE" ]; then
+            CHANGELOG_TYPE="comprehensive"
+          fi
+          
+          if [ -z "$COMMIT_LIMIT" ]; then
+            COMMIT_LIMIT=50
+          fi
+          
+          # Create changelog entry
+          CHANGELOG_FILE="changelog-results/generation/changelog-entry.md"
+          
+          cat > "$CHANGELOG_FILE" << EOF
+          # Changelog Entry - v$NEW_VERSION
+          
+          **Release Date**: $(date -u +"%Y-%m-%d")
+          **Version**: $NEW_VERSION
+          **Type**: ${{ needs.analyze-changes.outputs.version_bump }}
+          
+          ## 🚀 What's New in v$NEW_VERSION
+          
+          EOF
+          
+          # Add breaking changes if any
+          if [ "${{ needs.analyze-changes.outputs.breaking_changes }}" -gt 0 ]; then
+            echo "### 💥 Breaking Changes" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract breaking change commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "breaking\|major\|BREAKING" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add new features if any
+          if [ "${{ needs.analyze-changes.outputs.new_features }}" -gt 0 ]; then
+            echo "### ✨ New Features" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract feature commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "feat\|feature\|add\|new" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add bug fixes if any
+          if [ "${{ needs.analyze-changes.outputs.bug_fixes }}" -gt 0 ]; then
+            echo "### 🐛 Bug Fixes" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract bug fix commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "fix\|bug\|patch\|resolve" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add improvements if any
+          if [ "${{ needs.analyze-changes.outputs.improvements }}" -gt 0 ]; then
+            echo "### 🔧 Improvements" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract improvement commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "improve\|enhance\|update\|refactor" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add documentation changes
+          DOCUMENTATION_CHANGES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "docs\|documentation\|readme" | wc -l)
+          if [ "$DOCUMENTATION_CHANGES" -gt 0 ]; then
+            echo "### 📚 Documentation" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract documentation commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "docs\|documentation\|readme" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add maintenance changes
+          MAINTENANCE_CHANGES=$(git log --oneline -n "$COMMIT_LIMIT" | grep -i "chore\|cleanup\|maintenance\|ci" | wc -l)
+          if [ "$MAINTENANCE_CHANGES" -gt 0 ]; then
+            echo "### 🧹 Maintenance" >> "$CHANGELOG_FILE"
+            echo "" >> "$CHANGELOG_FILE"
+            
+            # Extract maintenance commits
+            git log --oneline -n "$COMMIT_LIMIT" | grep -i "chore\|cleanup\|maintenance\|ci" | while read -r commit; do
+              echo "- $commit" >> "$CHANGELOG_FILE"
+            done
+            
+            echo "" >> "$CHANGELOG_FILE"
+          fi
+          
+          # Add footer
+          cat >> "$CHANGELOG_FILE" << EOF
+          ## 📊 Release Statistics
+          
+          - **Total Commits**: ${{ needs.analyze-changes.outputs.commit_count }}
+          - **Breaking Changes**: ${{ needs.analyze-changes.outputs.breaking_changes }}
+          - **New Features**: ${{ needs.analyze-changes.outputs.new_features }}
+          - **Bug Fixes**: ${{ needs.analyze-changes.outputs.bug_fixes }}
+          - **Improvements**: ${{ needs.analyze-changes.outputs.improvements }}
+          
+          ## 🔗 Links
+          
+          - **GitHub Release**: [v$NEW_VERSION](https://github.com/AnglDavd/AI-WorkFlow/releases/tag/v$NEW_VERSION)
+          - **Full Changelog**: [v$NEW_VERSION](https://github.com/AnglDavd/AI-WorkFlow/compare/v${{ steps.version.outputs.current_version }}...v$NEW_VERSION)
+          
+          ---
+          
+          **Full Changelog**: [View all changes](https://github.com/AnglDavd/AI-WorkFlow/compare/v${{ steps.version.outputs.current_version }}...v$NEW_VERSION)
+          
+          *This changelog was automatically generated by the Changelog Generator GitHub Action*
+          EOF
+          
+          echo "✅ Changelog content generated"
+      
+      - name: Generate Release Notes
+        run: |
+          echo "📝 Generating release notes..."
+          
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          
+          # Create release notes
+          RELEASE_NOTES_FILE="changelog-results/generation/release-notes.md"
+          
+          cat > "$RELEASE_NOTES_FILE" << EOF
+          # Release Notes - v$NEW_VERSION
+          
+          ## 🎉 Release Highlights
+          
+          This release includes ${{ needs.analyze-changes.outputs.commit_count }} commits with significant improvements to the AI-Assisted Development Framework.
+          
+          ### 🔥 Key Changes
+          
+          $(if [ "${{ needs.analyze-changes.outputs.breaking_changes }}" -gt 0 ]; then
+            echo "- **${{ needs.analyze-changes.outputs.breaking_changes }} Breaking Changes**: Important updates that may require attention"
+          fi)
+          
+          $(if [ "${{ needs.analyze-changes.outputs.new_features }}" -gt 0 ]; then
+            echo "- **${{ needs.analyze-changes.outputs.new_features }} New Features**: Exciting new functionality added"
+          fi)
+          
+          $(if [ "${{ needs.analyze-changes.outputs.bug_fixes }}" -gt 0 ]; then
+            echo "- **${{ needs.analyze-changes.outputs.bug_fixes }} Bug Fixes**: Issues resolved and stability improved"
+          fi)
+          
+          $(if [ "${{ needs.analyze-changes.outputs.improvements }}" -gt 0 ]; then
+            echo "- **${{ needs.analyze-changes.outputs.improvements }} Improvements**: Enhancements and optimizations"
+          fi)
+          
+          ## 📋 What's Changed
+          
+          This release focuses on:
+          
+          - Enhanced framework functionality
+          - Improved user experience
+          - Better documentation and guides
+          - Increased stability and performance
+          - Comprehensive testing and validation
+          
+          ## 🚀 Getting Started
+          
+          To use this release:
+          
+          1. **Download** the latest version from the releases page
+          2. **Follow** the installation instructions in the README
+          3. **Review** the changelog for any breaking changes
+          4. **Update** your projects to use the new features
+          
+          ## 🔧 Migration Guide
+          
+          $(if [ "${{ needs.analyze-changes.outputs.breaking_changes }}" -gt 0 ]; then
+            echo "### Breaking Changes"
+            echo ""
+            echo "This release includes breaking changes. Please review the changelog for details and update your code accordingly."
+            echo ""
+          fi)
+          
+          ### New Features
+          
+          $(if [ "${{ needs.analyze-changes.outputs.new_features }}" -gt 0 ]; then
+            echo "Take advantage of the new features by reviewing the updated documentation and examples."
+          else
+            echo "This release focuses on improvements and bug fixes."
+          fi)
+          
+          ## 📞 Support
+          
+          If you encounter any issues with this release:
+          
+          1. Check the [documentation](.ai_workflow/FRAMEWORK_GUIDE.md)
+          2. Review the [troubleshooting guide](.ai_workflow/docs/TROUBLESHOOTING.md)
+          3. Open an issue on [GitHub](https://github.com/AnglDavd/AI-WorkFlow/issues)
+          
+          ## 🎯 What's Next
+          
+          Future releases will focus on:
+          
+          - Enhanced automation and CI/CD
+          - Improved user experience
+          - Better cross-platform compatibility
+          - More comprehensive documentation
+          - Community feedback integration
+          
+          ---
+          
+          **Thank you** for using the AI-Assisted Development Framework!
+          
+          *These release notes were automatically generated by the Changelog Generator GitHub Action*
+          EOF
+          
+          echo "✅ Release notes generated"
+      
+      - name: Upload Changelog Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-generation
+          path: changelog-results/generation/
+          retention-days: 90
+
+  update-changelog-file:
+    needs: [analyze-changes, generate-changelog]
+    runs-on: ubuntu-latest
+    if: needs.analyze-changes.outputs.changes_detected == 'true' && github.event.inputs.auto_update == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download Changelog Generation
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog-generation
+          path: generated-changelog
+      
+      - name: Update CHANGELOG.md
+        run: |
+          echo "📝 Updating CHANGELOG.md file..."
+          
+          # Check if CHANGELOG.md exists
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "📝 Creating new CHANGELOG.md file..."
+            
+            cat > "CHANGELOG.md" << EOF
+          # Changelog
+          
+          All notable changes to this project will be documented in this file.
+          
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+          
+          ## [Unreleased]
+          
+          EOF
+          fi
+          
+          # Read the generated changelog entry
+          if [ -f "generated-changelog/changelog-entry.md" ]; then
+            echo "📝 Prepending new changelog entry..."
+            
+            # Create temporary file
+            TEMP_FILE=$(mktemp)
+            
+            # Add new entry at the top (after the header)
+            head -n 7 "CHANGELOG.md" > "$TEMP_FILE"
+            echo "" >> "$TEMP_FILE"
+            cat "generated-changelog/changelog-entry.md" >> "$TEMP_FILE"
+            echo "" >> "$TEMP_FILE"
+            tail -n +8 "CHANGELOG.md" >> "$TEMP_FILE"
+            
+            # Replace original file
+            mv "$TEMP_FILE" "CHANGELOG.md"
+            
+            echo "✅ CHANGELOG.md updated successfully"
+          else
+            echo "❌ Generated changelog entry not found"
+            exit 1
+          fi
+      
+      - name: Commit Changelog Changes
+        run: |
+          echo "📝 Committing changelog changes..."
+          
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add and commit changes
+          git add CHANGELOG.md
+          
+          if git diff --staged --quiet; then
+            echo "ℹ️ No changes to commit"
+          else
+            git commit -m "docs: Update CHANGELOG.md with latest changes
+            
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+            
+            Co-Authored-By: Claude <noreply@anthropic.com>"
+            
+            echo "✅ Changelog changes committed"
+          fi
+      
+      - name: Push Changes
+        run: |
+          echo "📤 Pushing changelog changes..."
+          
+          # Push changes
+          git push origin main
+          
+          echo "✅ Changelog changes pushed to repository"
+
+  create-release:
+    needs: [analyze-changes, generate-changelog, update-changelog-file]
+    runs-on: ubuntu-latest
+    if: needs.analyze-changes.outputs.changes_detected == 'true' && github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download Changelog Generation
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog-generation
+          path: generated-changelog
+      
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read release notes
+            let releaseNotes = '';
+            try {
+              releaseNotes = fs.readFileSync('generated-changelog/release-notes.md', 'utf8');
+            } catch (error) {
+              releaseNotes = `
+              # Release Notes
+              
+              This release includes ${{ needs.analyze-changes.outputs.commit_count }} commits with the following changes:
+              
+              - **Breaking Changes**: ${{ needs.analyze-changes.outputs.breaking_changes }}
+              - **New Features**: ${{ needs.analyze-changes.outputs.new_features }}
+              - **Bug Fixes**: ${{ needs.analyze-changes.outputs.bug_fixes }}
+              - **Improvements**: ${{ needs.analyze-changes.outputs.improvements }}
+              
+              See the full changelog for detailed information about all changes.
+              `;
+            }
+            
+            // Create release
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v${{ needs.generate-changelog.outputs.new_version }}',
+              name: '🚀 Release v${{ needs.generate-changelog.outputs.new_version }}',
+              body: releaseNotes,
+              draft: false,
+              prerelease: '${{ needs.analyze-changes.outputs.version_bump }}' === 'prerelease'
+            });
+            
+            console.log(`Release created: ${release.data.html_url}`);
+
+  cleanup:
+    needs: [analyze-changes, generate-changelog, update-changelog-file, create-release]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Cleanup Temporary Files
+        run: |
+          echo "🧹 Cleaning up temporary changelog files..."
+          # Cleanup would be handled by GitHub automatically
+          echo "✅ Changelog generation cleanup completed"

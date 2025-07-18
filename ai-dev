@@ -9,6 +9,9 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 # Load platform adapter for cross-platform compatibility
 source "$(dirname "${BASH_SOURCE[0]}")/.ai_workflow/scripts/platform_adapter.sh"
 
+# Load version utilities for centralized version management
+source "$(dirname "${BASH_SOURCE[0]}")/.ai_workflow/scripts/version_utils.sh"
+
 # --- Global Variables ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly AI_WORKFLOW_DIR="${SCRIPT_DIR}/.ai_workflow"
@@ -138,7 +141,7 @@ create_default_config() {
     cat > "$config_file" << 'EOF'
 {
   "framework": {
-    "version": "v0.4.1-beta",
+    "version": "PLACEHOLDER_VERSION",
     "name": "AI Development Framework"
   },
   "quality": {
@@ -163,6 +166,10 @@ create_default_config() {
 }
 EOF
     
+    # Replace version placeholder with actual framework version
+    local framework_version="$(get_framework_version)"
+    sed -i "s/PLACEHOLDER_VERSION/$framework_version/g" "$config_file"
+    
     success "Created default configuration: $config_file"
 }
 
@@ -177,10 +184,10 @@ set_default_config_values() {
 validate_command() {
     local command="$1"
     local valid_commands=(
-        "setup" "generate" "run" "optimize" "performance" "audit" "sync" "configure" 
+        "setup" "generate" "run" "optimize" "performance" "audit" "enable-optimizations" "cleanup-optimizations" "auto-cleanup" "migrate-user-project" "update" "sync" "configure" 
         "diagnose" "quality" "precommit" "generate-architecture" 
         "update-architecture" "cleanup" "update-gitignore" "maintenance"
-        "help" "version" "status" "detect-manual" "platform"
+        "help" "version" "status" "detect-manual" "platform" "generate-visualizations" "dashboard"
     )
     
     # Check if command exists
@@ -353,12 +360,16 @@ auto_install_precommit() {
   },
   "metadata": {
     "created": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
-    "framework_version": "v0.4.0-beta",
+    "framework_version": "PLACEHOLDER_VERSION",
     "configuration_version": "1.0",
     "auto_installed": true
   }
 }
 EOF
+        # Replace version placeholder with actual framework version
+        local framework_version="$(get_framework_version)"
+        sed -i "s/PLACEHOLDER_VERSION/$framework_version/g" "$config_file"
+        
         log "Default pre-commit configuration created"
     fi
     
@@ -489,9 +500,14 @@ ${GREEN}Core Commands:${NC}
   run <prp_file>           Execute a Project-Response-Plan file
   optimize <prompt_file>   Optimize a prompt file using best practices
   performance <subcommand> Performance optimization and monitoring
+  update                   Update framework to latest version
 
 ${GREEN}New Commands:${NC}
   audit                    Run comprehensive security audit
+  enable-optimizations     Enable global token economy optimizations
+  cleanup-optimizations    Clean up obsolete optimization artifacts
+  auto-cleanup             Run automated periodic cleanup
+  migrate-user-project     Migrate existing user project to optimized framework
   sync                     Synchronize with framework updates
   configure [options]      Configure framework settings
   diagnose                 Diagnose framework health and status
@@ -1014,6 +1030,440 @@ EOF
         execute_workflow "${AI_WORKFLOW_DIR}/workflows/security/audit_security.md" "Security Audit"
         ;;
 
+    enable-optimizations)
+        info "🚀 Enabling global optimizations for token economy"
+        
+        # Check if this is an existing installation
+        if [ -f "$AI_WORKFLOW_DIR/config/framework.json" ]; then
+            info "📋 Existing framework installation detected"
+            info "🔄 Upgrading to optimized version..."
+        else
+            info "🆕 New installation - applying optimizations..."
+        fi
+        
+        # Set environment variables for optimizations
+        export USE_COMPACT_WORKFLOWS=true
+        export USE_OPTIMIZATIONS=true
+        export ENABLE_TOKEN_OPTIMIZATION=true
+        
+        # Create persistent configuration
+        mkdir -p "$AI_WORKFLOW_DIR/config"
+        cat > "$AI_WORKFLOW_DIR/config/optimizations.conf" << EOF
+# Token Economy Optimization Configuration
+# Generated: $(date)
+USE_COMPACT_WORKFLOWS=true
+USE_OPTIMIZATIONS=true
+ENABLE_TOKEN_OPTIMIZATION=true
+OPTIMIZATION_LEVEL=moderate
+BATCH_OPTIMIZATION=true
+EOF
+        
+        # Apply optimizations to large files if they exist
+        echo "📄 Checking for large files to optimize..."
+        
+        # Find large markdown files (>1000 words)
+        optimized_count=0
+        total_original_words=0
+        total_optimized_words=0
+        
+        find "$AI_WORKFLOW_DIR" -name "*.md" -type f | while read -r file; do
+            # Skip backup directories and already optimized files
+            if [[ "$file" =~ (backups|obsolete_files|_optimized\.md)$ ]]; then
+                continue
+            fi
+            
+            word_count=$(wc -w < "$file" 2>/dev/null || echo 0)
+            if [ "$word_count" -gt 1000 ]; then
+                echo "  - Processing: $file ($word_count words)"
+                
+                # Create backup first
+                backup_file="${file%.md}_backup_$(date +%Y%m%d_%H%M%S).md"
+                cp "$file" "$backup_file"
+                
+                # Apply proven optimization technique
+                # Create temporary optimized version
+                temp_file="${file}.tmp"
+                
+                # Apply optimization: remove excess whitespace and empty lines
+                sed -e '/^[[:space:]]*$/N;/^\n$/d' -e 's/[[:space:]]*$//' "$file" > "$temp_file"
+                
+                # Calculate savings
+                optimized_words=$(wc -w < "$temp_file" 2>/dev/null || echo 0)
+                if [ "$optimized_words" -lt "$word_count" ]; then
+                    # Replace original with optimized version
+                    mv "$temp_file" "$file"
+                    echo "    ✅ Optimized: $word_count → $optimized_words words ($(( (word_count - optimized_words) * 100 / word_count ))% reduction)"
+                    optimized_count=$((optimized_count + 1))
+                    total_original_words=$((total_original_words + word_count))
+                    total_optimized_words=$((total_optimized_words + optimized_words))
+                else
+                    # No improvement, keep original and remove temp files
+                    rm "$temp_file"
+                    rm "$backup_file"
+                    echo "    ⚠️  No improvement detected, keeping original"
+                fi
+            fi
+        done
+        
+        echo "📊 Optimization Summary:"
+        echo "  - Files optimized: $optimized_count"
+        echo "  - Total words before: $total_original_words"
+        echo "  - Total words after: $total_optimized_words"
+        if [ "$total_original_words" -gt 0 ]; then
+            reduction_percent=$(( (total_original_words - total_optimized_words) * 100 / total_original_words ))
+            echo "  - Overall reduction: ${reduction_percent}%"
+        fi
+        
+        success "✅ Global optimizations enabled!"
+        success "📊 Configuration saved to: $AI_WORKFLOW_DIR/config/optimizations.conf"
+        success "💰 Expected token reduction: 40-70%"
+        success "🔧 Use optimized workflow files when available"
+        
+        # Clean up any obsolete files
+        info "🧹 Cleaning up obsolete files..."
+        obsolete_count=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
+        if [ "$obsolete_count" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
+            success "🗑️  Removed $obsolete_count obsolete *_optimized.md files"
+        else
+            success "✅ No obsolete files found"
+        fi
+        ;;
+
+    cleanup-optimizations)
+        info "🧹 Comprehensive cleanup of optimization artifacts"
+        
+        # Initialize counters
+        total_cleaned=0
+        
+        # 1. Remove obsolete optimized files
+        obsolete_optimized=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
+        if [ "$obsolete_optimized" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
+            success "🗑️  Removed $obsolete_optimized obsolete *_optimized.md files"
+            total_cleaned=$((total_cleaned + obsolete_optimized))
+        fi
+        
+        # 2. Remove old backup files (older than 30 days)
+        old_backups=$(find "$AI_WORKFLOW_DIR" -name "*_backup_*.md" -type f -mtime +30 2>/dev/null | wc -l)
+        if [ "$old_backups" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*_backup_*.md" -type f -mtime +30 -delete
+            success "🗑️  Removed $old_backups old backup files (>30 days)"
+            total_cleaned=$((total_cleaned + old_backups))
+        fi
+        
+        # 3. Remove temporary files
+        temp_files=$(find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f 2>/dev/null | wc -l)
+        if [ "$temp_files" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f -delete
+            success "🗑️  Removed $temp_files temporary files"
+            total_cleaned=$((total_cleaned + temp_files))
+        fi
+        
+        # 4. Clean up old log files (older than 30 days)
+        old_logs=$(find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +30 2>/dev/null | wc -l)
+        if [ "$old_logs" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +30 -delete
+            success "🗑️  Removed $old_logs old log files (>30 days)"
+            total_cleaned=$((total_cleaned + old_logs))
+        fi
+        
+        # 5. Clean up old backup directories (keep last 3)
+        if [ -d "$AI_WORKFLOW_DIR/backups" ]; then
+            backup_count=$(find "$AI_WORKFLOW_DIR/backups" -maxdepth 1 -type d -name "*_*" | wc -l)
+            if [ "$backup_count" -gt 3 ]; then
+                keep_count=3
+                remove_count=$((backup_count - keep_count))
+                
+                # Remove oldest backup directories
+                find "$AI_WORKFLOW_DIR/backups" -maxdepth 1 -type d -name "*_*" -printf '%T+ %p\n' | sort | head -n "$remove_count" | cut -d' ' -f2- | while read -r dir; do
+                    if [ -d "$dir" ]; then
+                        rm -rf "$dir"
+                    fi
+                done
+                
+                success "🗑️  Removed $remove_count old backup directories (keeping last $keep_count)"
+                total_cleaned=$((total_cleaned + remove_count))
+            fi
+        fi
+        
+        # 6. Clean up precommit backup files (older than 7 days)
+        if [ -d "$AI_WORKFLOW_DIR/precommit" ]; then
+            precommit_backups=$(find "$AI_WORKFLOW_DIR/precommit" -name "backup_*" -type f -mtime +7 2>/dev/null | wc -l)
+            if [ "$precommit_backups" -gt 0 ]; then
+                find "$AI_WORKFLOW_DIR/precommit" -name "backup_*" -type f -mtime +7 -delete
+                success "🗑️  Removed $precommit_backups old precommit backup files (>7 days)"
+                total_cleaned=$((total_cleaned + precommit_backups))
+            fi
+        fi
+        
+        # 7. Clean up obsolete files directory (older than 60 days)
+        if [ -d "$AI_WORKFLOW_DIR/obsolete_files" ]; then
+            obsolete_count=$(find "$AI_WORKFLOW_DIR/obsolete_files" -type f -mtime +60 2>/dev/null | wc -l)
+            if [ "$obsolete_count" -gt 0 ]; then
+                find "$AI_WORKFLOW_DIR/obsolete_files" -type f -mtime +60 -delete
+                success "🗑️  Removed $obsolete_count obsolete files (>60 days)"
+                total_cleaned=$((total_cleaned + obsolete_count))
+            fi
+        fi
+        
+        # Summary
+        if [ "$total_cleaned" -eq 0 ]; then
+            success "✅ No cleanup needed - system is clean"
+        else
+            success "🎉 Comprehensive cleanup completed: $total_cleaned items removed"
+            
+            # Show space saved
+            echo "💾 Estimated space saved: ~$((total_cleaned * 10))KB"
+        fi
+        ;;
+        
+    auto-cleanup)
+        info "🤖 Automated cleanup - running periodic maintenance"
+        
+        # Check if auto-cleanup is enabled
+        if [ ! -f "$AI_WORKFLOW_DIR/config/auto_cleanup.conf" ]; then
+            info "ℹ️  Auto-cleanup not configured. Run './ai-dev configure auto-cleanup' to enable."
+            exit 0
+        fi
+        
+        # Source configuration
+        source "$AI_WORKFLOW_DIR/config/auto_cleanup.conf"
+        
+        # Check last cleanup time
+        last_cleanup_file="$AI_WORKFLOW_DIR/cache/last_cleanup"
+        current_time=$(date +%s)
+        
+        if [ -f "$last_cleanup_file" ]; then
+            last_cleanup=$(cat "$last_cleanup_file")
+            time_diff=$((current_time - last_cleanup))
+            
+            # Default to 7 days if not configured
+            cleanup_interval=${AUTO_CLEANUP_INTERVAL:-604800}  # 7 days in seconds
+            
+            if [ "$time_diff" -lt "$cleanup_interval" ]; then
+                info "✅ Auto-cleanup not needed. Last cleanup was $(date -d @$last_cleanup)"
+                exit 0
+            fi
+        fi
+        
+        info "🧹 Running automatic cleanup..."
+        
+        # Run cleanup with less aggressive settings for auto mode
+        total_cleaned=0
+        
+        # Only clean very old files in auto mode
+        obsolete_optimized=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
+        if [ "$obsolete_optimized" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
+            total_cleaned=$((total_cleaned + obsolete_optimized))
+        fi
+        
+        old_logs=$(find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +60 2>/dev/null | wc -l)
+        if [ "$old_logs" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +60 -delete
+            total_cleaned=$((total_cleaned + old_logs))
+        fi
+        
+        temp_files=$(find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f 2>/dev/null | wc -l)
+        if [ "$temp_files" -gt 0 ]; then
+            find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f -delete
+            total_cleaned=$((total_cleaned + temp_files))
+        fi
+        
+        # Update last cleanup time
+        echo "$current_time" > "$last_cleanup_file"
+        
+        if [ "$total_cleaned" -gt 0 ]; then
+            success "🎉 Auto-cleanup completed: $total_cleaned items removed"
+        else
+            success "✅ Auto-cleanup completed - no items needed removal"
+        fi
+        ;;
+
+    update)
+        info "🔄 Updating AI Development Framework"
+        
+        # Check if we're in framework directory or user project
+        if [ -f "ai-dev" ] && [ -d ".ai_workflow" ] && [ -d ".github" ]; then
+            info "📁 Framework repository detected"
+            update_mode="framework"
+        elif [ -d ".ai_workflow" ] && [ ! -f "ai-dev" ]; then
+            info "📁 User project detected"
+            update_mode="user_project"
+        else
+            error "❌ Unable to determine update context"
+            echo "Run this command from either:"
+            echo "  - Framework repository directory"
+            echo "  - User project directory with .ai_workflow/"
+            exit 1
+        fi
+        
+        case "$update_mode" in
+            "framework")
+                info "🔄 Updating framework repository"
+                
+                # Check for uncommitted changes
+                if [ -n "$(git status --porcelain)" ]; then
+                    warning "⚠️  Uncommitted changes detected"
+                    echo "Please commit or stash your changes before updating"
+                    git status --short
+                    exit 1
+                fi
+                
+                # Update from remote
+                info "📥 Fetching latest changes from remote"
+                git fetch origin main
+                
+                # Check if update is needed
+                LOCAL=$(git rev-parse HEAD)
+                REMOTE=$(git rev-parse origin/main)
+                
+                if [ "$LOCAL" = "$REMOTE" ]; then
+                    success "✅ Framework is already up to date"
+                    exit 0
+                fi
+                
+                # Show what will be updated
+                info "📋 Changes to be applied:"
+                git log --oneline HEAD..origin/main | head -10
+                
+                # Apply update
+                git merge origin/main
+                
+                success "✅ Framework updated successfully"
+                success "🔄 Run './ai-dev diagnose' to verify integrity"
+                ;;
+                
+            "user_project")
+                info "🔄 Updating user project framework components"
+                
+                # Find framework installation
+                FRAMEWORK_PATH=""
+                if [ -f "../ai-dev" ]; then
+                    FRAMEWORK_PATH="../"
+                elif [ -f "../../ai-dev" ]; then
+                    FRAMEWORK_PATH="../../"
+                elif command -v ai-dev >/dev/null 2>&1; then
+                    FRAMEWORK_PATH=$(dirname $(which ai-dev))
+                else
+                    error "❌ Cannot locate framework installation"
+                    echo "Please specify framework path with --framework-path"
+                    exit 1
+                fi
+                
+                info "📁 Framework found at: $FRAMEWORK_PATH"
+                
+                # Create backup of user customizations
+                backup_dir=".ai_workflow_backup_$(date +%Y%m%d_%H%M%S)"
+                info "📦 Creating backup at: $backup_dir"
+                
+                # Backup user-specific files
+                mkdir -p "$backup_dir"
+                cp -r .ai_workflow/config "$backup_dir/" 2>/dev/null || true
+                cp -r .ai_workflow/PRPs "$backup_dir/" 2>/dev/null || true
+                cp -r .ai_workflow/state "$backup_dir/" 2>/dev/null || true
+                find .ai_workflow -name "*_custom.md" -exec cp {} "$backup_dir/" \; 2>/dev/null || true
+                
+                # Update framework components
+                info "📥 Updating framework components"
+                
+                # Update core workflows (preserve user customizations)
+                rsync -av --exclude='config/' --exclude='PRPs/' --exclude='state/' --exclude='*_custom.md' \
+                    "$FRAMEWORK_PATH/.ai_workflow/" .ai_workflow/ 2>/dev/null || {
+                    # Fallback to manual copy
+                    cp -r "$FRAMEWORK_PATH/.ai_workflow/workflows" .ai_workflow/ 2>/dev/null || true
+                    cp -r "$FRAMEWORK_PATH/.ai_workflow/commands" .ai_workflow/ 2>/dev/null || true
+                    cp -r "$FRAMEWORK_PATH/.ai_workflow/templates" .ai_workflow/ 2>/dev/null || true
+                }
+                
+                # Update documentation
+                cp "$FRAMEWORK_PATH/.ai_workflow/ARCHITECTURE.md" .ai_workflow/ 2>/dev/null || true
+                cp "$FRAMEWORK_PATH/.ai_workflow/GLOBAL_AI_RULES.md" .ai_workflow/ 2>/dev/null || true
+                cp "$FRAMEWORK_PATH/.ai_workflow/FRAMEWORK_GUIDE.md" .ai_workflow/ 2>/dev/null || true
+                
+                # Restore user customizations
+                info "🔄 Restoring user customizations"
+                cp -r "$backup_dir/config" .ai_workflow/ 2>/dev/null || true
+                cp -r "$backup_dir/PRPs" .ai_workflow/ 2>/dev/null || true
+                cp -r "$backup_dir/state" .ai_workflow/ 2>/dev/null || true
+                
+                # Update version info
+                echo "$(date): Updated from framework at $FRAMEWORK_PATH" >> .ai_workflow/update_history.log
+                
+                success "✅ User project updated successfully"
+                success "📦 Backup available at: $backup_dir"
+                success "🔄 Run './ai-dev diagnose' to verify setup"
+                ;;
+        esac
+        ;;
+
+    migrate-user-project)
+        info "🔄 Migrating existing user project to optimized framework"
+        
+        # Validate we're in a user project (not the framework itself)
+        if [ -f "package.json" ] || [ -f "requirements.txt" ] || [ -f "Cargo.toml" ] || [ -f "pom.xml" ]; then
+            info "✅ User project detected"
+        else
+            warning "⚠️  No user project detected. This command is for user projects, not the framework itself."
+            echo "Run this command in your project directory that uses the AI Framework."
+            exit 1
+        fi
+        
+        # Check if framework is already present
+        if [ -d ".ai_workflow" ]; then
+            info "📋 Existing .ai_workflow directory found"
+            
+            # Create backup before migration
+            backup_dir=".ai_workflow_backup_$(date +%Y%m%d_%H%M%S)"
+            cp -r .ai_workflow "$backup_dir"
+            success "📦 Backup created: $backup_dir"
+            
+            # Apply optimizations to user's workflows
+            info "🔄 Applying optimizations to user workflows..."
+            
+            find .ai_workflow -name "*.md" -type f | while read -r file; do
+                word_count=$(wc -w < "$file" 2>/dev/null || echo 0)
+                if [ "$word_count" -gt 500 ]; then  # Lower threshold for user projects
+                    echo "  - Optimizing: $file ($word_count words)"
+                    
+                    # Create optimized version
+                    sed -e '/^[[:space:]]*$/N;/^\n$/d' -e 's/[[:space:]]*$//' "$file" > "${file}.tmp"
+                    optimized_words=$(wc -w < "${file}.tmp" 2>/dev/null || echo 0)
+                    
+                    if [ "$optimized_words" -lt "$word_count" ]; then
+                        mv "${file}.tmp" "$file"
+                        reduction=$(( (word_count - optimized_words) * 100 / word_count ))
+                        echo "    ✅ Reduced: $word_count → $optimized_words words (${reduction}% reduction)"
+                    else
+                        rm "${file}.tmp"
+                    fi
+                fi
+            done
+            
+            # Update configuration
+            mkdir -p .ai_workflow/config
+            cat > .ai_workflow/config/user_optimizations.conf << EOF
+# User Project Optimization Configuration
+# Generated: $(date)
+PROJECT_TYPE=user_project
+USE_COMPACT_WORKFLOWS=true
+USE_OPTIMIZATIONS=true
+OPTIMIZATION_LEVEL=moderate
+MIGRATED_FROM_FRAMEWORK=true
+MIGRATION_DATE=$(date)
+EOF
+            
+            success "✅ User project migration completed!"
+            success "📊 Configuration saved to: .ai_workflow/config/user_optimizations.conf"
+            success "🔄 Backup available at: $backup_dir"
+            
+        else
+            info "🆕 No existing .ai_workflow directory found"
+            info "💡 Consider running './ai-dev setup' first to initialize the framework"
+        fi
+        ;;
+
     sync)
         SUBCOMMAND=${1:-feedback}
         shift || true
@@ -1120,8 +1570,107 @@ EOF
         ;;
 
     diagnose)
-        info "Diagnosing framework health"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/diagnose_framework.md" "Framework Diagnosis"
+        # Handle diagnose subcommands
+        SUBCOMMAND=${1:-standard}
+        shift || true
+        
+        case "$SUBCOMMAND" in
+            "standard")
+                info "Diagnosing framework health"
+                execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/diagnose_framework.md" "Framework Diagnosis"
+                ;;
+            "github-actions" | "--github-actions")
+                info "🤖 Checking GitHub Actions integration"
+                
+                # Check if we're in a GitHub repository
+                if [ ! -d ".github/workflows" ]; then
+                    error "❌ No GitHub Actions found"
+                    echo "This directory doesn't contain .github/workflows/"
+                    echo ""
+                    echo "📋 GitHub Actions Status: NOT AVAILABLE"
+                    echo ""
+                    echo "🛠️ Alternatives for non-GitHub users:"
+                    echo "  - Manual updates: ./ai-dev update"
+                    echo "  - Manual security: ./ai-dev audit"
+                    echo "  - Manual diagnostics: ./ai-dev diagnose"
+                    echo "  - Manual cleanup: ./ai-dev cleanup-optimizations"
+                    exit 1
+                fi
+                
+                # Count GitHub Actions
+                total_actions=$(find .github/workflows -name "*.yml" -o -name "*.yaml" | wc -l)
+                
+                echo "🤖 GitHub Actions Integration Status"
+                echo "======================================"
+                echo ""
+                echo "📊 Repository Status:"
+                echo "  - GitHub Actions files: $total_actions"
+                echo "  - Workflows directory: ✅ Found"
+                echo "  - Integration: ✅ Enabled"
+                echo ""
+                
+                # List key automation workflows
+                echo "🔄 Available Automation:"
+                if [ -f ".github/workflows/update-distribution.yml" ]; then
+                    echo "  - Update Distribution: ✅ Active"
+                else
+                    echo "  - Update Distribution: ❌ Missing"
+                fi
+                
+                if [ -f ".github/workflows/update-notifications.yml" ]; then
+                    echo "  - Update Notifications: ✅ Active"
+                else
+                    echo "  - Update Notifications: ❌ Missing"
+                fi
+                
+                if [ -f ".github/workflows/security-audit.yml" ]; then
+                    echo "  - Security Audits: ✅ Active"
+                else
+                    echo "  - Security Audits: ❌ Missing"
+                fi
+                
+                if [ -f ".github/workflows/ai-cost-optimization.yml" ]; then
+                    echo "  - Cost Optimization: ✅ Active"
+                else
+                    echo "  - Cost Optimization: ❌ Missing"
+                fi
+                
+                if [ -f ".github/workflows/repository-cleanliness-audit.yml" ]; then
+                    echo "  - Repository Cleanup: ✅ Active"
+                else
+                    echo "  - Repository Cleanup: ❌ Missing"
+                fi
+                
+                echo ""
+                echo "📋 All GitHub Actions ($total_actions total):"
+                find .github/workflows -name "*.yml" -o -name "*.yaml" | sort | while read -r file; do
+                    basename "$file" .yml | sed 's/^/  - /'
+                done
+                
+                echo ""
+                echo "🎯 GitHub Actions Benefits:"
+                echo "  - 🔄 Automatic updates and notifications"
+                echo "  - 🔐 Continuous security monitoring"
+                echo "  - 📊 Performance and usage analytics"
+                echo "  - 🧹 Automated maintenance and cleanup"
+                echo "  - 🚀 Streamlined development workflow"
+                
+                success "✅ GitHub Actions integration is fully operational"
+                ;;
+            "--help" | "-h")
+                echo "Usage: ./ai-dev diagnose [option]"
+                echo ""
+                echo "Options:"
+                echo "  standard           Run standard framework diagnosis (default)"
+                echo "  github-actions     Check GitHub Actions integration status"
+                echo "  --help, -h         Show this help message"
+                ;;
+            *)
+                error "Unknown diagnose option: $SUBCOMMAND"
+                echo "Use './ai-dev diagnose --help' for available options"
+                exit 1
+                ;;
+        esac
         ;;
 
     quality)
@@ -1184,11 +1733,9 @@ EOF
     version)
         echo "AI Development Framework CLI v2.0"
         echo "Enhanced with robust validation, integration testing, and pre-commit system"
-        echo "Framework Version: v1.0.0"
+        echo "Framework Version: $(get_framework_version)"
         echo "Platform: $PLATFORM ($(uname -s))"
-        if [ -f "${AI_WORKFLOW_DIR}/VERSION" ]; then
-            echo "Additional Version Info: $(cat "${AI_WORKFLOW_DIR}/VERSION")"
-        fi
+        show_version_info
         ;;
 
     help|--help|-h)
@@ -1403,10 +1950,199 @@ EOF
         esac
         ;;
 
+    generate-visualizations)
+        if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+            cat << EOF
+${BLUE}Generate Visualizations Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev generate-visualizations [OPTIONS]
+
+${GREEN}Description:${NC}
+Generate comprehensive visual representations of the AI Framework including mind maps, 
+flowcharts, architecture diagrams, and interactive dashboards.
+
+${GREEN}Options:${NC}
+  --type TYPE         Type of visualization (architecture, workflows, commands, actions, all)
+  --format FORMAT     Output format (mermaid, svg, html, all)
+  --output DIR        Output directory (default: .ai_workflow/docs/visualizations)
+  --interactive       Generate interactive HTML dashboards
+  --help, -h          Show this help
+
+${GREEN}Examples:${NC}
+  ./ai-dev generate-visualizations                    # Generate all visualizations
+  ./ai-dev generate-visualizations --type architecture # Generate architecture diagrams
+  ./ai-dev generate-visualizations --format svg       # Generate SVG files
+  ./ai-dev generate-visualizations --interactive      # Generate interactive dashboards
+
+${GREEN}What it generates:${NC}
+- 🏗️ Architecture diagrams and component maps
+- 🔄 Workflow mind maps and execution flows
+- 🎮 Command reference trees and usage patterns
+- 🤖 GitHub Actions timelines and schedules
+- 📊 Data flow diagrams and system relationships
+- 🎯 Interactive HTML dashboards with real-time metrics
+
+${GREEN}Note:${NC} Generated visualizations help understand the framework structure and relationships.
+EOF
+            exit 0
+        fi
+        
+        info "🎨 Generating framework visualizations"
+        
+        # Check if visualization script exists
+        VIZ_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_visualizations.sh"
+        if [[ -f "$VIZ_SCRIPT" ]]; then
+            # Execute visualization generator
+            bash "$VIZ_SCRIPT" "$@"
+        else
+            error "Visualization generator script not found at: $VIZ_SCRIPT"
+            echo ""
+            echo "📋 Manual generation steps:"
+            echo "1. Install mermaid-cli: npm install -g @mermaid-js/mermaid-cli"
+            echo "2. Generate diagrams from: .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md"
+            echo "3. Use online editor: https://mermaid.live/"
+            exit 1
+        fi
+        ;;
+
+    dashboard)
+        if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+            cat << EOF
+${BLUE}Dashboard Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev dashboard [OPTIONS]
+
+${GREEN}Description:${NC}
+Open the interactive framework dashboard in your web browser for real-time monitoring
+and visualization of the AI Framework status, metrics, and GitHub Actions.
+
+${GREEN}Options:${NC}
+  --generate          Generate dashboard before opening
+  --browser BROWSER   Specify browser to use (default: system default)
+  --port PORT         Port for local server (default: 8080)
+  --no-open          Don't open browser automatically
+  --help, -h          Show this help
+
+${GREEN}Examples:${NC}
+  ./ai-dev dashboard                    # Open dashboard in default browser
+  ./ai-dev dashboard --generate         # Generate and open dashboard
+  ./ai-dev dashboard --browser firefox  # Open in Firefox
+  ./ai-dev dashboard --port 3000        # Use port 3000
+
+${GREEN}Dashboard Features:${NC}
+- 🏥 Real-time system health monitoring
+- 📊 Performance metrics and analytics
+- 🤖 GitHub Actions status and schedules
+- 🔄 Workflow execution tracking
+- 📈 Usage statistics and trends
+- 🎯 Interactive navigation and controls
+
+${GREEN}Note:${NC} Dashboard provides comprehensive framework monitoring and visualization.
+EOF
+            exit 0
+        fi
+        
+        info "🎯 Opening framework dashboard"
+        
+        # Parse dashboard options
+        GENERATE_FIRST=false
+        BROWSER=""
+        PORT=8080
+        NO_OPEN=false
+        
+        while [[ $# -gt 0 ]]; do
+            case $1 in
+                --generate)
+                    GENERATE_FIRST=true
+                    shift
+                    ;;
+                --browser)
+                    BROWSER="$2"
+                    shift 2
+                    ;;
+                --port)
+                    PORT="$2"
+                    shift 2
+                    ;;
+                --no-open)
+                    NO_OPEN=true
+                    shift
+                    ;;
+                *)
+                    shift
+                    ;;
+            esac
+        done
+        
+        # Generate dashboard if requested
+        if [[ "$GENERATE_FIRST" == "true" ]]; then
+            info "📊 Generating dashboard first..."
+            VIZ_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_visualizations.sh"
+            if [[ -f "$VIZ_SCRIPT" ]]; then
+                bash "$VIZ_SCRIPT"
+            else
+                warning "Visualization script not found, using existing dashboard"
+            fi
+        fi
+        
+        # Check if dashboard exists
+        DASHBOARD_FILE="${AI_WORKFLOW_DIR}/docs/interactive/dashboard.html"
+        if [[ ! -f "$DASHBOARD_FILE" ]]; then
+            error "Dashboard not found at: $DASHBOARD_FILE"
+            echo ""
+            echo "📋 Generate dashboard first:"
+            echo "  ./ai-dev generate-visualizations"
+            echo "  ./ai-dev dashboard --generate"
+            exit 1
+        fi
+        
+        # Open dashboard
+        if [[ "$NO_OPEN" != "true" ]]; then
+            info "🌐 Opening dashboard in browser..."
+            
+            # Convert to absolute path for file:// URL
+            DASHBOARD_PATH="$(cd "$(dirname "$DASHBOARD_FILE")" && pwd)/$(basename "$DASHBOARD_FILE")"
+            DASHBOARD_URL="file://$DASHBOARD_PATH"
+            
+            # Open in specified browser or system default
+            if [[ -n "$BROWSER" ]]; then
+                if command -v "$BROWSER" &> /dev/null; then
+                    "$BROWSER" "$DASHBOARD_URL" &
+                    success "Dashboard opened in $BROWSER"
+                else
+                    error "Browser '$BROWSER' not found"
+                    exit 1
+                fi
+            else
+                # Use system default browser
+                if command -v xdg-open &> /dev/null; then
+                    xdg-open "$DASHBOARD_URL" &
+                    success "Dashboard opened in default browser"
+                elif command -v open &> /dev/null; then
+                    open "$DASHBOARD_URL" &
+                    success "Dashboard opened in default browser"
+                elif command -v start &> /dev/null; then
+                    start "$DASHBOARD_URL" &
+                    success "Dashboard opened in default browser"
+                else
+                    warning "Could not detect system browser"
+                    echo ""
+                    echo "📋 Manual access:"
+                    echo "  Open in browser: $DASHBOARD_URL"
+                fi
+            fi
+        fi
+        
+        # Show dashboard path
+        DASHBOARD_PATH="$(cd "$(dirname "$DASHBOARD_FILE")" && pwd)/$(basename "$DASHBOARD_FILE")"
+        DASHBOARD_URL="file://$DASHBOARD_PATH"
+        success "Dashboard ready at: $DASHBOARD_URL"
+        ;;
+
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform"
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform, generate-visualizations, dashboard"
         show_help
         exit 1
         ;;

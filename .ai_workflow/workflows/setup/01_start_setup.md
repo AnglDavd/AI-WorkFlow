@@ -16,7 +16,17 @@ This node starts the project setup process by gathering the new project's name f
 # Log workflow start
 ./.ai_workflow/workflows/common/log_work_journal.md "INFO" "Starting Project Setup workflow."
 
-read -p 'Enter your new project name (e.g., my-awesome-app): ' PROJECT_NAME
+# Use environment variable or interactive prompt with auto-confirmation support
+if [ -n "$PROJECT_NAME" ]; then
+    echo "Using PROJECT_NAME from environment: $PROJECT_NAME"
+elif [ "$AUTO_CONFIRM" = "true" ]; then
+    PROJECT_NAME="my-awesome-app"
+    echo "Auto-confirmation enabled, using default project name: $PROJECT_NAME"
+else
+    echo -n 'Enter your new project name (e.g., my-awesome-app): '
+    read PROJECT_NAME
+fi
+
 if [ -z "$PROJECT_NAME" ]; then
     echo "PROJECT_NAME is empty. Aborting."
     ./.ai_workflow/workflows/common/error.md "Project name cannot be empty."

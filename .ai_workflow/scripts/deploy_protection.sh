@@ -249,7 +249,14 @@ EOF
     echo "3. Enable protection with custom mode"
     echo ""
     
-    read -p "Choose option [1-3]: " choice
+    # Use environment variable or default behavior for automation
+    if [[ -n "${AUTO_CONFIRM:-}" ]]; then
+        choice="$AUTO_CONFIRM"
+        echo "Choose option [1-3]: $choice (automated)"
+    else
+        echo -n "Choose option [1-3]: "
+        read choice
+    fi
     
     case "$choice" in
         1)
@@ -265,7 +272,14 @@ EOF
             echo "📋 Available modes:"
             "$PROTECTION_DIR/mode_manager.sh" list
             echo ""
-            read -p "Enter mode: " custom_mode
+            # Use environment variable or default behavior for automation
+            if [[ -n "${CUSTOM_MODE:-}" ]]; then
+                custom_mode="$CUSTOM_MODE"
+                echo "Enter mode: $custom_mode (automated)"
+            else
+                echo -n "Enter mode: "
+                read custom_mode
+            fi
             mv "$AI_DEV_SCRIPT.protected" "$AI_DEV_SCRIPT"
             "$PROTECTION_DIR/mode_manager.sh" set "$custom_mode"
             "$PROTECTION_SCRIPT" enable

@@ -28,7 +28,7 @@ A clear and concise description of what actually happened.
 - AI Model: [e.g. Claude, GPT-4]
 
 ## Framework Diagnostic
-Please run `./ai-dev diagnose` and paste the output:
+Run `./ai-dev diagnose` and paste the output:
 ```
 [Diagnostic output here]
 ```

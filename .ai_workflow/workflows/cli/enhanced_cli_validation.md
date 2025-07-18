@@ -211,7 +211,8 @@ confirm_action() {
         echo "$message: $REPLY (automated)"
     else
         # Fallback to manual input only if automation not configured
-        read -p "$prompt: " -n 1 -r
+        echo -n "$prompt: "
+        read -n 1 -r
         echo
     fi
     

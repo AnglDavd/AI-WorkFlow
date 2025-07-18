@@ -1,0 +1,377 @@
+name: Auto-Update Framework Visualizations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.ai_workflow/workflows/**'
+      - '.ai_workflow/scripts/**'
+      - '.ai_workflow/docs/**'
+      - 'ai-dev'
+      - 'CLAUDE.md'
+      - 'ARCHITECTURE.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.ai_workflow/workflows/**'
+      - '.ai_workflow/scripts/**'
+      - '.ai_workflow/docs/**'
+      - 'ai-dev'
+      - 'CLAUDE.md'
+      - 'ARCHITECTURE.md'
+  schedule:
+    - cron: '0 10 * * *'  # Daily at 10 AM UTC
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force complete regeneration'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      workflows_changed: ${{ steps.changes.outputs.workflows }}
+      commands_changed: ${{ steps.changes.outputs.commands }}
+      architecture_changed: ${{ steps.changes.outputs.architecture }}
+      docs_changed: ${{ steps.changes.outputs.docs }}
+      force_update: ${{ inputs.force_update }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Detect Changes
+        id: changes
+        run: |
+          echo "🔍 Detecting changes in framework components..."
+          
+          # Check for workflow changes
+          if git diff --name-only HEAD~1 HEAD | grep -E '\.(ai_workflow/workflows|ai_workflow/scripts)' || [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "workflows=true" >> $GITHUB_OUTPUT
+            echo "📋 Workflows changed detected"
+          else
+            echo "workflows=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for command changes
+          if git diff --name-only HEAD~1 HEAD | grep -E '(ai-dev|CLAUDE\.md)' || [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "commands=true" >> $GITHUB_OUTPUT
+            echo "🎮 Commands changed detected"
+          else
+            echo "commands=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for architecture changes
+          if git diff --name-only HEAD~1 HEAD | grep -E '(ARCHITECTURE\.md|FRAMEWORK_GUIDE\.md)' || [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "architecture=true" >> $GITHUB_OUTPUT
+            echo "🏗️ Architecture changed detected"
+          else
+            echo "architecture=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for documentation changes
+          if git diff --name-only HEAD~1 HEAD | grep -E '\.(ai_workflow/docs)' || [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "docs=true" >> $GITHUB_OUTPUT
+            echo "📚 Documentation changed detected"
+          else
+            echo "docs=false" >> $GITHUB_OUTPUT
+          fi
+
+  update-visualizations:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.workflows_changed == 'true' ||
+      needs.detect-changes.outputs.commands_changed == 'true' ||
+      needs.detect-changes.outputs.architecture_changed == 'true' ||
+      needs.detect-changes.outputs.docs_changed == 'true' ||
+      needs.detect-changes.outputs.force_update == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Setup Environment
+        run: |
+          echo "🔧 Setting up visualization environment..."
+          
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install -y bc jq
+          
+          # Install mermaid-cli for SVG generation
+          npm install -g @mermaid-js/mermaid-cli
+          
+          # Make ai-dev executable
+          chmod +x ai-dev
+      
+      - name: Collect Development State
+        run: |
+          echo "📊 Collecting current development state..."
+          
+          # Create development state file
+          cat > .ai_workflow/state/development_state.json << 'EOF'
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "version": "$(git describe --tags --abbrev=0 2>/dev/null || echo 'v1.0.0')",
+            "commit": "$(git rev-parse --short HEAD)",
+            "branch": "$(git rev-parse --abbrev-ref HEAD)",
+            "workflows": {
+              "total": $(find .ai_workflow/workflows -name "*.md" | wc -l),
+              "categories": {
+                "setup": $(find .ai_workflow/workflows/setup -name "*.md" 2>/dev/null | wc -l),
+                "prd": $(find .ai_workflow/workflows/prd -name "*.md" 2>/dev/null | wc -l),
+                "prp": $(find .ai_workflow/workflows/prp -name "*.md" 2>/dev/null | wc -l),
+                "run": $(find .ai_workflow/workflows/run -name "*.md" 2>/dev/null | wc -l),
+                "security": $(find .ai_workflow/workflows/security -name "*.md" 2>/dev/null | wc -l),
+                "sync": $(find .ai_workflow/workflows/sync -name "*.md" 2>/dev/null | wc -l),
+                "cli": $(find .ai_workflow/workflows/cli -name "*.md" 2>/dev/null | wc -l),
+                "monitoring": $(find .ai_workflow/workflows/monitoring -name "*.md" 2>/dev/null | wc -l),
+                "feedback": $(find .ai_workflow/workflows/feedback -name "*.md" 2>/dev/null | wc -l),
+                "common": $(find .ai_workflow/workflows/common -name "*.md" 2>/dev/null | wc -l)
+              }
+            },
+            "commands": {
+              "total": $(grep -c "^[[:space:]]*[a-zA-Z-]*)[[:space:]]*$" ai-dev 2>/dev/null || echo 0)
+            },
+            "github_actions": {
+              "total": $(find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null | wc -l)
+            },
+            "development_tasks": {
+              "completed": $(find .ai_workflow -name "*.md" -exec grep -l "✅" {} \; 2>/dev/null | wc -l),
+              "pending": $(find .ai_workflow -name "*.md" -exec grep -l "❌\|🔄\|⚠️" {} \; 2>/dev/null | wc -l)
+            }
+          }
+          EOF
+          
+          # Process the JSON to replace command substitutions
+          TEMP_FILE=$(mktemp)
+          eval "echo \"$(cat .ai_workflow/state/development_state.json)\"" > "$TEMP_FILE"
+          mv "$TEMP_FILE" .ai_workflow/state/development_state.json
+          
+          echo "📋 Development state collected"
+          cat .ai_workflow/state/development_state.json
+      
+      - name: Generate Enhanced Visualizations
+        run: |
+          echo "🎨 Generating enhanced visualizations with development state..."
+          
+          # Run existing visualization generator
+          ./ai-dev generate-visualizations --include-state
+          
+          # Generate additional development-specific diagrams
+          bash .ai_workflow/scripts/generate_development_diagrams.sh
+      
+      - name: Generate SVG Exports
+        run: |
+          echo "🖼️ Generating SVG exports for better integration..."
+          
+          # Create SVG directory
+          mkdir -p .ai_workflow/docs/diagrams/svg
+          
+          # Convert Mermaid diagrams to SVG
+          for mmd_file in .ai_workflow/docs/diagrams/*.mmd; do
+            if [ -f "$mmd_file" ]; then
+              base_name=$(basename "$mmd_file" .mmd)
+              echo "📊 Converting $base_name to SVG..."
+              
+              # Use mermaid-cli to convert
+              mmdc -i "$mmd_file" -o ".ai_workflow/docs/diagrams/svg/${base_name}.svg" -t neutral -b white || {
+                echo "⚠️ Failed to convert $base_name, creating fallback..."
+                echo "<svg></svg>" > ".ai_workflow/docs/diagrams/svg/${base_name}.svg"
+              }
+            fi
+          done
+      
+      - name: Update Documentation
+        run: |
+          echo "📚 Updating visualization documentation..."
+          
+          # Update main visualization README
+          cat > .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md << 'EOF'
+          # Framework Visualization System
+          
+          **Last Updated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Auto-Generated:** ✅ This file is automatically updated by GitHub Actions
+          
+          ## 📊 Current Framework State
+          
+          EOF
+          
+          # Append development state
+          echo "\`\`\`json" >> .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md
+          cat .ai_workflow/state/development_state.json >> .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md
+          echo "\`\`\`" >> .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md
+          
+          # Add visualization links
+          cat >> .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md << 'EOF'
+          
+          ## 🎨 Available Visualizations
+          
+          ### Framework Architecture
+          - **Mermaid:** [architecture.mmd](diagrams/architecture.mmd)
+          - **SVG:** [architecture.svg](diagrams/svg/architecture.svg)
+          
+          ### Workflow Mind Map
+          - **Mermaid:** [workflow_map.mmd](diagrams/workflow_map.mmd)
+          - **SVG:** [workflow_map.svg](diagrams/svg/workflow_map.svg)
+          
+          ### Command Reference
+          - **Mermaid:** [commands.mmd](diagrams/commands.mmd)
+          - **SVG:** [commands.svg](diagrams/svg/commands.svg)
+          
+          ### GitHub Actions Timeline
+          - **Mermaid:** [github_actions.mmd](diagrams/github_actions.mmd)
+          - **SVG:** [github_actions.svg](diagrams/svg/github_actions.svg)
+          
+          ### Data Flow
+          - **Mermaid:** [data_flow.mmd](diagrams/data_flow.mmd)
+          - **SVG:** [data_flow.svg](diagrams/svg/data_flow.svg)
+          
+          ### Development Progress
+          - **Mermaid:** [development_progress.mmd](diagrams/development_progress.mmd)
+          - **SVG:** [development_progress.svg](diagrams/svg/development_progress.svg)
+          
+          ## 🔄 Automatic Updates
+          
+          This visualization system automatically updates when:
+          - Framework workflows are modified
+          - CLI commands are updated
+          - Architecture changes are made
+          - Documentation is updated
+          - Daily at 10 AM UTC
+          
+          ## 🚀 Usage
+          
+          ### View in GitHub
+          Click on any `.mmd` file to see the rendered diagram in GitHub.
+          
+          ### Local Generation
+          ```bash
+          ./ai-dev generate-visualizations
+          ./ai-dev dashboard
+          ```
+          
+          ### Integration
+          Use the SVG files for documentation, presentations, or external tools.
+          
+          ---
+          
+          *Auto-generated by Framework Visualization System*
+          EOF
+          
+          # Process the markdown file to resolve command substitutions
+          TEMP_FILE=$(mktemp)
+          eval "echo \"$(cat .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md)\"" > "$TEMP_FILE"
+          mv "$TEMP_FILE" .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md
+      
+      - name: Commit Changes
+        run: |
+          echo "💾 Committing visualization updates..."
+          
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add all visualization files
+          git add .ai_workflow/docs/diagrams/
+          git add .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md
+          git add .ai_workflow/state/development_state.json
+          git add .ai_workflow/docs/interactive/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "📋 No visualization changes to commit"
+          else
+            echo "📋 Committing visualization changes..."
+            git commit -m "🎨 Auto-update framework visualizations
+            
+            - Updated diagrams based on framework changes
+            - Regenerated SVG exports
+            - Updated development state tracking
+            - Refreshed interactive dashboard
+            
+            Changes detected in:
+            - Workflows: ${{ needs.detect-changes.outputs.workflows_changed }}
+            - Commands: ${{ needs.detect-changes.outputs.commands_changed }}
+            - Architecture: ${{ needs.detect-changes.outputs.architecture_changed }}
+            - Documentation: ${{ needs.detect-changes.outputs.docs_changed }}
+            
+            🤖 Generated with GitHub Actions"
+            
+            git push
+            echo "✅ Visualization updates committed and pushed"
+          fi
+      
+      - name: Create Update Summary
+        run: |
+          echo "📊 Creating update summary..."
+          
+          # Create summary file
+          cat > visualization_update_summary.md << 'EOF'
+          # Visualization Update Summary
+          
+          **Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Trigger:** ${{ github.event_name }}
+          **Commit:** ${{ github.sha }}
+          
+          ## Changes Detected
+          
+          - **Workflows:** ${{ needs.detect-changes.outputs.workflows_changed }}
+          - **Commands:** ${{ needs.detect-changes.outputs.commands_changed }}
+          - **Architecture:** ${{ needs.detect-changes.outputs.architecture_changed }}
+          - **Documentation:** ${{ needs.detect-changes.outputs.docs_changed }}
+          
+          ## Generated Artifacts
+          
+          - ✅ Updated Mermaid diagrams
+          - ✅ Generated SVG exports
+          - ✅ Refreshed interactive dashboard
+          - ✅ Updated development state tracking
+          
+          ## Next Steps
+          
+          The visualizations are now up-to-date and ready for use. Check the updated diagrams at:
+          - [Framework Visualization Documentation](.ai_workflow/docs/FRAMEWORK_VISUALIZATION.md)
+          - [Interactive Dashboard](.ai_workflow/docs/interactive/dashboard.html)
+          
+          EOF
+          
+          # Process the summary
+          TEMP_FILE=$(mktemp)
+          eval "echo \"$(cat visualization_update_summary.md)\"" > "$TEMP_FILE"
+          mv "$TEMP_FILE" visualization_update_summary.md
+          
+          echo "📋 Update summary created"
+          cat visualization_update_summary.md
+      
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-visualizations
+          path: |
+            .ai_workflow/docs/diagrams/
+            .ai_workflow/docs/interactive/
+            .ai_workflow/state/development_state.json
+            visualization_update_summary.md
+          retention-days: 30
+
+  notify-completion:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, update-visualizations]
+    if: always()
+    
+    steps:
+      - name: Notification
+        run: |
+          echo "🎉 Framework visualization update completed!"
+          echo "📊 Status: ${{ needs.update-visualizations.result }}"
+          echo "🔄 Changes: ${{ needs.detect-changes.outputs.workflows_changed || needs.detect-changes.outputs.commands_changed || needs.detect-changes.outputs.architecture_changed || needs.detect-changes.outputs.docs_changed }}"

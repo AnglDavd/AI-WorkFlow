@@ -242,7 +242,14 @@ safe_execute() {
         
         # Require manual confirmation for dangerous operations
         if [ "$FORCE_DANGEROUS_OPERATIONS" != "true" ]; then
-            read -p "⚠️  Continue with dangerous operation? [y/N]: " confirm
+            # Use environment variable or default behavior for automation
+            if [[ -n "${AUTO_CONFIRM:-}" ]]; then
+                confirm="$AUTO_CONFIRM"
+                echo "⚠️  Continue with dangerous operation? [y/N]: $confirm (automated)"
+            else
+                echo -n "⚠️  Continue with dangerous operation? [y/N]: "
+                read confirm
+            fi
             if [ "$confirm" != "y" ]; then
                 echo "Operation cancelled by user"
                 return 1
@@ -322,7 +329,14 @@ safe_execute_with_loop_detection() {
         
         # Require manual confirmation for potential loops
         if [ "$ALLOW_POTENTIAL_LOOPS" != "true" ]; then
-            read -p "⚠️  Continue despite loop risk? [y/N]: " confirm
+            # Use environment variable or default behavior for automation
+            if [[ -n "${AUTO_CONFIRM:-}" ]]; then
+                confirm="$AUTO_CONFIRM"
+                echo "⚠️  Continue despite loop risk? [y/N]: $confirm (automated)"
+            else
+                echo -n "⚠️  Continue despite loop risk? [y/N]: "
+                read confirm
+            fi
             if [ "$confirm" != "y" ]; then
                 echo "Operation cancelled due to loop risk"
                 return 1

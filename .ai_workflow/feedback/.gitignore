@@ -1,0 +1,15 @@
+# Temporary files
+*.tmp
+*.temp
+
+# Raw API responses
+raw/*.json
+
+# Sensitive data
+*.key
+*.secret
+*.token
+
+# Large files
+*.log
+*.gz

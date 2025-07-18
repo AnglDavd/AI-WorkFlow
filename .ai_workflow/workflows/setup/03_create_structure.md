@@ -3,7 +3,7 @@ This node is the core of the setup process. It either injects the `.ai_workflow`
 
 ## Pre-conditions
 - The file `/.ai_workflow/temp_state.vars` must exist and contain `PROJECT_NAME` and `PROJECT_DIR`.
-- The user must have confirmed the plan in the previous step.
+- The setup plan must have been validated in the previous step.
 
 ## Commands
 ```bash
@@ -130,18 +130,26 @@ deploy_protection() {
         return 0
     fi
     
-    # Ask user if they want protection
-    echo "🛡️  Circuit Breaker Protection Available"
-    echo "This provides loop prevention and safety mechanisms."
-    echo ""
-    echo "📋 Available modes:"
-    echo "1. production - Balanced limits for normal use"
-    echo "2. development - Permissive limits for development"
-    echo "3. enterprise - Strict limits for enterprise"
-    echo "4. skip - No protection (can be enabled later)"
-    echo ""
-    
-    read -p "Choose protection mode [1-4]: " protection_choice
+    # Use environment variable or interactive prompt with auto-confirmation support
+    if [ -n "$PROTECTION_MODE" ]; then
+        echo "Using PROTECTION_MODE from environment: $PROTECTION_MODE"
+        protection_choice="$PROTECTION_MODE"
+    elif [ "$AUTO_CONFIRM" = "true" ]; then
+        protection_choice="1"
+        echo "Auto-confirmation enabled, using production mode protection"
+    else
+        echo "🛡️  Circuit Breaker Protection Available"
+        echo "This provides loop prevention and safety mechanisms."
+        echo ""
+        echo "📋 Available modes:"
+        echo "1. production - Balanced limits for normal use"
+        echo "2. development - Permissive limits for development"
+        echo "3. enterprise - Strict limits for enterprise"
+        echo "4. skip - No protection (can be enabled later)"
+        echo ""
+        echo -n "Choose protection mode [1-4]: "
+        read protection_choice
+    fi
     
     case "$protection_choice" in
         1)

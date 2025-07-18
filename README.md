@@ -111,6 +111,45 @@ git clone https://github.com/AnglDavd/AI-WorkFlow.git .ai_framework
 | **Optional** | Python 3.6+ | For JSON validation and processing (not required) |
 | **Optional** | jq | Enhanced JSON processing |
 
+### 🤖 GitHub Actions Integration
+
+> **⚠️ Important**: This framework leverages **GitHub Actions** for automation and may have limited functionality when used outside of GitHub repositories.
+
+#### 🔄 **Automated Features via GitHub Actions**
+- **🔍 Performance Monitoring**: Automatic benchmarking and regression detection
+- **🩺 Health Checks**: Daily framework integrity validation
+- **🔐 Security Audits**: Continuous vulnerability scanning
+- **📊 Usage Analytics**: Adoption tracking and improvement insights
+- **🚀 Update Distribution**: Automatic notification and distribution of updates
+- **🧹 Maintenance**: Automated cleanup and optimization
+
+#### 📋 **GitHub Actions Dependency**
+| Feature | GitHub Actions Required | Alternative |
+|---------|------------------------|-------------|
+| **Core Framework** | ❌ No | Works standalone |
+| **Update Notifications** | ✅ Yes | Manual `./ai-dev update` |
+| **Automated Security** | ✅ Yes | Manual `./ai-dev audit` |
+| **Performance Monitoring** | ✅ Yes | Manual benchmarking |
+| **Health Checks** | ✅ Yes | Manual `./ai-dev diagnose` |
+| **Community Features** | ✅ Yes | Manual feedback submission |
+
+#### 🛠️ **For Non-GitHub Users**
+If you're using this framework outside of GitHub:
+- **✅ Core functionality works** - All CLI commands and workflows function normally
+- **⚠️ Limited automation** - No automatic updates, security checks, or monitoring
+- **📋 Manual alternative** - Use `./ai-dev diagnose` to check for missing automation
+- **🔄 Update process** - Manual update via `git pull` or download new releases
+
+#### 🎯 **GitHub Actions Status**
+Check your repository's GitHub Actions status:
+```bash
+# Check if GitHub Actions are enabled
+./ai-dev diagnose --github-actions
+
+# View active automation
+./ai-dev status --verbose
+```
+
 ### 🔧 Platform-Specific Setup
 
 #### 🐧 **Linux** (Recommended)

@@ -278,7 +278,14 @@ interactive_mode_selection() {
         ((i++))
     done
     
-    read -p "Select mode [1-${#mode_array[@]}]: " choice
+    # Use environment variable or default behavior for automation
+    if [[ -n "${MODE_SELECTION:-}" ]]; then
+        choice="$MODE_SELECTION"
+        echo "Select mode [1-${#mode_array[@]}]: $choice (automated)"
+    else
+        echo -n "Select mode [1-${#mode_array[@]}]: "
+        read choice
+    fi
     
     if [ "$choice" -ge 1 ] && [ "$choice" -le "${#mode_array[@]}" ]; then
         local selected_mode="${mode_array[$((choice-1))]}"

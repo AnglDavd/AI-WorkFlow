@@ -50,7 +50,13 @@ fi
 ```bash
 # 1. Receive PRP File
 if [[ -z "$PRP_FILE_PATH" ]]; then
-    read -p "Enter path to PRP file: " PRP_FILE_PATH
+    # Use environment variable or default behavior for automation
+    if [[ -n "${PRP_FILE_PATH:-}" ]]; then
+        echo "Enter path to PRP file: $PRP_FILE_PATH (automated)"
+    else
+        echo -n "Enter path to PRP file: "
+        read PRP_FILE_PATH
+    fi
     if [[ ! -f "$PRP_FILE_PATH" ]]; then
         echo "❌ PRP file not found: $PRP_FILE_PATH"
         exit 1

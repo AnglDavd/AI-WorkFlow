@@ -168,7 +168,14 @@ safe_execute() {
     # Check for dangerous operations
     if is_dangerous_operation "$command" "$file_path"; then
         echo "❌ Dangerous operation detected"
-        read -p "⚠️  Continue? [y/N]: " confirm
+        # Use environment variable or default behavior for automation
+        if [[ -n "${AUTO_CONFIRM:-}" ]]; then
+            confirm="$AUTO_CONFIRM"
+            echo "⚠️  Continue? [y/N]: $confirm (automated)"
+        else
+            echo -n "⚠️  Continue? [y/N]: "
+            read confirm
+        fi
         if [ "$confirm" != "y" ]; then
             echo "Operation cancelled"
             return 1
