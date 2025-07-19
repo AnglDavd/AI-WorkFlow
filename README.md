@@ -52,9 +52,9 @@ Traditional development is **too complex**:
 
 Each command is powered by **expert AI instruction files** that guide the AI through professional-grade processes:
 
-1. **PRD Creation (01_create_prd.md)**: Comprehensive interview process to extract maximum project detail
-2. **Task Generation (02_generate_tasks.md)**: Breaks down PRD into 5-phase implementation plan
-3. **Execution (03_execute_tasks.md)**: Executes tasks with production-ready code and GitHub backup
+1. **PRD Creation (create_prd_guide.md)**: Comprehensive interview process to extract maximum project detail
+2. **Task Generation (generate_tasks_guide.md)**: Breaks down PRD into 5-phase implementation plan
+3. **Execution (execute_tasks_guide.md)**: Executes tasks with production-ready code and GitHub backup
 
 ## 🌟 Key Features
 
@@ -146,10 +146,9 @@ Get detailed help for any command:
 ### Framework Structure
 ```
 ai-dev                          # Main CLI script (ultra-simple)
-.ai_workflow/simple/            # AI instruction guides
-├── 01_create_prd.md           # PRD creation expert guide
-├── 02_generate_tasks.md       # Task generation expert guide  
-└── 03_execute_tasks.md        # Execution expert guide
+create_prd_guide.md            # PRD creation expert guide
+generate_tasks_guide.md        # Task generation expert guide  
+execute_tasks_guide.md         # Execution expert guide
 .github/workflows/              # 24 automation workflows
 docs/                          # Generated project files
 ├── prds/                      # Product Requirements Documents

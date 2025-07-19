@@ -10,7 +10,7 @@ set -euo pipefail
 
 # --- Global Variables ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly AI_WORKFLOW_DIR="${SCRIPT_DIR}/.ai_workflow"
+# AI guide files are now in root directory
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -107,9 +107,9 @@ EOF
 validate_environment() {
     # Check if we have the required guide files
     local required_files=(
-        ".ai_workflow/simple/01_create_prd.md"
-        ".ai_workflow/simple/02_generate_tasks.md" 
-        ".ai_workflow/simple/03_execute_tasks.md"
+        "create_prd_guide.md"
+        "generate_tasks_guide.md" 
+        "execute_tasks_guide.md"
     )
     
     for file in "${required_files[@]}"; do
@@ -299,7 +299,7 @@ EOF
             exit 0
         fi
         
-        execute_ai_guide ".ai_workflow/simple/01_create_prd.md" "Creating Ultra-Detailed PRD"
+        execute_ai_guide "create_prd_guide.md" "Creating Ultra-Detailed PRD"
         ;;
 
     generate)
@@ -355,7 +355,7 @@ EOF
         
         validate_file_path "$PRD_FILE" "prd"
         
-        execute_ai_guide ".ai_workflow/simple/02_generate_tasks.md" "Generating Implementation Tasks" "$PRD_FILE"
+        execute_ai_guide "generate_tasks_guide.md" "Generating Implementation Tasks" "$PRD_FILE"
         ;;
 
     execute)
@@ -419,7 +419,7 @@ EOF
         
         validate_file_path "$TASKS_FILE" "tasks"
         
-        execute_ai_guide ".ai_workflow/simple/03_execute_tasks.md" "Executing Implementation Plan" "$TASKS_FILE"
+        execute_ai_guide "execute_tasks_guide.md" "Executing Implementation Plan" "$TASKS_FILE"
         ;;
 
     help|--help|-h)
@@ -440,16 +440,16 @@ EOF
         echo ""
         
         echo "📁 Directory Structure:"
-        echo "  .ai_workflow/simple/     ✅ $(ls .ai_workflow/simple/*.md 2>/dev/null | wc -l) guide files"
+        echo "  Root directory/         ✅ $(ls *_guide.md 2>/dev/null | wc -l) guide files"
         echo "  docs/prds/              ✅ $(ls docs/prds/*.md 2>/dev/null | wc -l) PRD files"
         echo "  docs/tasks/             ✅ $(ls docs/tasks/*.md 2>/dev/null | wc -l) task files"
         echo "  docs/reports/           ✅ Ready for reports"
         echo ""
         
         echo "🤖 AI Guides Available:"
-        [ -f ".ai_workflow/simple/01_create_prd.md" ] && echo "  ✅ PRD Creation Guide" || echo "  ❌ PRD Creation Guide"
-        [ -f ".ai_workflow/simple/02_generate_tasks.md" ] && echo "  ✅ Task Generation Guide" || echo "  ❌ Task Generation Guide"
-        [ -f ".ai_workflow/simple/03_execute_tasks.md" ] && echo "  ✅ Execution Guide" || echo "  ❌ Execution Guide"
+        [ -f "create_prd_guide.md" ] && echo "  ✅ PRD Creation Guide" || echo "  ❌ PRD Creation Guide"
+        [ -f "generate_tasks_guide.md" ] && echo "  ✅ Task Generation Guide" || echo "  ❌ Task Generation Guide"
+        [ -f "execute_tasks_guide.md" ] && echo "  ✅ Execution Guide" || echo "  ❌ Execution Guide"
         echo ""
         
         echo "🔄 Recent Activity:"
