@@ -6,7 +6,7 @@
 
 **Objective:** Transform PRD into ultra-detailed, 5-phase implementation plan
 
-**Output:** `docs/tasks/tasks-{project-name}-{timestamp}.md`
+**Output:** `tasks_{project-name}_{timestamp}.md`
 
 ## Process
 

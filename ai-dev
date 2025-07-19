@@ -58,8 +58,8 @@ ${GREEN}Core Commands:${NC}
 
 ${GREEN}Process Flow:${NC}
   ${CYAN}1.${NC} ./ai-dev create-prd                    → Creates detailed PRD
-  ${CYAN}2.${NC} ./ai-dev generate docs/prds/prd-xxx.md → Generates task breakdown
-  ${CYAN}3.${NC} ./ai-dev execute docs/tasks/tasks-xxx.md → Implements + backs up to GitHub
+  ${CYAN}2.${NC} ./ai-dev generate prd_xxx.md → Generates task breakdown
+  ${CYAN}3.${NC} ./ai-dev execute tasks_xxx.md → Implements + backs up to GitHub
 
 ${GREEN}What Each Step Does:${NC}
 
@@ -67,13 +67,13 @@ ${GREEN}What Each Step Does:${NC}
   - Interactive comprehensive interview process
   - Extracts maximum project detail and context
   - Creates 3000+ word PRD with business & technical requirements
-  - Saves to docs/prds/prd-{project}-{timestamp}.md
+  - Saves to prd_{project}_{timestamp}.md
 
   ${BOLD}generate:${NC}
   - Analyzes PRD and breaks down into 5 implementation phases
   - Creates detailed tasks with acceptance criteria
   - Includes architecture, development, testing, and deployment
-  - Saves to docs/tasks/tasks-{project}-{timestamp}.md
+  - Saves to tasks_{project}_{timestamp}.md
 
   ${BOLD}execute:${NC}
   - Executes each task phase-by-phase with production-ready code
@@ -83,8 +83,8 @@ ${GREEN}What Each Step Does:${NC}
 
 ${GREEN}Examples:${NC}
   ./ai-dev create-prd
-  ./ai-dev generate docs/prds/prd-my-app-20240101_120000.md
-  ./ai-dev execute docs/tasks/tasks-my-app-20240101_120000.md
+  ./ai-dev generate prd_my-app_20240101_120000.md
+  ./ai-dev execute tasks_my-app_20240101_120000.md
 
 ${GREEN}Features:${NC}
   ✅ Ultra-detailed requirements gathering
@@ -95,9 +95,9 @@ ${GREEN}Features:${NC}
   ✅ Complete documentation generation
 
 ${GREEN}Directory Structure Created:${NC}
-  docs/prds/     - Product Requirements Documents
-  docs/tasks/    - Implementation task breakdowns
-  docs/reports/  - Execution and quality reports
+  prd_*          - Product Requirements Documents
+  tasks_*        - Implementation task breakdowns
+  report_*       - Execution and quality reports
 
 For detailed help on any command: ./ai-dev <command> --help
 EOF
@@ -120,8 +120,7 @@ validate_environment() {
         fi
     done
     
-    # Create output directories
-    mkdir -p docs/prds docs/tasks docs/reports
+    # Ultra-flat structure - no directories needed
     
     log "Environment validation passed"
 }
@@ -276,7 +275,7 @@ ${GREEN}What it does:${NC}
 - Technical architecture and requirements gathering
 - Functional requirements and user story creation
 - Implementation details and project planning
-- Creates detailed PRD saved to docs/prds/
+- Creates detailed PRD saved in root directory
 
 ${GREEN}Interview Sections:${NC}
 1. Project Overview & Vision
@@ -286,7 +285,7 @@ ${GREEN}Interview Sections:${NC}
 5. Project Planning & Timeline
 
 ${GREEN}Output:${NC}
-- Ultra-detailed PRD file: docs/prds/prd-{project}-{timestamp}.md
+- Ultra-detailed PRD file: prd_{project}_{timestamp}.md
 - 3000+ words with comprehensive coverage
 - Ready for task generation
 
@@ -294,7 +293,7 @@ ${GREEN}Example:${NC}
   ./ai-dev create-prd
 
 ${GREEN}Next Step:${NC}
-  ./ai-dev generate docs/prds/prd-{your-project}.md
+  ./ai-dev generate prd_{your-project}.md
 EOF
             exit 0
         fi
@@ -330,16 +329,16 @@ ${GREEN}What it does:${NC}
 - GitHub Actions workflow generation
 
 ${GREEN}Output:${NC}
-- Comprehensive task file: docs/tasks/tasks-{project}-{timestamp}.md
+- Comprehensive task file: tasks_{project}_{timestamp}.md
 - 5 phases with detailed implementation steps
 - Ready for execution
 
 ${GREEN}Examples:${NC}
-  ./ai-dev generate docs/prds/prd-my-app-20240101.md
-  ./ai-dev generate docs/prds/prd-ecommerce-site.md
+  ./ai-dev generate prd_my-app_20240101.md
+  ./ai-dev generate prd_ecommerce-site.md
 
 ${GREEN}Next Step:${NC}
-  ./ai-dev execute docs/tasks/tasks-{your-project}.md
+  ./ai-dev execute tasks_{your-project}.md
 EOF
             exit 0
         fi
@@ -349,7 +348,7 @@ EOF
             error "Missing required argument: <prd_file>"
             echo ""
             echo "Usage: ./ai-dev generate <prd_file>"
-            echo "Example: ./ai-dev generate docs/prds/prd-my-project.md"
+            echo "Example: ./ai-dev generate prd_my-project.md"
             exit 1
         fi
         
@@ -396,8 +395,8 @@ ${GREEN}Output:${NC}
 - Deployment-ready infrastructure
 
 ${GREEN}Examples:${NC}
-  ./ai-dev execute docs/tasks/tasks-my-app-20240101.md
-  ./ai-dev execute docs/tasks/tasks-ecommerce-site.md
+  ./ai-dev execute tasks_my-app_20240101.md
+  ./ai-dev execute tasks_ecommerce-site.md
 
 ${GREEN}GitHub Integration:${NC}
 - Automatic milestone commits with detailed messages
@@ -413,7 +412,7 @@ EOF
             error "Missing required argument: <tasks_file>"
             echo ""
             echo "Usage: ./ai-dev execute <tasks_file>"
-            echo "Example: ./ai-dev execute docs/tasks/tasks-my-project.md"
+            echo "Example: ./ai-dev execute tasks_my-project.md"
             exit 1
         fi
         
@@ -440,10 +439,10 @@ EOF
         echo ""
         
         echo "📁 Directory Structure:"
-        echo "  Root directory/         ✅ $(ls *_guide.md 2>/dev/null | wc -l) guide files"
-        echo "  docs/prds/              ✅ $(ls docs/prds/*.md 2>/dev/null | wc -l) PRD files"
-        echo "  docs/tasks/             ✅ $(ls docs/tasks/*.md 2>/dev/null | wc -l) task files"
-        echo "  docs/reports/           ✅ Ready for reports"
+        echo "  Guide files/            ✅ $(ls *_guide.md 2>/dev/null | wc -l) guide files"
+        echo "  PRD files/              ✅ $(ls prd_*.md 2>/dev/null | wc -l) PRD files"
+        echo "  Task files/             ✅ $(ls tasks_*.md 2>/dev/null | wc -l) task files"
+        echo "  Report files/           ✅ $(ls report_*.md 2>/dev/null | wc -l) report files"
         echo ""
         
         echo "🤖 AI Guides Available:"
@@ -453,9 +452,9 @@ EOF
         echo ""
         
         echo "🔄 Recent Activity:"
-        echo "  PRDs Created: $(ls docs/prds/*.md 2>/dev/null | wc -l)"
-        echo "  Tasks Generated: $(ls docs/tasks/*.md 2>/dev/null | wc -l)"
-        echo "  Last Modified: $(find docs -name "*.md" -type f -exec stat -c %y {} \; 2>/dev/null | sort -r | head -1 | cut -d' ' -f1 || echo "None")"
+        echo "  PRDs Created: $(ls prd_*.md 2>/dev/null | wc -l)"
+        echo "  Tasks Generated: $(ls tasks_*.md 2>/dev/null | wc -l)"
+        echo "  Last Modified: $(find . -maxdepth 1 -name "*.md" -type f -exec stat -c %y {} \; 2>/dev/null | sort -r | head -1 | cut -d' ' -f1 || echo "None")"
         ;;
 
     *)

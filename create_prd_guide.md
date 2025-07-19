@@ -4,7 +4,7 @@
 
 **Objective:** Create ultra-detailed Product Requirements Document through comprehensive interview
 
-**Output:** `docs/prds/prd-{project-name}-{timestamp}.md`
+**Output:** `prd_{project-name}_{timestamp}.md`
 
 ## Interview Process
 

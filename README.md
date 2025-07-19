@@ -40,10 +40,10 @@ Traditional development is **too complex**:
 ./ai-dev create-prd
 
 # Step 2: Generate implementation plan from requirements  
-./ai-dev generate docs/prds/prd-my-project.md
+./ai-dev generate prd_my-project.md
 
 # Step 3: Execute plan with automatic GitHub backup
-./ai-dev execute docs/tasks/tasks-my-project.md
+./ai-dev execute tasks_my-project.md
 ```
 
 **That's it!** 🎉
@@ -110,10 +110,10 @@ chmod +x ai-dev
 ./ai-dev create-prd
 
 # 2. Generate implementation plan (replace with your PRD file)
-./ai-dev generate docs/prds/prd-my-app-20240119.md
+./ai-dev generate prd_my-app_20240119.md
 
 # 3. Execute with automatic GitHub backup (replace with your tasks file)
-./ai-dev execute docs/tasks/tasks-my-app-20240119.md
+./ai-dev execute tasks_my-app_20240119.md
 ```
 
 ## 📋 Commands Reference
@@ -122,8 +122,8 @@ chmod +x ai-dev
 
 | Command | Description | Input | Output |
 |---------|-------------|--------|--------|
-| `create-prd` | Create ultra-detailed PRD through AI interview | Interactive | `docs/prds/prd-{project}-{timestamp}.md` |
-| `generate` | Convert PRD to 5-phase implementation plan | PRD file path | `docs/tasks/tasks-{project}-{timestamp}.md` |
+| `create-prd` | Create ultra-detailed PRD through AI interview | Interactive | `prd_{project}_{timestamp}.md` |
+| `generate` | Convert PRD to 5-phase implementation plan | PRD file path | `tasks_{project}_{timestamp}.md` |
 | `execute` | Execute tasks with production code + GitHub backup | Tasks file path | Complete project + Git history |
 
 ### Utility Commands
@@ -150,10 +150,9 @@ create_prd_guide.md            # PRD creation expert guide
 generate_tasks_guide.md        # Task generation expert guide  
 execute_tasks_guide.md         # Execution expert guide
 .github/workflows/              # 24 automation workflows
-docs/                          # Generated project files
-├── prds/                      # Product Requirements Documents
-├── tasks/                     # Implementation task breakdowns
-└── reports/                   # Execution reports
+prd_*                          # Product Requirements Documents
+tasks_*                        # Implementation task breakdowns
+report_*                       # Execution reports
 ```
 
 ### Generated Project Structure
@@ -161,7 +160,7 @@ docs/                          # Generated project files
 your-project/
 ├── src/                       # Source code (technology-specific)
 ├── tests/                     # Comprehensive test suite
-├── docs/                      # Technical documentation
+├── docs/                      # Technical documentation (generated projects)
 ├── .github/workflows/         # CI/CD automation
 ├── README.md                  # Project documentation
 └── package.json              # Dependencies (or equivalent)
