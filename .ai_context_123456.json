@@ -1,0 +1,25 @@
+{
+    "session_id": "123456",
+    "created": "2025-07-19T16:34:09-04:00",
+    "last_updated": "2025-07-19T16:34:09-04:00",
+    "files": {
+        "prd": "",
+        "tasks": "",
+        "report": ""
+    },
+    "project_metadata": {
+        "name": "",
+        "complexity": "
+Unknown",
+        "tech_stack": "None"
+    },
+    "progress": {
+        "total_tasks": 0,
+        "completed_tasks": 0,
+        "approved_tasks": 0,
+        "proposed_tasks": 0
+    },
+    "decisions": [],
+    "risk_factors": [],
+    "notes": []
+}

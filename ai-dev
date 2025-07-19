@@ -1,16 +1,21 @@
 #!/bin/bash
 
 # ai-dev - Ultra-Simple AI Development Framework CLI
-# Version: 3.0 - Simplified to 3 core commands
-# 1. create-prd   - Create ultra-detailed PRDs
-# 2. generate     - Convert PRDs to implementation tasks  
-# 3. execute      - Execute tasks with GitHub backup
+# Version: 3.1 - Enhanced with real-time collaboration
+# Core Commands: create-prd, generate, execute
+# Collaboration: collaborate, dev, context
+# Real-time AI-developer integration without additional files
 
 set -euo pipefail
 
 # --- Global Variables ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # AI guide files are now in root directory
+
+# Session ID generation for workflow traceability
+generate_session_id() {
+    echo "$(date +%s | tail -c 6)"
+}
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -43,11 +48,691 @@ title() {
     echo -e "\n${BOLD}${PURPLE}$1${NC}\n"
 }
 
+# --- Collaboration Functions ---
+get_session_state() {
+    local session_id="$1"
+    
+    # Use comments in existing files for state tracking
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    if [ -f "$tasks_file" ]; then
+        grep "<!-- STATE:" "$tasks_file" 2>/dev/null | tail -1 | sed 's/.*STATE: //' | sed 's/ -->.*//'
+    else
+        echo "session_not_found"
+    fi
+}
+
+update_session_state() {
+    local session_id="$1"
+    local current_task="$2"
+    local status="$3"
+    
+    # Add state as comment to tasks file
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    if [ -f "$tasks_file" ]; then
+        echo "<!-- STATE: task=$current_task status=$status timestamp=$(date +%s) -->" >> "$tasks_file"
+        log "Session state updated: $current_task -> $status"
+    else
+        error "Tasks file not found for session: $session_id"
+        return 1
+    fi
+}
+
+load_full_context() {
+    local session_id="$1"
+    
+    log "Loading full context for session: $session_id"
+    
+    # Load PRD
+    local prd_file=$(ls "01_prd_${session_id}_"*.md 2>/dev/null | head -1)
+    if [ -f "$prd_file" ]; then
+        local word_count=$(wc -w < "$prd_file")
+        success "PRD loaded: $word_count words"
+        export AI_CONTEXT_PRD="$prd_file"
+    else
+        error "PRD file not found for session: $session_id"
+        return 1
+    fi
+    
+    # Load tasks
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    if [ -f "$tasks_file" ]; then
+        local total_tasks=$(grep -c "### Task" "$tasks_file" 2>/dev/null || echo 0)
+        success "Tasks loaded: $total_tasks tasks"
+        export AI_CONTEXT_TASKS="$tasks_file"
+    else
+        error "Tasks file not found for session: $session_id"
+        return 1
+    fi
+    
+    # Load current state
+    local current_state=$(get_session_state "$session_id")
+    success "Current state: $current_state"
+    export AI_CONTEXT_SESSION="$session_id"
+    
+    return 0
+}
+
+validate_current_progress() {
+    local session_id="$1"
+    local quiet="${2:-false}"
+    
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    if [ ! -f "$tasks_file" ]; then
+        error "Tasks file not found for session: $session_id"
+        return 1
+    fi
+    
+    # Count completed tasks
+    local completed_tasks=$(grep -c "✅" "$tasks_file" 2>/dev/null || echo 0)
+    local total_tasks=$(grep -c "### Task" "$tasks_file" 2>/dev/null || echo 1)
+    
+    if [ "$quiet" != "true" ]; then
+        title "📊 Progress Validation: Session $session_id"
+        echo "Progress: $completed_tasks/$total_tasks tasks completed"
+        
+        # Show pending acceptance criteria
+        echo ""
+        echo "Pending Acceptance Criteria:"
+        grep -A 5 "**Acceptance Criteria:**" "$tasks_file" | while read -r line; do
+            if [[ "$line" =~ ^\-\ \[\ \] ]]; then
+                echo "❌ ${line#- [ ] }"
+            elif [[ "$line" =~ ^\-\ \[x\] ]]; then
+                echo "✅ ${line#- [x] }"
+            fi
+        done
+    fi
+    
+    # Return success if more than 80% complete
+    local progress_percent=$((completed_tasks * 100 / total_tasks))
+    [ $progress_percent -gt 80 ]
+}
+
+get_next_recommended_task() {
+    local session_id="$1"
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    
+    if [ ! -f "$tasks_file" ]; then
+        error "Tasks file not found for session: $session_id"
+        return 1
+    fi
+    
+    # Find first uncompleted task
+    local next_task=$(awk '/### Task/ { task=$0; getline; while(getline && !/### Task/ && !/✅/) { if(/❌/) { task=""; break } } if(task!="") { print task; exit } }' "$tasks_file")
+    
+    if [ -n "$next_task" ]; then
+        echo "🎯 Next recommended task:"
+        echo "   $next_task"
+        
+        # Show acceptance criteria for this task
+        local task_line=$(grep -n "$next_task" "$tasks_file" | cut -d: -f1)
+        if [ -n "$task_line" ]; then
+            echo ""
+            echo "Acceptance Criteria:"
+            sed -n "${task_line},+20p" "$tasks_file" | grep -A 10 "**Acceptance Criteria:**" | while read -r line; do
+                if [[ "$line" =~ ^\-\ \[\ \] ]]; then
+                    echo "   $line"
+                fi
+            done
+        fi
+    else
+        success "All tasks completed!"
+    fi
+}
+
+validate_code_against_criteria() {
+    local session_id="$1"
+    local file_path="$2"
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    
+    if [ ! -f "$file_path" ]; then
+        error "File not found: $file_path"
+        return 1
+    fi
+    
+    if [ ! -f "$tasks_file" ]; then
+        error "Tasks file not found for session: $session_id"
+        return 1
+    fi
+    
+    title "👁️ Code Review: $(basename "$file_path")"
+    
+    # Extract and validate against acceptance criteria
+    grep -A 10 "**Acceptance Criteria:**" "$tasks_file" | while read -r line; do
+        if [[ "$line" =~ ^\-\ \[\ \] ]]; then
+            local check="${line#- [ ] }"
+            
+            case "$check" in
+                *"error handling"*|*"exception"*)
+                    if grep -q "try\|catch\|throw\|error\|Exception" "$file_path"; then
+                        echo "✅ Error handling found"
+                    else
+                        echo "❌ No error handling detected"
+                    fi
+                    ;;
+                *"input validation"*|*"sanitiz"*)
+                    if grep -q "validate\|sanitize\|filter\|escape" "$file_path"; then
+                        echo "✅ Input validation found"
+                    else
+                        echo "❌ No input validation detected"
+                    fi
+                    ;;
+                *"documentation"*|*"comment"*)
+                    if grep -q "\/\*\*\|\/\/\|#\|@param\|@return" "$file_path"; then
+                        echo "✅ Documentation comments found"
+                    else
+                        echo "❌ No documentation detected"
+                    fi
+                    ;;
+                *"test"*|*"unit test"*)
+                    local test_file="${file_path%.*}.test.${file_path##*.}"
+                    if [ -f "$test_file" ] || grep -q "test\|Test\|assert" "$file_path"; then
+                        echo "✅ Tests found"
+                    else
+                        echo "❌ No tests detected"
+                    fi
+                    ;;
+                *"security"*|*"SQL injection"*|*"XSS"*)
+                    if grep -q "prepare\|bind\|escape\|sanitize\|nonce" "$file_path"; then
+                        echo "✅ Security measures found"
+                    else
+                        echo "❌ No security measures detected"
+                    fi
+                    ;;
+                *)
+                    echo "ℹ️  Manual check needed: $check"
+                    ;;
+            esac
+        fi
+    done
+}
+
+start_continuous_validation() {
+    local session_id="$1"
+    
+    title "🔄 Starting Continuous Validation"
+    
+    # Create monitoring script
+    cat > "/tmp/validate_${session_id}.sh" << EOF
+#!/bin/bash
+while true; do
+    sleep 30
+    if "$0" dev --validate "$session_id" --quiet > /dev/null 2>&1; then
+        echo "\$(date '+%H:%M:%S'): ✅ Validation passed"
+    else
+        echo "\$(date '+%H:%M:%S'): ❌ Validation failed - attention needed"
+    fi
+done
+EOF
+    
+    chmod +x "/tmp/validate_${session_id}.sh"
+    nohup "/tmp/validate_${session_id}.sh" > "/tmp/validation_${session_id}.log" 2>&1 &
+    local pid=$!
+    
+    success "Continuous validation started (PID: $pid)"
+    log "Monitor with: tail -f /tmp/validation_${session_id}.log"
+    log "Stop with: kill $pid"
+    
+    echo "$pid" > "/tmp/validate_${session_id}.pid"
+}
+
+stop_continuous_validation() {
+    local session_id="$1"
+    
+    if [ -f "/tmp/validate_${session_id}.pid" ]; then
+        local pid=$(cat "/tmp/validate_${session_id}.pid")
+        if kill "$pid" 2>/dev/null; then
+            success "Continuous validation stopped (PID: $pid)"
+            rm -f "/tmp/validate_${session_id}.pid"
+            rm -f "/tmp/validate_${session_id}.sh"
+        else
+            warning "Validation process not found or already stopped"
+        fi
+    else
+        warning "No continuous validation running for session: $session_id"
+    fi
+}
+
+# --- Level 1 Enhancement Functions ---
+
+save_session_context() {
+    local session_id="$1"
+    local context_file=".ai_context_${session_id}.json"
+    
+    log "Saving session context for: $session_id"
+    
+    # Gather all session information
+    local prd_file=$(ls "01_prd_${session_id}_"*.md 2>/dev/null | head -1)
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    local report_file=$(ls "03_report_${session_id}_"*.md 2>/dev/null | head -1)
+    
+    # Create context JSON
+    cat > "$context_file" << EOF
+{
+    "session_id": "$session_id",
+    "created": "$(date -Iseconds)",
+    "last_updated": "$(date -Iseconds)",
+    "files": {
+        "prd": "$(basename "$prd_file" 2>/dev/null || echo "")",
+        "tasks": "$(basename "$tasks_file" 2>/dev/null || echo "")",
+        "report": "$(basename "$report_file" 2>/dev/null || echo "")"
+    },
+    "project_metadata": {
+        "name": "$(echo "$prd_file" | sed 's/.*_\(.*\)\.md/\1/' 2>/dev/null || echo "")",
+        "complexity": "$(grep "Complexity Assessment:" "$prd_file" 2>/dev/null | cut -d: -f2 | xargs || echo "Unknown")",
+        "tech_stack": "$(grep "TECH_APPROVED:" "$prd_file" 2>/dev/null | tail -1 | sed 's/.*TECH_APPROVED: \([^[:space:]]*\).*/\1/' || echo "None")"
+    },
+    "progress": {
+        "total_tasks": $(grep -c "### Task" "$tasks_file" 2>/dev/null || echo 0),
+        "completed_tasks": $(grep -c "✅" "$tasks_file" 2>/dev/null || echo 0),
+        "approved_tasks": $(grep -c "APPROVED:" "$tasks_file" 2>/dev/null || echo 0),
+        "proposed_tasks": $(grep -c "PROPOSED:" "$tasks_file" 2>/dev/null || echo 0)
+    },
+    "decisions": [],
+    "risk_factors": [],
+    "notes": []
+}
+EOF
+    
+    # Extract and save decision history
+    if [ -f "$tasks_file" ]; then
+        extract_decision_history "$session_id" "$tasks_file" "$context_file"
+    fi
+    
+    success "Session context saved: $context_file"
+}
+
+extract_decision_history() {
+    local session_id="$1"
+    local tasks_file="$2"
+    local context_file="$3"
+    
+    # Extract decisions from comments
+    local decisions=""
+    local temp_decisions="/tmp/decisions_${session_id}.json"
+    
+    echo '[]' > "$temp_decisions"
+    
+    # Extract TECH_APPROVED decisions
+    if grep -q "TECH_APPROVED:" "$tasks_file"; then
+        local tech_decision=$(grep "TECH_APPROVED:" "$tasks_file" | tail -1)
+        local tech_option=$(echo "$tech_decision" | sed 's/.*TECH_APPROVED: \([^[:space:]]*\).*/\1/')
+        
+        jq ". += [{\"type\": \"technology\", \"decision\": \"$tech_option\", \"timestamp\": \"$(date -Iseconds)\", \"source\": \"tech_approval\"}]" "$temp_decisions" > "${temp_decisions}.tmp"
+        mv "${temp_decisions}.tmp" "$temp_decisions"
+    fi
+    
+    # Extract APPROVED task decisions
+    grep "APPROVED:" "$tasks_file" 2>/dev/null | while read -r approval; do
+        local task_id=$(echo "$approval" | sed 's/.*task=\([^[:space:]]*\).*/\1/')
+        local timestamp=$(echo "$approval" | sed 's/.*timestamp=\([^[:space:]]*\).*/\1/')
+        local changes=$(echo "$approval" | sed 's/.*changes="\([^"]*\)".*/\1/' 2>/dev/null || echo "")
+        
+        if [ -n "$changes" ]; then
+            jq ". += [{\"type\": \"task_approval\", \"task_id\": \"$task_id\", \"changes\": \"$changes\", \"timestamp\": \"$timestamp\", \"source\": \"developer_approval\"}]" "$temp_decisions" > "${temp_decisions}.tmp"
+        else
+            jq ". += [{\"type\": \"task_approval\", \"task_id\": \"$task_id\", \"timestamp\": \"$timestamp\", \"source\": \"developer_approval\"}]" "$temp_decisions" > "${temp_decisions}.tmp"
+        fi
+        mv "${temp_decisions}.tmp" "$temp_decisions" 2>/dev/null || true
+    done
+    
+    # Merge decisions into main context file
+    if command -v jq >/dev/null 2>&1; then
+        local temp_context="${context_file}.tmp"
+        jq --slurpfile decisions "$temp_decisions" '.decisions = $decisions[0]' "$context_file" > "$temp_context"
+        mv "$temp_context" "$context_file"
+    fi
+    
+    rm -f "$temp_decisions" "${temp_decisions}.tmp"
+}
+
+restore_session_context() {
+    local session_id="$1"
+    local context_file=".ai_context_${session_id}.json"
+    
+    if [ ! -f "$context_file" ]; then
+        warning "No saved context found for session: $session_id"
+        return 1
+    fi
+    
+    title "🧠 Restoring Session Context: $session_id"
+    
+    # Extract and display context information
+    if command -v jq >/dev/null 2>&1; then
+        local project_name=$(jq -r '.project_metadata.name' "$context_file" 2>/dev/null || echo "Unknown")
+        local complexity=$(jq -r '.project_metadata.complexity' "$context_file" 2>/dev/null || echo "Unknown")
+        local tech_stack=$(jq -r '.project_metadata.tech_stack' "$context_file" 2>/dev/null || echo "None")
+        local total_tasks=$(jq -r '.progress.total_tasks' "$context_file" 2>/dev/null || echo "0")
+        local completed_tasks=$(jq -r '.progress.completed_tasks' "$context_file" 2>/dev/null || echo "0")
+        local approved_tasks=$(jq -r '.progress.approved_tasks' "$context_file" 2>/dev/null || echo "0")
+        
+        echo "📋 Project: $project_name"
+        echo "🔧 Complexity: $complexity"
+        echo "💻 Technology: $tech_stack"
+        echo "📊 Progress: $completed_tasks/$total_tasks tasks completed"
+        echo "✅ Approved: $approved_tasks tasks approved"
+        echo ""
+        
+        # Show recent decisions
+        echo "📝 Recent Decisions:"
+        jq -r '.decisions[] | "  - \(.type): \(.decision // .task_id) (\(.timestamp[:19]))"' "$context_file" 2>/dev/null | tail -5 || echo "  No decisions recorded"
+        
+        success "Context restored successfully"
+        
+        # Set environment variables for AI context
+        export AI_CONTEXT_SESSION="$session_id"
+        export AI_CONTEXT_PROJECT="$project_name"
+        export AI_CONTEXT_COMPLEXITY="$complexity"
+        export AI_CONTEXT_TECH="$tech_stack"
+        
+    else
+        warning "jq not available - limited context restoration"
+        echo "Context file exists but cannot parse JSON without jq"
+        return 1
+    fi
+}
+
+compress_large_context() {
+    local session_id="$1"
+    local context_file=".ai_context_${session_id}.json"
+    
+    title "🗜️ Compressing Large Context: $session_id"
+    
+    # Check if files are too large for AI context
+    local prd_file=$(ls "01_prd_${session_id}_"*.md 2>/dev/null | head -1)
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    
+    if [ -f "$prd_file" ]; then
+        local prd_size=$(wc -w < "$prd_file")
+        if [ "$prd_size" -gt 4000 ]; then
+            warning "PRD is large ($prd_size words) - creating summary"
+            
+            # Create compressed summary
+            local summary_file="${prd_file%.md}_summary.md"
+            create_prd_summary "$prd_file" "$summary_file"
+            
+            echo "📄 Created PRD summary: $summary_file"
+        fi
+    fi
+    
+    if [ -f "$tasks_file" ]; then
+        local task_count=$(grep -c "### Task" "$tasks_file")
+        if [ "$task_count" -gt 25 ]; then
+            warning "Many tasks ($task_count) - creating focused view"
+            
+            # Create focused task view
+            local focused_file="${tasks_file%.md}_current.md"
+            create_focused_task_view "$tasks_file" "$focused_file" "$session_id"
+            
+            echo "📋 Created focused task view: $focused_file"
+        fi
+    fi
+}
+
+create_prd_summary() {
+    local prd_file="$1"
+    local summary_file="$2"
+    
+    cat > "$summary_file" << EOF
+# PRD Summary (Auto-generated)
+
+## Key Information
+$(grep -A 5 "## 1. Project Overview" "$prd_file" | head -10)
+
+## Technology Stack
+$(grep -A 20 "## 2. Technology Stack Analysis" "$prd_file" | grep -E "(RECOMMENDED|Backend:|Frontend:|Database:)" | head -10)
+
+## Critical Requirements
+$(grep -E "^\*\*|^- \*\*" "$prd_file" | head -15)
+
+## Budget & Timeline
+$(grep -E "\$[0-9,]+|[0-9]+ weeks|[0-9]+ months" "$prd_file" | head -5)
+
+---
+*This is an auto-generated summary. See full PRD: $(basename "$prd_file")*
+EOF
+}
+
+create_focused_task_view() {
+    local tasks_file="$1"
+    local focused_file="$2"
+    local session_id="$3"
+    
+    cat > "$focused_file" << EOF
+# Current Task Focus (Auto-generated)
+
+## Active Tasks
+EOF
+    
+    # Show next 3-5 uncompleted tasks
+    local task_count=0
+    grep -n "### Task" "$tasks_file" | while read -r line && [ $task_count -lt 5 ]; do
+        local line_num=$(echo "$line" | cut -d: -f1)
+        local task_title=$(echo "$line" | cut -d: -f2-)
+        
+        # Check if task is completed
+        if ! sed -n "${line_num},+20p" "$tasks_file" | grep -q "✅"; then
+            echo "" >> "$focused_file"
+            sed -n "${line_num},+15p" "$tasks_file" | head -16 >> "$focused_file"
+            task_count=$((task_count + 1))
+        fi
+    done
+    
+    echo "" >> "$focused_file"
+    echo "---" >> "$focused_file"
+    echo "*Showing next 5 uncompleted tasks. See full plan: $(basename "$tasks_file")*" >> "$focused_file"
+}
+
+validate_dependencies() {
+    local session_id="$1"
+    local task_id="${2:-all}"
+    
+    title "🔍 Dependency Validation: Session $session_id"
+    
+    local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+    local prd_file=$(ls "01_prd_${session_id}_"*.md 2>/dev/null | head -1)
+    
+    if [ ! -f "$tasks_file" ] || [ ! -f "$prd_file" ]; then
+        error "Required files not found for dependency validation"
+        return 1
+    fi
+    
+    local issues=0
+    
+    # Check technology consistency
+    local prd_tech=$(grep "TECH_APPROVED:" "$prd_file" 2>/dev/null | tail -1 | sed 's/.*TECH_APPROVED: \([^[:space:]]*\).*/\1/' || echo "")
+    local tasks_tech=""
+    
+    if grep -q "PHP\|Laravel\|MySQL" "$tasks_file"; then
+        tasks_tech="php-stack"
+    elif grep -q "Python\|Django\|FastAPI" "$tasks_file"; then
+        tasks_tech="python-stack"
+    elif grep -q "Node\|Express\|JavaScript" "$tasks_file"; then
+        tasks_tech="node-stack"
+    fi
+    
+    if [ -n "$prd_tech" ] && [ -n "$tasks_tech" ]; then
+        if [[ "$prd_tech" != *"$tasks_tech"* ]] && [[ "$tasks_tech" != *"$prd_tech"* ]]; then
+            warning "Technology mismatch: PRD approved '$prd_tech' but tasks use '$tasks_tech'"
+            issues=$((issues + 1))
+        else
+            success "Technology stack consistent between PRD and tasks"
+        fi
+    fi
+    
+    # Check task dependencies
+    echo ""
+    echo "📋 Task Dependency Analysis:"
+    
+    local database_task=$(grep -n "database\|schema\|model" "$tasks_file" | head -1 | cut -d: -f1)
+    local auth_task=$(grep -n "authentication\|login\|user" "$tasks_file" | head -1 | cut -d: -f1)
+    local frontend_task=$(grep -n "frontend\|UI\|interface" "$tasks_file" | head -1 | cut -d: -f1)
+    
+    if [ -n "$database_task" ] && [ -n "$auth_task" ]; then
+        if [ "$database_task" -gt "$auth_task" ]; then
+            warning "Dependency issue: Authentication task before database setup"
+            echo "  Recommendation: Complete database tasks before authentication"
+            issues=$((issues + 1))
+        else
+            success "Database setup scheduled before authentication"
+        fi
+    fi
+    
+    if [ -n "$auth_task" ] && [ -n "$frontend_task" ]; then
+        if [ "$auth_task" -gt "$frontend_task" ]; then
+            warning "Dependency issue: Frontend tasks before authentication"
+            echo "  Recommendation: Complete authentication before frontend integration"
+            issues=$((issues + 1))
+        else
+            success "Authentication scheduled before frontend integration"
+        fi
+    fi
+    
+    # Check for missing critical tasks
+    echo ""
+    echo "🔍 Critical Task Coverage:"
+    
+    local has_security=$(grep -c "security\|validation\|sanitiz" "$tasks_file")
+    local has_testing=$(grep -c "test\|testing\|QA" "$tasks_file")
+    local has_deployment=$(grep -c "deploy\|production\|hosting" "$tasks_file")
+    
+    if [ "$has_security" -eq 0 ]; then
+        warning "Missing security tasks - add input validation and security measures"
+        issues=$((issues + 1))
+    else
+        success "Security tasks included ($has_security found)"
+    fi
+    
+    if [ "$has_testing" -eq 0 ]; then
+        warning "Missing testing tasks - add quality assurance tasks"
+        issues=$((issues + 1))
+    else
+        success "Testing tasks included ($has_testing found)"
+    fi
+    
+    if [ "$has_deployment" -eq 0 ]; then
+        warning "Missing deployment tasks - add production deployment plan"
+        issues=$((issues + 1))
+    else
+        success "Deployment tasks included ($has_deployment found)"
+    fi
+    
+    echo ""
+    if [ "$issues" -eq 0 ]; then
+        success "✅ All dependency validations passed"
+        return 0
+    else
+        warning "⚠️ Found $issues dependency issues that should be addressed"
+        return 1
+    fi
+}
+
+enhanced_error_handler() {
+    local error_type="$1"
+    local session_id="$2"
+    local context="$3"
+    local suggestion="$4"
+    
+    title "🚨 Enhanced Error Handler: $error_type"
+    
+    echo "📍 Context: $context"
+    echo "🔧 Session: $session_id"
+    echo ""
+    
+    case "$error_type" in
+        "missing_file")
+            echo "❌ File not found error detected"
+            echo "🔍 Checking for alternative files..."
+            
+            # Try to find similar files
+            if [[ "$context" == *"prd"* ]]; then
+                echo "Looking for PRD files:"
+                ls 01_prd_*.md 2>/dev/null | head -3 || echo "  No PRD files found"
+            elif [[ "$context" == *"tasks"* ]]; then
+                echo "Looking for task files:"
+                ls 02_tasks_*.md 2>/dev/null | head -3 || echo "  No task files found"
+            fi
+            
+            echo ""
+            echo "💡 Suggestions:"
+            echo "  1. Check session ID format (6 digits)"
+            echo "  2. Verify files were created successfully"
+            echo "  3. Use './ai-dev status' to see available sessions"
+            ;;
+            
+        "context_overload")
+            echo "❌ Context size exceeding optimal limits"
+            echo "🔍 Analyzing context size..."
+            
+            if [ -n "$session_id" ]; then
+                compress_large_context "$session_id"
+            fi
+            
+            echo ""
+            echo "💡 Suggestions:"
+            echo "  1. Use compressed context files created above"
+            echo "  2. Focus on current phase tasks only"
+            echo "  3. Save context and restart session if needed"
+            ;;
+            
+        "dependency_conflict")
+            echo "❌ Dependency conflict detected"
+            echo "🔍 Running dependency validation..."
+            
+            if [ -n "$session_id" ]; then
+                validate_dependencies "$session_id"
+            fi
+            
+            echo ""
+            echo "💡 Suggestions:"
+            echo "  1. Review dependency validation results above"
+            echo "  2. Adjust task order if needed"
+            echo "  3. Update technology stack if inconsistent"
+            ;;
+            
+        "approval_required")
+            echo "❌ Operation requires approval but none found"
+            echo "🔍 Checking approval status..."
+            
+            if [ -n "$session_id" ]; then
+                local tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+                if [ -f "$tasks_file" ]; then
+                    local proposed=$(grep -c "PROPOSED:" "$tasks_file" 2>/dev/null || echo 0)
+                    local approved=$(grep -c "APPROVED:" "$tasks_file" 2>/dev/null || echo 0)
+                    echo "  Proposed tasks: $proposed"
+                    echo "  Approved tasks: $approved"
+                fi
+            fi
+            
+            echo ""
+            echo "💡 Suggestions:"
+            echo "  1. Use './ai-dev dev --propose $session_id task-id' first"
+            echo "  2. Review with './ai-dev collaborate --preview $session_id task-id'"
+            echo "  3. Approve with './ai-dev dev --approve $session_id task-id'"
+            ;;
+            
+        *)
+            echo "❌ Unknown error type: $error_type"
+            echo "📝 Context: $context"
+            
+            if [ -n "$suggestion" ]; then
+                echo ""
+                echo "💡 Suggestion: $suggestion"
+            fi
+            ;;
+    esac
+    
+    echo ""
+    echo "🆘 If issues persist:"
+    echo "  - Check './ai-dev status' for system health"
+    echo "  - Use './ai-dev context --save $session_id' to preserve work"
+    echo "  - Review session files manually"
+}
+
 # --- Help Function ---
 show_help() {
     cat << EOF
-${BLUE}AI Development Framework CLI v3.0${NC}
-${CYAN}Ultra-Simple: 3 Steps to Production${NC}
+${BLUE}AI Development Framework CLI v3.1${NC}
+${CYAN}Enhanced with Real-Time AI-Developer Collaboration${NC}
 
 ${GREEN}Usage:${NC} ./ai-dev <command> [arguments]
 
@@ -56,10 +741,42 @@ ${GREEN}Core Commands:${NC}
   ${BOLD}generate <prd_file>${NC}     Generate implementation tasks from PRD
   ${BOLD}execute <tasks_file>${NC}    Execute tasks with automatic GitHub backup
 
+${GREEN}Collaboration Commands:${NC}
+  ${BOLD}collaborate --start <session_id>${NC}      Start real-time collaborative session
+  ${BOLD}collaborate --sync <session_id>${NC}       Synchronize progress and get next task
+  ${BOLD}collaborate --review <session_id> <file>${NC}  Review code against acceptance criteria
+  ${BOLD}collaborate --monitor <session_id>${NC}    Start continuous validation monitoring
+  ${BOLD}collaborate --review-tech <session_id>${NC}     Review and approve technology stack
+  ${BOLD}collaborate --preview <session_id> <task_id>${NC}  Preview AI implementation approach
+
+${GREEN}Development Commands:${NC}
+  ${BOLD}dev --validate <session_id>${NC}           Validate current progress against plan
+  ${BOLD}dev --next <session_id>${NC}               Show next recommended task
+  ${BOLD}dev --status <session_id>${NC}             Show detailed session status
+  ${BOLD}dev --propose <session_id> <task_id>${NC}       AI proposes task implementation
+  ${BOLD}dev --approve <session_id> <task_id>${NC}       Developer approves AI proposal
+
+${GREEN}Context Commands:${NC}
+  ${BOLD}context --load <session_id>${NC}           Load full session context for AI
+  ${BOLD}context --save <session_id>${NC}           Save session context persistently
+  ${BOLD}context --restore <session_id>${NC}        Restore saved session context
+  ${BOLD}context --compress <session_id>${NC}       Compress large context files
+  ${BOLD}context --validate-deps <session_id>${NC}  Validate project dependencies
+  ${BOLD}context --update <session_id> <task> <status>${NC}  Update task status
+  ${BOLD}context --analyze <session_id>${NC}        Analyze progress vs original plan
+
 ${GREEN}Process Flow:${NC}
-  ${CYAN}1.${NC} ./ai-dev create-prd                    → Creates detailed PRD
-  ${CYAN}2.${NC} ./ai-dev generate prd_xxx.md → Generates task breakdown
-  ${CYAN}3.${NC} ./ai-dev execute tasks_xxx.md → Implements + backs up to GitHub
+  ${CYAN}1.${NC} ./ai-dev create-prd                    → Creates detailed PRD with tech options
+  ${CYAN}2.${NC} ./ai-dev collaborate --review-tech xxx → Review and approve technology stack
+  ${CYAN}3.${NC} ./ai-dev generate 01_prd_xxx.md → Generates task breakdown
+  ${CYAN}4.${NC} ./ai-dev collaborate --start xxx  → Start AI collaboration with supervision
+  ${CYAN}5.${NC} ./ai-dev execute 02_tasks_xxx.md → Implements + backs up to GitHub
+
+${GREEN}Supervision Workflow:${NC}
+  ${CYAN}→${NC} ./ai-dev dev --propose xxx task-2-1     → AI proposes implementation approach
+  ${CYAN}→${NC} ./ai-dev collaborate --preview xxx task-2-1  → Review detailed implementation plan
+  ${CYAN}→${NC} ./ai-dev dev --approve xxx task-2-1     → Approve or request changes
+  ${CYAN}→${NC} ./ai-dev dev --status xxx               → Monitor implementation progress
 
 ${GREEN}What Each Step Does:${NC}
 
@@ -67,13 +784,13 @@ ${GREEN}What Each Step Does:${NC}
   - Interactive comprehensive interview process
   - Extracts maximum project detail and context
   - Creates 3000+ word PRD with business & technical requirements
-  - Saves to prd_{project}_{timestamp}.md
+  - Saves to 01_prd_{session-id}_{project}.md
 
   ${BOLD}generate:${NC}
   - Analyzes PRD and breaks down into 5 implementation phases
   - Creates detailed tasks with acceptance criteria
   - Includes architecture, development, testing, and deployment
-  - Saves to tasks_{project}_{timestamp}.md
+  - Saves to 02_tasks_{session-id}_{project}.md
 
   ${BOLD}execute:${NC}
   - Executes each task phase-by-phase with production-ready code
@@ -83,8 +800,8 @@ ${GREEN}What Each Step Does:${NC}
 
 ${GREEN}Examples:${NC}
   ./ai-dev create-prd
-  ./ai-dev generate prd_my-app_20240101_120000.md
-  ./ai-dev execute tasks_my-app_20240101_120000.md
+  ./ai-dev generate 01_prd_abc123_my-app.md
+  ./ai-dev execute 02_tasks_abc123_my-app.md
 
 ${GREEN}Features:${NC}
   ✅ Ultra-detailed requirements gathering
@@ -93,11 +810,22 @@ ${GREEN}Features:${NC}
   ✅ Automatic GitHub backup and versioning
   ✅ Quality gates and testing integration
   ✅ Complete documentation generation
+  🆕 Real-time AI-developer collaboration
+  🆕 Technology stack analysis and approval workflow
+  🆕 AI supervision with proposal-approval system
+  🆕 Implementation preview before execution
+  🆕 Continuous validation monitoring
+  🆕 Code review against acceptance criteria
+  🆕 Progress tracking and context management
+  ⭐ **NEW LEVEL 1**: Persistent context system
+  ⭐ **NEW LEVEL 1**: Enhanced error handling with smart recovery
+  ⭐ **NEW LEVEL 1**: Dependency validation and conflict detection
+  ⭐ **NEW LEVEL 1**: Large project context compression
 
 ${GREEN}Directory Structure Created:${NC}
-  prd_*          - Product Requirements Documents
-  tasks_*        - Implementation task breakdowns
-  report_*       - Execution and quality reports
+  01_prd_*       - Product Requirements Documents (Step 1)
+  02_tasks_*     - Implementation task breakdowns (Step 2)
+  03_report_*    - Execution and quality reports (Step 3)
 
 For detailed help on any command: ./ai-dev <command> --help
 EOF
@@ -137,7 +865,9 @@ validate_file_path() {
     
     # Check if file exists
     if [ ! -f "$file_path" ]; then
-        error "File not found: $file_path"
+        # Use enhanced error handler
+        local session_id=$(echo "$file_path" | sed 's/.*_\([0-9]\{6\}\)_.*/\1/' 2>/dev/null || echo "unknown")
+        enhanced_error_handler "missing_file" "$session_id" "File not found: $file_path" "Check available files with ./ai-dev status"
         return 1
     fi
     
@@ -275,7 +1005,7 @@ ${GREEN}What it does:${NC}
 - Technical architecture and requirements gathering
 - Functional requirements and user story creation
 - Implementation details and project planning
-- Creates detailed PRD saved in root directory
+- Creates detailed PRD with sequential naming and session ID
 
 ${GREEN}Interview Sections:${NC}
 1. Project Overview & Vision
@@ -285,7 +1015,7 @@ ${GREEN}Interview Sections:${NC}
 5. Project Planning & Timeline
 
 ${GREEN}Output:${NC}
-- Ultra-detailed PRD file: prd_{project}_{timestamp}.md
+- Ultra-detailed PRD file: 01_prd_{session-id}_{project}.md
 - 3000+ words with comprehensive coverage
 - Ready for task generation
 
@@ -293,7 +1023,7 @@ ${GREEN}Example:${NC}
   ./ai-dev create-prd
 
 ${GREEN}Next Step:${NC}
-  ./ai-dev generate prd_{your-project}.md
+  ./ai-dev generate 01_prd_{session-id}_{your-project}.md
 EOF
             exit 0
         fi
@@ -329,16 +1059,16 @@ ${GREEN}What it does:${NC}
 - GitHub Actions workflow generation
 
 ${GREEN}Output:${NC}
-- Comprehensive task file: tasks_{project}_{timestamp}.md
+- Comprehensive task file: 02_tasks_{session-id}_{project}.md
 - 5 phases with detailed implementation steps
 - Ready for execution
 
 ${GREEN}Examples:${NC}
-  ./ai-dev generate prd_my-app_20240101.md
-  ./ai-dev generate prd_ecommerce-site.md
+  ./ai-dev generate 01_prd_abc123_my-app.md
+  ./ai-dev generate 01_prd_def456_ecommerce-site.md
 
 ${GREEN}Next Step:${NC}
-  ./ai-dev execute tasks_{your-project}.md
+  ./ai-dev execute 02_tasks_{session-id}_{your-project}.md
 EOF
             exit 0
         fi
@@ -348,7 +1078,7 @@ EOF
             error "Missing required argument: <prd_file>"
             echo ""
             echo "Usage: ./ai-dev generate <prd_file>"
-            echo "Example: ./ai-dev generate prd_my-project.md"
+            echo "Example: ./ai-dev generate 01_prd_abc123_my-project.md"
             exit 1
         fi
         
@@ -395,8 +1125,8 @@ ${GREEN}Output:${NC}
 - Deployment-ready infrastructure
 
 ${GREEN}Examples:${NC}
-  ./ai-dev execute tasks_my-app_20240101.md
-  ./ai-dev execute tasks_ecommerce-site.md
+  ./ai-dev execute 02_tasks_abc123_my-app.md
+  ./ai-dev execute 02_tasks_def456_ecommerce-site.md
 
 ${GREEN}GitHub Integration:${NC}
 - Automatic milestone commits with detailed messages
@@ -412,7 +1142,7 @@ EOF
             error "Missing required argument: <tasks_file>"
             echo ""
             echo "Usage: ./ai-dev execute <tasks_file>"
-            echo "Example: ./ai-dev execute tasks_my-project.md"
+            echo "Example: ./ai-dev execute 02_tasks_abc123_my-project.md"
             exit 1
         fi
         
@@ -421,28 +1151,541 @@ EOF
         execute_ai_guide "execute_tasks_guide.md" "Executing Implementation Plan" "$TASKS_FILE"
         ;;
 
+    collaborate)
+        SUBCOMMAND=${2:-}
+        SESSION_ID=${3:-}
+        
+        case "$SUBCOMMAND" in
+            --start)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev collaborate --start <session_id>"
+                    exit 1
+                fi
+                
+                title "🤝 Starting Collaborative Session: $SESSION_ID"
+                
+                if load_full_context "$SESSION_ID"; then
+                    start_continuous_validation "$SESSION_ID"
+                    get_next_recommended_task "$SESSION_ID"
+                else
+                    error "Failed to load session context"
+                    exit 1
+                fi
+                ;;
+                
+            --sync)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev collaborate --sync <session_id>"
+                    exit 1
+                fi
+                
+                title "🔄 Synchronizing Progress: $SESSION_ID"
+                
+                validate_current_progress "$SESSION_ID"
+                echo ""
+                get_next_recommended_task "$SESSION_ID"
+                ;;
+                
+            --review)
+                FILE_PATH=${4:-}
+                if [ -z "$SESSION_ID" ] || [ -z "$FILE_PATH" ]; then
+                    error "Missing required arguments"
+                    echo "Usage: ./ai-dev collaborate --review <session_id> <file_path>"
+                    exit 1
+                fi
+                
+                validate_code_against_criteria "$SESSION_ID" "$FILE_PATH"
+                ;;
+                
+            --monitor)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev collaborate --monitor <session_id>"
+                    exit 1
+                fi
+                
+                start_continuous_validation "$SESSION_ID"
+                ;;
+                
+            --stop)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev collaborate --stop <session_id>"
+                    exit 1
+                fi
+                
+                stop_continuous_validation "$SESSION_ID"
+                ;;
+                
+            --review-tech)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev collaborate --review-tech <session_id>"
+                    exit 1
+                fi
+                
+                title "🤖 Technology Stack Review: Session $SESSION_ID"
+                
+                prd_file=$(ls "01_prd_${SESSION_ID}_"*.md 2>/dev/null | head -1)
+                if [ -f "$prd_file" ]; then
+                    # Show technology options from PRD
+                    echo "Technology options from PRD analysis:"
+                    echo "======================================"
+                    
+                    if grep -q "## 2. Technology Stack Analysis" "$prd_file"; then
+                        # Extract technology section
+                        sed -n '/## 2. Technology Stack Analysis/,/## 3./p' "$prd_file" | head -n -1
+                        
+                        echo ""
+                        echo "📋 To approve a technology stack:"
+                        echo "   1. Choose your preferred option (1 or 2)"
+                        echo "   2. Add approval comment to PRD:"
+                        echo "      echo '<!-- TECH_APPROVED: option-1 -->' >> $prd_file"
+                        echo "   3. Generate tasks with chosen stack:"
+                        echo "      ./ai-dev generate $prd_file"
+                        echo ""
+                        
+                        # Check if already approved
+                        if grep -q "<!-- TECH_APPROVED:" "$prd_file"; then
+                            approved_option=$(grep "<!-- TECH_APPROVED:" "$prd_file" | tail -1 | sed 's/.*TECH_APPROVED: \([^[:space:]]*\).*/\1/')
+                            success "Technology stack already approved: $approved_option"
+                        else
+                            warning "Technology stack not yet approved"
+                            echo "Run: echo '<!-- TECH_APPROVED: option-1 -->' >> $prd_file"
+                        fi
+                    else
+                        warning "No technology analysis found in PRD"
+                        echo "This PRD was created before technology analysis was implemented"
+                        echo "Consider regenerating the PRD to get technology options"
+                    fi
+                else
+                    error "PRD file not found for session: $SESSION_ID"
+                    exit 1
+                fi
+                ;;
+                
+            --preview)
+                TASK_ID=${4:-}
+                if [ -z "$SESSION_ID" ] || [ -z "$TASK_ID" ]; then
+                    error "Missing required arguments"
+                    echo "Usage: ./ai-dev collaborate --preview <session_id> <task_id>"
+                    exit 1
+                fi
+                
+                title "👁️ Implementation Preview: Task $TASK_ID"
+                
+                tasks_file=$(ls "02_tasks_${SESSION_ID}_"*.md 2>/dev/null | head -1)
+                if [ -f "$tasks_file" ]; then
+                    # Find the specific task
+                    task_line=$(grep -n "### Task $TASK_ID" "$tasks_file" | cut -d: -f1)
+                    
+                    if [ -n "$task_line" ]; then
+                        echo "🎯 Task Details:"
+                        echo "==============="
+                        
+                        # Extract task section (from task title to next task or end)
+                        sed -n "${task_line},/### Task [0-9]/p" "$tasks_file" | head -n -1 | sed '$d' || sed -n "${task_line},\$p" "$tasks_file"
+                        
+                        echo ""
+                        echo "🤖 AI Implementation Approach:"
+                        echo "==============================="
+                        
+                        # Generate implementation preview based on task content
+                        task_content=$(sed -n "${task_line},/### Task [0-9]/p" "$tasks_file" | head -n -1 || sed -n "${task_line},\$p" "$tasks_file")
+                        
+                        # Analyze task content and suggest implementation
+                        if echo "$task_content" | grep -qi "authentication\|login\|user"; then
+                            echo "📁 Files to create/modify:"
+                            echo "   - login.php (user authentication form)"
+                            echo "   - session.php (session management functions)"
+                            echo "   - auth_middleware.php (authentication validation)"
+                            echo ""
+                            echo "🔧 Key implementation points:"
+                            echo "   - Password hashing with PHP password_hash()"
+                            echo "   - CSRF token validation"
+                            echo "   - Session security (httpOnly, secure flags)"
+                            echo "   - Input sanitization and validation"
+                        elif echo "$task_content" | grep -qi "database\|model\|schema"; then
+                            echo "📁 Files to create/modify:"
+                            echo "   - database/schema.sql (database structure)"
+                            echo "   - models/ (data access layer)"
+                            echo "   - config/database.php (connection settings)"
+                            echo ""
+                            echo "🔧 Key implementation points:"
+                            echo "   - Prepared statements for SQL injection prevention"
+                            echo "   - Connection pooling and error handling"
+                            echo "   - Data validation and sanitization"
+                        elif echo "$task_content" | grep -qi "frontend\|ui\|interface"; then
+                            echo "📁 Files to create/modify:"
+                            echo "   - assets/css/styles.css (responsive design)"
+                            echo "   - assets/js/main.js (interactive functionality)"
+                            echo "   - templates/ (HTML templates)"
+                            echo ""
+                            echo "🔧 Key implementation points:"
+                            echo "   - Mobile-first responsive design"
+                            echo "   - Accessibility (WCAG compliance)"
+                            echo "   - Form validation and user feedback"
+                        else
+                            echo "📁 Files to be determined based on specific requirements"
+                            echo "🔧 Implementation approach will follow task acceptance criteria"
+                        fi
+                        
+                        echo ""
+                        echo "📝 To approve this implementation approach:"
+                        echo "   ./ai-dev dev --approve $SESSION_ID $TASK_ID"
+                        echo ""
+                        echo "📝 To approve with modifications:"
+                        echo "   ./ai-dev dev --approve $SESSION_ID $TASK_ID --changes \"your feedback\""
+                        
+                        # Check if already proposed/approved
+                        if grep -q "<!-- PROPOSED: task=$TASK_ID" "$tasks_file"; then
+                            warning "Task already proposed by AI"
+                        fi
+                        
+                        if grep -q "<!-- APPROVED: task=$TASK_ID" "$tasks_file"; then
+                            approval=$(grep "<!-- APPROVED: task=$TASK_ID" "$tasks_file" | tail -1)
+                            success "Task already approved: $approval"
+                        fi
+                    else
+                        error "Task $TASK_ID not found in tasks file"
+                        echo "Available tasks:"
+                        grep "### Task" "$tasks_file" | head -5
+                        exit 1
+                    fi
+                else
+                    error "Tasks file not found for session: $SESSION_ID"
+                    exit 1
+                fi
+                ;;
+                
+            *)
+                error "Unknown collaborate subcommand: $SUBCOMMAND"
+                echo "Available subcommands: --start, --sync, --review, --monitor, --stop, --review-tech, --preview"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    dev)
+        SUBCOMMAND=${2:-}
+        SESSION_ID=${3:-}
+        
+        case "$SUBCOMMAND" in
+            --validate)
+                QUIET=${4:-}
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev dev --validate <session_id> [--quiet]"
+                    exit 1
+                fi
+                
+                if [ "$QUIET" = "--quiet" ]; then
+                    validate_current_progress "$SESSION_ID" "true"
+                else
+                    validate_current_progress "$SESSION_ID"
+                fi
+                ;;
+                
+            --next)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev dev --next <session_id>"
+                    exit 1
+                fi
+                
+                get_next_recommended_task "$SESSION_ID"
+                ;;
+                
+            --status)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev dev --status <session_id>"
+                    exit 1
+                fi
+                
+                title "📊 Development Status: Session $SESSION_ID"
+                
+                # Show session state
+                current_state=$(get_session_state "$SESSION_ID")
+                echo "Current State: $current_state"
+                echo ""
+                
+                # Show progress
+                validate_current_progress "$SESSION_ID"
+                echo ""
+                
+                # Show next task
+                get_next_recommended_task "$SESSION_ID"
+                ;;
+                
+            --propose)
+                TASK_ID=${4:-}
+                if [ -z "$SESSION_ID" ] || [ -z "$TASK_ID" ]; then
+                    error "Missing required arguments"
+                    echo "Usage: ./ai-dev dev --propose <session_id> <task_id>"
+                    exit 1
+                fi
+                
+                title "🤖 AI Implementation Proposal: Task $TASK_ID"
+                
+                tasks_file=$(ls "02_tasks_${SESSION_ID}_"*.md 2>/dev/null | head -1)
+                if [ -f "$tasks_file" ]; then
+                    # Check if task exists
+                    if grep -q "### Task $TASK_ID" "$tasks_file"; then
+                        
+                        echo "AI analyzes task requirements and proposes implementation approach..."
+                        echo ""
+                        
+                        # Show task summary
+                        echo "📋 Task Summary:"
+                        grep -A 5 "### Task $TASK_ID" "$tasks_file" | head -6
+                        echo ""
+                        
+                        echo "🤖 AI Proposes:"
+                        echo "1. Analysis of task requirements completed"
+                        echo "2. Implementation approach determined"
+                        echo "3. Required files and structure planned" 
+                        echo "4. Security and quality measures identified"
+                        echo ""
+                        
+                        echo "📝 Next Steps:"
+                        echo "   Review proposal: ./ai-dev collaborate --preview $SESSION_ID $TASK_ID"
+                        echo "   Approve proposal: ./ai-dev dev --approve $SESSION_ID $TASK_ID"
+                        echo ""
+                        
+                        # Record proposal
+                        if ! grep -q "<!-- PROPOSED: task=$TASK_ID" "$tasks_file"; then
+                            echo "<!-- PROPOSED: task=$TASK_ID timestamp=$(date +%s) -->" >> "$tasks_file"
+                            success "Task proposal recorded"
+                        else
+                            warning "Task already proposed"
+                        fi
+                        
+                    else
+                        error "Task $TASK_ID not found"
+                        echo "Available tasks:"
+                        grep "### Task" "$tasks_file" | head -5
+                        exit 1
+                    fi
+                else
+                    error "Tasks file not found for session: $SESSION_ID"
+                    exit 1
+                fi
+                ;;
+                
+            --approve)
+                TASK_ID=${4:-}
+                CHANGES=${5:-}
+                if [ -z "$SESSION_ID" ] || [ -z "$TASK_ID" ]; then
+                    error "Missing required arguments"  
+                    echo "Usage: ./ai-dev dev --approve <session_id> <task_id> [--changes \"feedback\"]"
+                    exit 1
+                fi
+                
+                title "✅ Developer Approval: Task $TASK_ID"
+                
+                tasks_file=$(ls "02_tasks_${SESSION_ID}_"*.md 2>/dev/null | head -1)
+                if [ -f "$tasks_file" ]; then
+                    
+                    # Check if task exists
+                    if grep -q "### Task $TASK_ID" "$tasks_file"; then
+                        
+                        # Check if task was proposed
+                        if grep -q "<!-- PROPOSED: task=$TASK_ID" "$tasks_file"; then
+                            
+                            # Handle changes request
+                            if [[ "$CHANGES" == "--changes" ]] && [[ -n "${6:-}" ]]; then
+                                feedback="${6}"
+                                echo "📝 Approval with developer feedback:"
+                                echo "   \"$feedback\""
+                                echo ""
+                                
+                                # Record approval with changes
+                                echo "<!-- APPROVED: task=$TASK_ID changes=\"$feedback\" timestamp=$(date +%s) -->" >> "$tasks_file"
+                                success "Task approved with requested changes"
+                                
+                                echo ""
+                                echo "🤖 AI will adjust implementation based on your feedback"
+                                echo "📋 Monitor progress: ./ai-dev dev --status $SESSION_ID"
+                                
+                            else
+                                # Standard approval
+                                echo "✅ Task implementation approach approved as proposed"
+                                
+                                # Record approval
+                                echo "<!-- APPROVED: task=$TASK_ID timestamp=$(date +%s) -->" >> "$tasks_file"
+                                success "Task approved - AI can proceed with implementation"
+                                
+                                echo ""
+                                echo "📋 Track implementation: ./ai-dev dev --status $SESSION_ID"
+                                echo "🔄 Next task: ./ai-dev dev --next $SESSION_ID"
+                            fi
+                            
+                        else
+                            warning "Task has not been proposed yet"
+                            echo "First run: ./ai-dev dev --propose $SESSION_ID $TASK_ID"
+                            exit 1
+                        fi
+                        
+                    else
+                        error "Task $TASK_ID not found"
+                        exit 1
+                    fi
+                    
+                else
+                    error "Tasks file not found for session: $SESSION_ID"
+                    exit 1
+                fi
+                ;;
+                
+            *)
+                error "Unknown dev subcommand: $SUBCOMMAND"
+                echo "Available subcommands: --validate, --next, --status, --propose, --approve"
+                exit 1
+                ;;
+        esac
+        ;;
+
+    context)
+        SUBCOMMAND=${2:-}
+        SESSION_ID=${3:-}
+        
+        case "$SUBCOMMAND" in
+            --load)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --load <session_id>"
+                    exit 1
+                fi
+                
+                title "🧠 Loading Full Context: Session $SESSION_ID"
+                load_full_context "$SESSION_ID"
+                ;;
+                
+            --update)
+                TASK=${4:-}
+                STATUS=${5:-}
+                if [ -z "$SESSION_ID" ] || [ -z "$TASK" ] || [ -z "$STATUS" ]; then
+                    error "Missing required arguments"
+                    echo "Usage: ./ai-dev context --update <session_id> <task> <status>"
+                    echo "Status options: in_progress, completed, blocked"
+                    exit 1
+                fi
+                
+                update_session_state "$SESSION_ID" "$TASK" "$STATUS"
+                ;;
+                
+            --save)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --save <session_id>"
+                    exit 1
+                fi
+                
+                save_session_context "$SESSION_ID"
+                ;;
+                
+            --restore)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --restore <session_id>"
+                    exit 1
+                fi
+                
+                restore_session_context "$SESSION_ID"
+                ;;
+                
+            --compress)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --compress <session_id>"
+                    exit 1
+                fi
+                
+                compress_large_context "$SESSION_ID"
+                ;;
+                
+            --validate-deps)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --validate-deps <session_id>"
+                    exit 1
+                fi
+                
+                validate_dependencies "$SESSION_ID"
+                ;;
+                
+            --analyze)
+                if [ -z "$SESSION_ID" ]; then
+                    error "Missing session ID"
+                    echo "Usage: ./ai-dev context --analyze <session_id>"
+                    exit 1
+                fi
+                
+                title "🔍 Analyzing Progress vs Plan: Session $SESSION_ID"
+                
+                # Load context and show analysis
+                if load_full_context "$SESSION_ID"; then
+                    echo ""
+                    validate_current_progress "$SESSION_ID"
+                    echo ""
+                    
+                    tasks_file="$AI_CONTEXT_TASKS"
+                    total_tasks=$(grep -c "### Task" "$tasks_file" 2>/dev/null || echo 0)
+                    completed_tasks=$(grep -c "✅" "$tasks_file" 2>/dev/null || echo 0)
+                    progress_percent=$((completed_tasks * 100 / total_tasks))
+                    
+                    echo "📈 Progress Analysis:"
+                    echo "   Total tasks: $total_tasks"
+                    echo "   Completed: $completed_tasks"
+                    echo "   Progress: $progress_percent%"
+                    
+                    if [ $progress_percent -ge 80 ]; then
+                        echo "   Status: 🎉 Near completion!"
+                    elif [ $progress_percent -ge 50 ]; then
+                        echo "   Status: 🚀 Good progress"
+                    elif [ $progress_percent -ge 20 ]; then
+                        echo "   Status: 🔧 Getting started"
+                    else
+                        echo "   Status: 🏁 Just beginning"
+                    fi
+                fi
+                ;;
+                
+            *)
+                error "Unknown context subcommand: $SUBCOMMAND"
+                echo "Available subcommands: --load, --update, --save, --restore, --compress, --validate-deps, --analyze"
+                exit 1
+                ;;
+        esac
+        ;;
+
     help|--help|-h)
         show_help
         ;;
 
     version)
-        echo "AI Development Framework CLI v3.0"
-        echo "Ultra-Simple: 3 Steps to Production"
-        echo "Commands: create-prd, generate, execute"
+        echo "AI Development Framework CLI v3.1.1"
+        echo "Enhanced with AI Supervision + Level 1 Foundation"
+        echo "Core: create-prd, generate, execute"
+        echo "Collaboration: collaborate, dev, context"
+        echo "Level 1: Persistent context, enhanced errors, dependency validation"
         ;;
 
     status)
         title "🔍 Framework Status"
         
-        echo "Version: AI Development Framework CLI v3.0"
-        echo "Mode: Ultra-Simple (3 commands)"
+        echo "Version: AI Development Framework CLI v3.1.1"
+        echo "Mode: Enhanced Collaboration + Level 1 Foundation (22 commands)"
         echo ""
         
         echo "📁 Directory Structure:"
         echo "  Guide files/            ✅ $(ls *_guide.md 2>/dev/null | wc -l) guide files"
-        echo "  PRD files/              ✅ $(ls prd_*.md 2>/dev/null | wc -l) PRD files"
-        echo "  Task files/             ✅ $(ls tasks_*.md 2>/dev/null | wc -l) task files"
-        echo "  Report files/           ✅ $(ls report_*.md 2>/dev/null | wc -l) report files"
+        echo "  PRD files/              ✅ $(ls 01_prd_*.md 2>/dev/null | wc -l) PRD files"
+        echo "  Task files/             ✅ $(ls 02_tasks_*.md 2>/dev/null | wc -l) task files"
+        echo "  Report files/           ✅ $(ls 03_report_*.md 2>/dev/null | wc -l) report files"
         echo ""
         
         echo "🤖 AI Guides Available:"
@@ -452,15 +1695,18 @@ EOF
         echo ""
         
         echo "🔄 Recent Activity:"
-        echo "  PRDs Created: $(ls prd_*.md 2>/dev/null | wc -l)"
-        echo "  Tasks Generated: $(ls tasks_*.md 2>/dev/null | wc -l)"
+        echo "  PRDs Created: $(ls 01_prd_*.md 2>/dev/null | wc -l)"
+        echo "  Tasks Generated: $(ls 02_tasks_*.md 2>/dev/null | wc -l)"
         echo "  Last Modified: $(find . -maxdepth 1 -name "*.md" -type f -exec stat -c %y {} \; 2>/dev/null | sort -r | head -1 | cut -d' ' -f1 || echo "None")"
         ;;
 
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        echo "Available commands: create-prd, generate, execute, help, version, status"
+        echo "Available commands:"
+        echo "  Core: create-prd, generate, execute"
+        echo "  Collaboration: collaborate, dev, context"
+        echo "  System: help, version, status"
         echo ""
         show_help
         exit 1
