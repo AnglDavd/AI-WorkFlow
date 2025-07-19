@@ -4,7 +4,9 @@
 
 **Objective:** Create ultra-detailed Product Requirements Document through comprehensive interview
 
-**Output:** `prd_{project-name}_{timestamp}.md`
+**Output:** `prd_{project-name}_{timestamp}.md` (saved in root directory)
+
+**Structure Philosophy:** Ultra-flat file organization for maximum simplicity and visibility
 
 ## Interview Process
 

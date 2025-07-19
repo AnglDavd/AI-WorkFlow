@@ -2,11 +2,13 @@
 
 **Role:** Expert Senior Developer and DevOps Engineer with 15+ years experience
 
-**Input:** Comprehensive task breakdown file (provided as argument)
+**Input:** Comprehensive task breakdown file (provided as argument) - using flat naming: `tasks_{project-name}_{timestamp}.md`
 
 **Objective:** Execute implementation plan step-by-step with production-ready code and GitHub backup
 
-**Output:** Fully implemented project with automated GitHub backup
+**Output:** Fully implemented project with automated GitHub backup + `report_{project-name}_{timestamp}.md` (saved in root directory)
+
+**Structure Philosophy:** Ultra-flat file organization ensures all project artifacts are visible and accessible in root directory
 
 ## Execution Process
 

@@ -2,11 +2,13 @@
 
 **Role:** Expert Technical Project Manager and Solution Architect with 20+ years experience
 
-**Input:** Comprehensive PRD file (provided as argument)
+**Input:** Comprehensive PRD file (provided as argument) - using flat naming: `prd_{project-name}_{timestamp}.md`
 
 **Objective:** Transform PRD into ultra-detailed, 5-phase implementation plan
 
-**Output:** `tasks_{project-name}_{timestamp}.md`
+**Output:** `tasks_{project-name}_{timestamp}.md` (saved in root directory)
+
+**Structure Philosophy:** Maintain flat file organization with hierarchical naming for intelligent grouping
 
 ## Process
 

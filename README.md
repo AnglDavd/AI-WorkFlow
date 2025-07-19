@@ -11,11 +11,12 @@
 
 ## 🎯 What is This Framework?
 
-The **AI Development Framework** is an ultra-simple system that enables anyone to build production-ready software through AI-guided workflows. **Simplified from a complex 24-command system to just 3 essential commands**, this framework makes AI-assisted development accessible to everyone.
+The **AI Development Framework** is an ultra-simple system that enables anyone to build production-ready software through AI-guided workflows. **Simplified from a complex 24-command system to just 3 essential commands with 100% flat file structure**, this framework makes AI-assisted development accessible to everyone.
 
 ### 🔥 Revolutionary Simplicity
 
 - **⚡ 3 Commands Only**: `create-prd`, `generate`, `execute` - that's it!
+- **📁 100% Flat Structure**: All files in root directory with smart naming
 - **🤖 AI-Guided**: Expert AI instructions built into every step
 - **📋 Zero Complexity**: No learning curve, instant productivity
 - **🚀 Production Ready**: Generates professional-grade code and documentation
@@ -26,6 +27,7 @@ The **AI Development Framework** is an ultra-simple system that enables anyone t
 
 Traditional development is **too complex**:
 - ❌ Overwhelming number of tools and commands
+- ❌ Complex directory structures and nested folders
 - ❌ Complex setup and configuration requirements  
 - ❌ Steep learning curves for new developers
 - ❌ Inconsistent project structures and workflows
@@ -60,6 +62,8 @@ Each command is powered by **expert AI instruction files** that guide the AI thr
 
 ### ⚡ Ultra-Simple Interface
 - **3 commands total** - no complexity overload
+- **100% flat file structure** - everything visible in root directory
+- **Smart hierarchical naming** - `prd_*`, `tasks_*`, `report_*` patterns
 - **Natural workflow** - follows logical development process
 - **Zero configuration** - works out of the box
 - **Instant results** - immediate productivity
@@ -143,7 +147,7 @@ Get detailed help for any command:
 
 ## 🏗️ Project Structure
 
-### Framework Structure
+### 📁 Ultra-Flat Framework Structure
 ```
 ai-dev                          # Main CLI script (ultra-simple)
 create_prd_guide.md            # PRD creation expert guide
@@ -153,6 +157,37 @@ execute_tasks_guide.md         # Execution expert guide
 prd_*                          # Product Requirements Documents
 tasks_*                        # Implementation task breakdowns
 report_*                       # Execution reports
+```
+
+### 🎯 Smart Hierarchical Naming Examples
+```
+# Single project example:
+prd_ecommerce-site_20240719_110000.md     # Requirements document
+tasks_ecommerce-site_20240719_110000.md   # Implementation tasks
+report_ecommerce-site_20240719_110000.md  # Execution report
+
+# Multiple projects:
+prd_blog-personal_20240719_120000.md
+prd_mobile-app_20240719_130000.md
+tasks_blog-personal_20240719_120000.md
+tasks_mobile-app_20240719_130000.md
+report_blog-personal_20240719_120000.md
+report_mobile-app_20240719_130000.md
+```
+
+### 🔍 Intelligent File Grouping
+```bash
+# View all files for a specific project
+ls *ecommerce-site*
+
+# View all PRD files
+ls prd_*
+
+# View all task files  
+ls tasks_*
+
+# View all reports
+ls report_*
 ```
 
 ### Generated Project Structure
@@ -236,8 +271,10 @@ The framework includes **24 pre-configured GitHub Actions** for complete automat
 
 ### Framework Performance
 - **⚡ 3 commands** vs 24+ in complex systems
+- **📁 100% flat structure** vs nested directory hierarchies
 - **🚀 10x faster** project setup and execution  
 - **✅ 100% automation** - no manual steps required
+- **🔍 Instant visibility** - all files in root directory
 - **💰 40-70% cost reduction** in AI usage
 - **🎯 Zero learning curve** - instant productivity
 
