@@ -1,126 +1,65 @@
-# AI-Assisted Development Framework License
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
 
-**Version 1.0**  
-**Effective Date: July 2025**
+Copyright (C) 2024 AnglDavd
 
-## Preamble
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-This AI-Assisted Development Framework ("Framework") is licensed under a dual licensing model that balances open-source accessibility with commercial rights protection. This license ensures the Framework remains freely available for non-commercial use while preserving the author's rights to commercialize and monetize the Framework.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-## 1. Definitions
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-- **"Framework"** refers to the AI-Assisted Development Framework software, including all source code, documentation, workflows, templates, and associated materials.
-- **"Author"** refers to the original creator and copyright holder of the Framework.
-- **"You"** refers to any person or entity exercising rights under this License.
-- **"Non-Commercial Use"** refers to use that is not primarily intended for or directed toward commercial advantage or monetary compensation.
-- **"Commercial Use"** refers to use that is primarily intended for or directed toward commercial advantage or monetary compensation.
-- **"Derivative Work"** refers to any work based upon the Framework or portions thereof.
+================================================================================
 
-## 2. Grant of Rights for Non-Commercial Use
+AI Development Framework - Ultra-Simple Edition
+Copyright (C) 2024 AnglDavd
 
-### 2.1 Permitted Uses
-Subject to the terms and conditions of this License, the Author grants You a worldwide, royalty-free, non-exclusive license to:
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-- **Use** the Framework for personal, educational, research, and non-commercial purposes
-- **Study** and examine the Framework's source code
-- **Modify** the Framework for your own non-commercial use
-- **Distribute** unmodified copies of the Framework with this License
-- **Create** derivative works for non-commercial purposes
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-### 2.2 Attribution Requirements
-You must:
-- Retain all copyright notices and this License in any copy or substantial portion of the Framework
-- Provide clear attribution to the Author in any derivative works
-- Include a copy of this License with any distribution
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## 3. Restrictions on Commercial Use
+================================================================================
 
-### 3.1 Commercial Use Prohibition
-You may NOT:
-- Use the Framework or any derivative works for commercial purposes without explicit written permission from the Author
-- Sell, rent, lease, or sublicense the Framework or derivative works
-- Offer the Framework as a commercial service or product
-- Integrate the Framework into commercial products or services
-- Use the Framework in any way that generates revenue without prior authorization
+ADDITIONAL TERMS AND CONDITIONS:
 
-### 3.2 Commercial Licensing
-Commercial use requires a separate commercial license from the Author. Contact information for commercial licensing inquiries will be provided in the repository documentation.
+1. ATTRIBUTION REQUIREMENT
+   Any distribution or derivative work must retain the original copyright
+   notice and credit to AnglDavd as the original author.
 
-## 4. Contributions and Community
+2. AI FRAMEWORK INTEGRITY
+   The core AI instruction files (.ai_workflow/simple/*.md) must remain
+   accessible and modifiable under the same license terms.
 
-### 4.1 Contribution License
-By contributing to the Framework, you grant the Author:
-- Perpetual, worldwide, royalty-free license to use, modify, and distribute your contributions
-- The right to relicense your contributions under different terms, including commercial licenses
-- The right to incorporate your contributions into commercial versions of the Framework
+3. GITHUB ACTIONS WORKFLOWS
+   The included GitHub Actions workflows (.github/workflows/*.yml) are
+   provided as-is and may be modified or removed as needed for your projects.
 
-### 4.2 Community Guidelines
-- All contributions must be your original work or properly licensed
-- Contributions should align with the Framework's open-source philosophy
-- The Author reserves the right to reject contributions that don't meet quality standards
+4. NO WARRANTY
+   This software is provided "as is" without warranty of any kind, either
+   express or implied, including but not limited to the warranties of
+   merchantability, fitness for a particular purpose and noninfringement.
 
-## 5. Intellectual Property Protection
+5. LIMITATION OF LIABILITY
+   In no event shall the authors or copyright holders be liable for any
+   claim, damages or other liability, whether in an action of contract,
+   tort or otherwise, arising from, out of or in connection with the
+   software or the use or other dealings in the software.
 
-### 5.1 Copyright
-The Framework is protected by copyright law. The Author retains all rights not expressly granted in this License.
-
-### 5.2 Trademarks
-Any trademarks, service marks, or trade names associated with the Framework remain the exclusive property of the Author.
-
-### 5.3 Patents
-This License does not grant any patent rights. However, if you institute patent litigation against the Author regarding the Framework, your rights under this License terminate automatically.
-
-## 6. Future Commercialization Rights
-
-### 6.1 Monetization Reserved
-The Author explicitly reserves the right to:
-- Create and sell commercial versions of the Framework
-- Offer commercial licenses and support services
-- Develop premium features and paid add-ons
-- Establish partnerships and licensing agreements
-- Monetize the Framework through any lawful means
-
-### 6.2 Open-Source Commitment
-The Author commits to:
-- Maintaining a free, open-source version of the Framework
-- Continuing to accept community contributions
-- Providing clear distinction between open-source and commercial offerings
-- Respecting the rights of non-commercial users
-
-## 7. Disclaimer and Limitation of Liability
-
-### 7.1 No Warranty
-THE FRAMEWORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-### 7.2 Limitation of Liability
-IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE FRAMEWORK OR THE USE OR OTHER DEALINGS IN THE FRAMEWORK.
-
-## 8. Termination
-
-### 8.1 Automatic Termination
-This License terminates automatically if you violate any of its terms, particularly regarding commercial use restrictions.
-
-### 8.2 Effect of Termination
-Upon termination, you must cease all use of the Framework and destroy all copies in your possession.
-
-## 9. Governing Law
-
-This License shall be governed by and construed in accordance with the laws of the jurisdiction where the Author resides, without regard to conflict of law principles.
-
-## 10. Contact Information
-
-For commercial licensing inquiries, questions about this License, or permission requests:
-
-**Repository**: https://github.com/AnglDavd/AI-WorkFlow  
-**Issues**: Use GitHub Issues for non-commercial questions  
-**Commercial Licensing**: angldavd@gmail.com
-
----
-
-**© 2025 AnglDavd. All rights reserved.**
-
-This License is designed to protect the Author's commercial interests while fostering an open-source community. By using the Framework, you agree to these terms.
-
----
-
-*This is a custom license tailored for the AI-Assisted Development Framework. For legal advice regarding your specific situation, consult with a qualified attorney.*
+For the complete GNU General Public License v3 text, visit:
+https://www.gnu.org/licenses/gpl-3.0.html

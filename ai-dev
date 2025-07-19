@@ -1,436 +1,138 @@
 #!/bin/bash
 
-# ai-dev - A CLI wrapper for the AI Development Framework
-# This script provides a user-friendly interface to the underlying .md workflows.
-# Version: 2.0 - Enhanced with robust validation and new commands
+# ai-dev - Ultra-Simple AI Development Framework CLI
+# Version: 3.0 - Simplified to 3 core commands
+# 1. create-prd   - Create ultra-detailed PRDs
+# 2. generate     - Convert PRDs to implementation tasks  
+# 3. execute      - Execute tasks with GitHub backup
 
-set -euo pipefail  # Exit on error, undefined vars, pipe failures
-
-# Load platform adapter for cross-platform compatibility
-source "$(dirname "${BASH_SOURCE[0]}")/.ai_workflow/scripts/platform_adapter.sh"
-
-# Load version utilities for centralized version management
-source "$(dirname "${BASH_SOURCE[0]}")/.ai_workflow/scripts/version_utils.sh"
+set -euo pipefail
 
 # --- Global Variables ---
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly AI_WORKFLOW_DIR="${SCRIPT_DIR}/.ai_workflow"
-readonly CACHE_DIR="${AI_WORKFLOW_DIR}/cache"
-readonly CONFIG_FILE="${AI_WORKFLOW_DIR}/config/framework.json"
-readonly LOG_FILE="${CACHE_DIR}/ai-dev.log"
-
-# Ensure directories exist
-mkdir -p "${CACHE_DIR}"
-mkdir -p "${AI_WORKFLOW_DIR}/config"
-mkdir -p "${AI_WORKFLOW_DIR}/logs"
 
 # Colors for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
+readonly PURPLE='\033[0;35m'
+readonly CYAN='\033[0;36m'
 readonly NC='\033[0m' # No Color
+readonly BOLD='\033[1m'
 
 # --- Utility Functions ---
-# Quality validation functionrun_quality_validation() {    local context="$1"    local project_path="${2:-$(pwd)}"        if [[ "$QUALITY_VALIDATION_ENABLED" == "false" ]]; then        echo "⏭️  Quality validation disabled"        return 0    fi        echo "🔍 Running quality validation ($context)..."        if PROJECT_PATH="$project_path" bash .ai_workflow/workflows/quality/quality_gates.md; then        echo "✅ Quality validation passed"        return 0    else        echo "❌ Quality validation failed"        if [[ "$QUALITY_VALIDATION_STRICT" == "true" ]]; then            echo "🚫 Operation blocked due to quality issues (strict mode enabled)"            return 1        else            echo "⚠️  Quality issues detected but operation proceeding"            return 0        fi    fi}
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
-}
-
-error() {
-    echo -e "${RED}Error: $*${NC}" >&2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $*" >> "$LOG_FILE"
-}
-
-warning() {
-    echo -e "${YELLOW}Warning: $*${NC}" >&2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARNING] $*" >> "$LOG_FILE"
+    echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC} $1"
 }
 
 success() {
-    echo -e "${GREEN}$*${NC}"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] $*" >> "$LOG_FILE"
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-info() {
-    echo -e "${BLUE}$*${NC}"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $*" >> "$LOG_FILE"
+error() {
+    echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
-# --- Enhanced UX Functions ---
-show_progress() {
-    local message="$1"
-    local step="$2"
-    local total="$3"
-    
-    if [[ -n "$step" && -n "$total" ]]; then
-        local percentage=$(( (step * 100) / total ))
-        printf "\r🔄 %s [%d/%d] %d%%" "$message" "$step" "$total" "$percentage"
-    else
-        printf "\r🔄 %s..." "$message"
-    fi
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-complete_progress() {
-    local message="$1"
-    printf "\r✅ %s\n" "$message"
+title() {
+    echo -e "\n${BOLD}${PURPLE}$1${NC}\n"
 }
 
-confirm_action() {
-    local message="$1"
-    local default="$2"
-    
-    if [[ "${FORCE:-false}" == "true" ]]; then
-        echo "🚀 Force mode: $message - proceeding"
-        return 0
-    fi
-    
-    local prompt="$message"
-    if [[ "$default" == "y" ]]; then
-        prompt="$prompt [Y/n]"
-    else
-        prompt="$prompt [y/N]"
-    fi
-    
-    # Use environment variable or default behavior for automation
-    if [[ -n "${AUTO_CONFIRM:-}" ]]; then
-        REPLY="$AUTO_CONFIRM"
-        echo "$message: $REPLY (automated)"
-    else
-        read -p "$prompt: " -n 1 -r
-        echo
-    fi
-    
-    if [[ $REPLY =~ ^[Yy]$ ]] || ([[ -z $REPLY ]] && [[ "$default" == "y" ]]); then
-        return 0
-    else
-        return 1
-    fi
-}
+# --- Help Function ---
+show_help() {
+    cat << EOF
+${BLUE}AI Development Framework CLI v3.0${NC}
+${CYAN}Ultra-Simple: 3 Steps to Production${NC}
 
-# --- Enhanced Configuration Functions ---
-load_configuration() {
-    local config_file="$1"
-    
-    # Create default configuration if not exists
-    if [[ ! -f "$config_file" ]]; then
-        create_default_config "$config_file"
-    fi
-    
-    # Load configuration with validation
-    if command -v jq >/dev/null 2>&1; then
-        if jq empty "$config_file" >/dev/null 2>&1; then
-            # Load configuration values
-            QUALITY_VALIDATION_ENABLED=$(jq -r '.quality.validation_enabled // "true"' "$config_file")
-            QUALITY_VALIDATION_STRICT=$(jq -r '.quality.strict_mode // "false"' "$config_file")
-            LOG_LEVEL=$(jq -r '.logging.level // "info"' "$config_file")
-            AUTO_CLEANUP_ENABLED=$(jq -r '.maintenance.auto_cleanup // "true"' "$config_file")
-        else
-            warning "Invalid JSON in configuration file: $config_file"
-            create_default_config "$config_file"
-        fi
-    else
-        warning "jq not found - using default configuration"
-        set_default_config_values
-    fi
-}
+${GREEN}Usage:${NC} ./ai-dev <command> [arguments]
 
-create_default_config() {
-    local config_file="$1"
-    
-    cat > "$config_file" << 'EOF'
-{
-  "framework": {
-    "version": "PLACEHOLDER_VERSION",
-    "name": "AI Development Framework"
-  },
-  "quality": {
-    "validation_enabled": true,
-    "strict_mode": false,
-    "threshold": 80,
-    "auto_fix": false
-  },
-  "logging": {
-    "level": "info",
-    "file": ".ai_workflow/cache/ai-dev.log"
-  },
-  "maintenance": {
-    "auto_cleanup": true,
-    "cleanup_threshold_days": 30
-  },
-  "user": {
-    "name": "",
-    "email": "",
-    "preferences": {}
-  }
-}
+${GREEN}Core Commands:${NC}
+  ${BOLD}create-prd${NC}              Create ultra-detailed Product Requirements Document
+  ${BOLD}generate <prd_file>${NC}     Generate implementation tasks from PRD
+  ${BOLD}execute <tasks_file>${NC}    Execute tasks with automatic GitHub backup
+
+${GREEN}Process Flow:${NC}
+  ${CYAN}1.${NC} ./ai-dev create-prd                    → Creates detailed PRD
+  ${CYAN}2.${NC} ./ai-dev generate docs/prds/prd-xxx.md → Generates task breakdown
+  ${CYAN}3.${NC} ./ai-dev execute docs/tasks/tasks-xxx.md → Implements + backs up to GitHub
+
+${GREEN}What Each Step Does:${NC}
+
+  ${BOLD}create-prd:${NC}
+  - Interactive comprehensive interview process
+  - Extracts maximum project detail and context
+  - Creates 3000+ word PRD with business & technical requirements
+  - Saves to docs/prds/prd-{project}-{timestamp}.md
+
+  ${BOLD}generate:${NC}
+  - Analyzes PRD and breaks down into 5 implementation phases
+  - Creates detailed tasks with acceptance criteria
+  - Includes architecture, development, testing, and deployment
+  - Saves to docs/tasks/tasks-{project}-{timestamp}.md
+
+  ${BOLD}execute:${NC}
+  - Executes each task phase-by-phase with production-ready code
+  - Continuous GitHub backup at each milestone
+  - Comprehensive testing and quality validation
+  - Creates complete project with documentation
+
+${GREEN}Examples:${NC}
+  ./ai-dev create-prd
+  ./ai-dev generate docs/prds/prd-my-app-20240101_120000.md
+  ./ai-dev execute docs/tasks/tasks-my-app-20240101_120000.md
+
+${GREEN}Features:${NC}
+  ✅ Ultra-detailed requirements gathering
+  ✅ Comprehensive task breakdown with 5 phases
+  ✅ Production-ready code implementation
+  ✅ Automatic GitHub backup and versioning
+  ✅ Quality gates and testing integration
+  ✅ Complete documentation generation
+
+${GREEN}Directory Structure Created:${NC}
+  docs/prds/     - Product Requirements Documents
+  docs/tasks/    - Implementation task breakdowns
+  docs/reports/  - Execution and quality reports
+
+For detailed help on any command: ./ai-dev <command> --help
 EOF
-    
-    # Replace version placeholder with actual framework version
-    local framework_version="$(get_framework_version)"
-    sed -i "s/PLACEHOLDER_VERSION/$framework_version/g" "$config_file"
-    
-    success "Created default configuration: $config_file"
 }
 
-set_default_config_values() {
-    QUALITY_VALIDATION_ENABLED="true"
-    QUALITY_VALIDATION_STRICT="false"
-    LOG_LEVEL="info"
-    AUTO_CLEANUP_ENABLED="true"
-}
-
-# --- Enhanced Validation Functions ---
-validate_command() {
-    local command="$1"
-    local valid_commands=(
-        "setup" "generate" "run" "optimize" "performance" "audit" "enable-optimizations" "cleanup-optimizations" "auto-cleanup" "migrate-user-project" "update" "sync" "configure" 
-        "diagnose" "quality" "precommit" "generate-architecture" 
-        "update-architecture" "cleanup" "update-gitignore" "maintenance"
-        "help" "version" "status" "detect-manual" "platform" "generate-visualizations" "dashboard" "verify-installation" "verify"
-    )
-    
-    # Check if command exists
-    if [[ ! " ${valid_commands[*]} " =~ " ${command} " ]]; then
-        error "Unknown command: '$command'"
-        echo ""
-        echo "📋 Available commands:"
-        printf '%s\n' "${valid_commands[@]}" | sort | sed 's/^/  /'
-        echo ""
-        echo "💡 Use './ai-dev help' for detailed information"
-        return 1
-    fi
-    
-    return 0
-}
-
+# --- Validation Functions ---
 validate_environment() {
-    log "Validating environment"
-    
-    # Create necessary directories
-    mkdir -p "$CACHE_DIR" "$AI_WORKFLOW_DIR/config" "$AI_WORKFLOW_DIR/logs"
-    
-    # Check if we're in a valid AI framework directory
-    if [ ! -d "$AI_WORKFLOW_DIR" ]; then
-        error "Not in an AI Development Framework directory"
-        error "Expected to find .ai_workflow/ directory"
-        echo ""
-        echo "💡 Suggestions:"
-        echo "  - Initialize framework: ./ai-dev setup"
-        echo "  - Navigate to framework directory"
-        echo "  - Check if .ai_workflow/ directory exists"
-        exit 1
-    fi
-    
-    # Check for required workflow directories
-    local required_dirs=(
-        "workflows/setup"
-        "workflows/run" 
-        "workflows/security"
-        "workflows/quality"
-        "workflows/monitoring"
+    # Check if we have the required guide files
+    local required_files=(
+        ".ai_workflow/simple/01_create_prd.md"
+        ".ai_workflow/simple/02_generate_tasks.md" 
+        ".ai_workflow/simple/03_execute_tasks.md"
     )
     
-    for dir in "${required_dirs[@]}"; do
-        if [ ! -d "${AI_WORKFLOW_DIR}/${dir}" ]; then
-            warning "Missing workflow directory: ${dir}"
+    for file in "${required_files[@]}"; do
+        if [ ! -f "$file" ]; then
+            error "Required guide file missing: $file"
+            error "Framework appears to be corrupted or incomplete"
+            exit 1
         fi
     done
     
-    # Check for critical files
-    if [ ! -f "${AI_WORKFLOW_DIR}/GLOBAL_AI_RULES.md" ]; then
-        warning "Missing GLOBAL_AI_RULES.md - framework may not function correctly"
-    fi
+    # Create output directories
+    mkdir -p docs/prds docs/tasks docs/reports
     
-    # Validate permissions
-    if [ ! -w "$CACHE_DIR" ]; then
-        error "No write permission to cache directory: $CACHE_DIR"
-        exit 1
-    fi
-    
-    log "Environment validation completed"
-}
-
-# Auto-install pre-commit system (zero friction)
-auto_install_precommit() {
-    log "Checking pre-commit system auto-installation"
-    
-    # Check if we're in a git repository
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        log "Not in a git repository, skipping pre-commit auto-installation"
-        return 0
-    fi
-    
-    local git_hooks_dir="$(git rev-parse --git-dir)/hooks"
-    local framework_hooks_dir="$AI_WORKFLOW_DIR/precommit/hooks"
-    local config_file="$AI_WORKFLOW_DIR/precommit/config/validation_rules.json"
-    
-    # Check if hooks are already installed
-    if [ -f "$git_hooks_dir/pre-commit" ] && [ -f "$config_file" ]; then
-        log "Pre-commit system already installed"
-        return 0
-    fi
-    
-    log "Auto-installing pre-commit system (zero friction mode)"
-    
-    # Create default configuration if not exists
-    if [ ! -f "$config_file" ]; then
-        mkdir -p "$(dirname "$config_file")"
-        cat > "$config_file" << 'EOF'
-{
-  "validation_rules": {
-    "code_quality": {
-      "enabled": true,
-      "max_complexity": 10,
-      "max_function_lines": 50,
-      "require_documentation": false,
-      "check_bash_syntax": true,
-      "validate_markdown": true,
-      "check_json_yaml": true
-    },
-    "security": {
-      "enabled": true,
-      "block_sensitive_data": true,
-      "require_secure_paths": true,
-      "scan_dependencies": true,
-      "check_permissions": true,
-      "validate_commands": true
-    },
-    "framework_compliance": {
-      "enabled": true,
-      "require_claude_md_updates": false,
-      "validate_workflow_structure": true,
-      "check_integration_tests": false,
-      "enforce_naming_conventions": true,
-      "validate_todo_updates": false
-    },
-    "documentation": {
-      "enabled": false,
-      "sync_readme": false,
-      "validate_comments": false,
-      "check_changelog": false,
-      "require_examples": false
-    }
-  },
-  "quality_gates": {
-    "minimum_score": 80,
-    "block_on_security_issues": true,
-    "block_on_critical_errors": true,
-    "allow_override": false,
-    "require_manual_review": false
-  },
-  "file_patterns": {
-    "include": [
-      "*.sh",
-      "*.md",
-      "*.json",
-      "*.yml",
-      "*.yaml",
-      "ai-dev"
-    ],
-    "exclude": [
-      ".git/**",
-      ".ai_workflow/cache/**",
-      ".ai_workflow/logs/**",
-      "*.log",
-      "*.tmp",
-      "capturas/**",
-      "*.png",
-      "*.jpg",
-      "*.jpeg",
-      "*.gif"
-    ]
-  },
-  "hooks": {
-    "pre_commit": {
-      "enabled": true,
-      "timeout_seconds": 30,
-      "fail_fast": true
-    },
-    "pre_push": {
-      "enabled": false,
-      "timeout_seconds": 60,
-      "additional_checks": true
-    },
-    "commit_msg": {
-      "enabled": false,
-      "enforce_conventional_commits": true,
-      "max_length": 100
-    }
-  },
-  "metadata": {
-    "created": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
-    "framework_version": "PLACEHOLDER_VERSION",
-    "configuration_version": "1.0",
-    "auto_installed": true
-  }
-}
-EOF
-        # Replace version placeholder with actual framework version
-        local framework_version="$(get_framework_version)"
-        sed -i "s/PLACEHOLDER_VERSION/$framework_version/g" "$config_file"
-        
-        log "Default pre-commit configuration created"
-    fi
-    
-    # Install hooks silently if framework hooks exist
-    if [ -d "$framework_hooks_dir" ]; then
-        local hooks_installed=0
-        
-        # Backup existing hooks silently
-        local backup_dir="$AI_WORKFLOW_DIR/precommit/backup_hooks_$(date +%Y%m%d_%H%M%S)"
-        mkdir -p "$backup_dir"
-        
-        for hook in pre-commit pre-push commit-msg; do
-            if [ -f "$git_hooks_dir/$hook" ]; then
-                cp "$git_hooks_dir/$hook" "$backup_dir/" 2>/dev/null || true
-            fi
-        done
-        
-        # Install framework hooks silently
-        for hook in pre-commit pre-push commit-msg; do
-            if [ -f "$framework_hooks_dir/$hook" ]; then
-                cp "$framework_hooks_dir/$hook" "$git_hooks_dir/" 2>/dev/null || true
-                chmod +x "$git_hooks_dir/$hook" 2>/dev/null || true
-                hooks_installed=$((hooks_installed + 1))
-            fi
-        done
-        
-        if [ $hooks_installed -gt 0 ]; then
-            log "Pre-commit hooks auto-installed silently ($hooks_installed hooks)"
-            
-            # Create installation marker
-            echo "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")" > "$AI_WORKFLOW_DIR/precommit/.auto_installed"
-            
-            # Log successful installation
-            echo "Auto-installed pre-commit system with $hooks_installed hooks" >> "$AI_WORKFLOW_DIR/logs/precommit_auto_install.log"
-        else
-            log "No hooks found to install"
-        fi
-    else
-        log "Framework hooks directory not found, skipping auto-installation"
-    fi
+    log "Environment validation passed"
 }
 
 validate_file_path() {
     local file_path="$1"
     local file_type="${2:-file}"
     
-    # Security: Prevent symbolic link following (check first)
-    if [ -L "$file_path" ]; then
-        error "Symbolic links not allowed: $file_path"
-        return 1
-    fi
-    
     # Security: Prevent path traversal attacks
-    if [[ "$file_path" == *".."* ]] || [[ "$file_path" == *"~"* ]]; then
+    if [[ "$file_path" == *".."* ]]; then
         error "Invalid file path: Path traversal not allowed"
-        return 1
-    fi
-    
-    # Security: Prevent absolute path access to system files
-    if [[ "$file_path" == /* ]]; then
-        error "Absolute paths not allowed: $file_path"
         return 1
     fi
     
@@ -448,9 +150,9 @@ validate_file_path() {
                 return 1
             fi
             ;;
-        "prp")
+        "tasks")
             if [[ "$file_path" != *.md ]]; then
-                error "PRP file must be a markdown file (.md)"
+                error "Tasks file must be a markdown file (.md)"
                 return 1
             fi
             ;;
@@ -466,405 +168,68 @@ validate_file_path() {
     return 0
 }
 
-check_dependencies() {
-    local missing_deps=()
-    
-    # Check for required commands
-    local required_commands=("bash" "mkdir" "touch" "grep" "find")
-    
-    for cmd in "${required_commands[@]}"; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            missing_deps+=("$cmd")
-        fi
-    done
-    
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        error "Missing required dependencies: ${missing_deps[*]}"
-        error "Please install missing dependencies and try again"
-        exit 1
-    fi
-    
-    log "Dependencies check passed"
-}
-
-# --- Enhanced Help Function ---
-show_help() {
-    cat << EOF
-${BLUE}AI Development Framework CLI v2.0${NC}
-
-${GREEN}Usage:${NC} ./ai-dev <command> [options]
-
-${GREEN}Core Commands:${NC}
-  setup                    Start the interactive project setup workflow
-  generate <prd_file>      Generate tasks from a Product Requirements Document
-  run <prp_file>           Execute a Project-Response-Plan file
-  optimize <prompt_file>   Optimize a prompt file using best practices
-  performance <subcommand> Performance optimization and monitoring
-  update                   Update framework to latest version
-
-${GREEN}New Commands:${NC}
-  audit                    Run comprehensive security audit
-  enable-optimizations     Enable global token economy optimizations
-  cleanup-optimizations    Clean up obsolete optimization artifacts
-  auto-cleanup             Run automated periodic cleanup
-  migrate-user-project     Migrate existing user project to optimized framework
-  sync                     Synchronize with framework updates
-  configure [options]      Configure framework settings
-  diagnose                 Diagnose framework health and status
-  quality <path>           Run quality validation on project
-  precommit <subcommand>   Pre-commit validation and quality assurance
-
-${GREEN}Documentation Commands:${NC}
-  generate-architecture    Generate project architecture documentation
-  update-architecture      Update existing architecture documentation
-
-${GREEN}Maintenance Commands:${NC}
-  cleanup [options]        Manage obsolete files and repository cleanup
-  update-gitignore         Update .gitignore with latest patterns
-  maintenance [level]      Run periodic repository maintenance
-  platform                 Show platform compatibility information
-
-${GREEN}Utility Commands:${NC}
-  help                     Show this help message
-  version                  Show framework version information
-  status                   Show current framework status
-  verify-installation      Verify framework installation integrity
-
-${GREEN}Options:${NC}
-  --verbose, -v           Enable verbose output
-  --quiet, -q             Suppress non-error output
-  --dry-run               Show what would be done without executing
-  --force                 Force execution (bypass some validations)
-
-${GREEN}Examples:${NC}
-  ./ai-dev setup
-  ./ai-dev generate docs/prd.md
-  ./ai-dev run .ai_workflow/PRPs/generated/prp-feature.md
-  ./ai-dev optimize .ai_workflow/generate-tasks.md
-  ./ai-dev quality src/
-  ./ai-dev audit --verbose
-  ./ai-dev configure --user
-  ./ai-dev diagnose
-  ./ai-dev generate-architecture
-  ./ai-dev update-architecture
-  ./ai-dev cleanup --status
-  ./ai-dev maintenance weekly
-
-${GREEN}Configuration:${NC}
-  Framework config: ${CONFIG_FILE}
-  Logs location: ${LOG_FILE}
-  Cache location: ${CACHE_DIR}
-
-For more information, visit: https://github.com/your-org/ai-framework
-EOF
-}
-
-# --- Option Parsing ---
-VERBOSE=false
-QUIET=false
-DRY_RUN=false
-FORCE=false
-
-# Parse global options
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -v|--verbose)
-            VERBOSE=true
-            shift
-            ;;
-        -q|--quiet)
-            QUIET=true
-            shift
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        --force)
-            FORCE=true
-            shift
-            ;;
-        --)
-            shift
-            break
-            ;;
-        -*)
-            error "Unknown option: $1"
-            show_help
-            exit 1
-            ;;
-        *)
-            break
-            ;;
-    esac
-done
-
-# --- Workflow Calling Functions ---
-
-# Universal workflow calling function
-call_workflow() {
-    local workflow_path="$1"
-    shift
-    local workflow_args="$*"
-    
-    # Resolve full path
-    local full_path="${AI_WORKFLOW_DIR}/workflows/${workflow_path}"
-    
-    if [ ! -f "$full_path" ]; then
-        error "Workflow not found: $workflow_path"
-        return 1
-    fi
-    
-    # Export arguments for the called workflow
-    export WORKFLOW_ARGS="$workflow_args"
-    
-    [ "$VERBOSE" = "true" ] && info "Calling workflow: $workflow_path with args: $workflow_args"
-    
-    # Execute the workflow using our MD parser
-    execute_md_workflow "$full_path"
-}
-
-# Error handling function
-handle_workflow_error() {
-    local error_message="$1"
-    [ "$VERBOSE" = "true" ] && info "Handling workflow error: $error_message"
-    export WORKFLOW_ARGS="$error_message"
-    call_workflow "common/error.md" "$error_message"
-}
-
-# Logging function
-log_workflow_event() {
-    local log_level="$1"
-    local log_message="$2"
-    [ "$VERBOSE" = "true" ] && info "Logging workflow event: $log_level - $log_message"
-    export WORKFLOW_ARGS="$log_level $log_message"
-    call_workflow "common/log_work_journal.md" "$log_level" "$log_message"
-}
-
-# State management function
-manage_workflow_state() {
-    local action="${1:-get}"
-    local state_data="${2:-}"
-    [ "$VERBOSE" = "true" ] && info "Managing workflow state: $action $state_data"
-    export WORKFLOW_ARGS="$action $state_data"
-    call_workflow "common/manage_workflow_state.md" "$action" "$state_data"
-}
-
-# Success handling
-handle_workflow_success() {
-    local success_message="${1:-Workflow completed successfully}"
-    [ "$VERBOSE" = "true" ] && info "Handling workflow success: $success_message"
-    export WORKFLOW_ARGS="$success_message"
-    call_workflow "common/success.md" "$success_message"
-}
-
-# Rollback function
-rollback_workflow_changes() {
-    local rollback_reason="${1:-Rollback requested}"
-    [ "$VERBOSE" = "true" ] && info "Rolling back workflow changes: $rollback_reason"
-    export WORKFLOW_ARGS="$rollback_reason"
-    call_workflow "common/rollback_changes.md" "$rollback_reason"
-}
-
-# Execute abstract tool function
-execute_abstract_tool() {
-    local tool_name="$1"
-    shift
-    local tool_args="$*"
-    [ "$VERBOSE" = "true" ] && info "Executing abstract tool: $tool_name with args: $tool_args"
-    export WORKFLOW_ARGS="$tool_name $tool_args"
-    call_workflow "tools/execute_abstract_tool_call.md" "$tool_name" "$tool_args"
-}
-
-# Process workflow calls within bash content
-process_workflow_calls() {
-    local bash_content="$1"
-    local processed_content="$bash_content"
-    
-    # Use safer sed patterns with simpler regex
-    
-    # Replace direct workflow execution calls (./.ai_workflow/workflows/...)
-    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
-    
-    # Replace source workflow calls (source .ai_workflow/workflows/...)
-    processed_content=$(echo "$processed_content" | sed 's|source \.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
-    
-    # Replace bash workflow calls (bash .ai_workflow/workflows/...)
-    processed_content=$(echo "$processed_content" | sed 's|bash \.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
-    
-    # Replace common error pattern with safer approach
-    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/common/error\.md "\([^"]*\)"|handle_workflow_error "\1"|g')
-    
-    # Replace common logging pattern with safer approach
-    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/common/log_work_journal\.md "\([^"]*\)" "\([^"]*\)"|log_workflow_event "\1" "\2"|g')
-    
-    # Parse and replace abstract tool calls 
-    # Note: The actual PRP parsing should be done by a proper YAML parser
-    # These patterns handle simple inline tool calls for compatibility
-    
-    # Handle simple WRITE_FILE calls (legacy format)
-    processed_content=$(echo "$processed_content" | sed 's|WRITE_FILE: `\([^`]*\)` - \(.*\)|echo "Creating file: \1"; echo "\2" > "\1"|g')
-    
-    # Handle simple FILE_EXISTS calls  
-    processed_content=$(echo "$processed_content" | sed 's|FILE_EXISTS: `\([^`]*\)`|if [[ -f "\1" ]]; then echo "✅ File exists: \1"; else echo "❌ File missing: \1"; exit 1; fi|g')
-    
-    # Handle simple LINT_FILE calls
-    processed_content=$(echo "$processed_content" | sed 's|LINT_FILE: `\([^`]*\)`|echo "Linting file: \1"; $LINT_COMMAND "\1" \|\| echo "Lint check completed for \1"|g')
-    
-    # Handle simple RUN_TESTS calls
-    processed_content=$(echo "$processed_content" | sed 's|RUN_TESTS: \(.*\)|echo "Running tests: \1"; \1|g')
-    
-    # Handle simple RUN_TYPE_CHECK calls
-    processed_content=$(echo "$processed_content" | sed 's|RUN_TYPE_CHECK: \(.*\)|echo "Type checking: \1"; \1|g')
-    
-    # Handle simple DELETE_FILE calls
-    processed_content=$(echo "$processed_content" | sed 's|DELETE_FILE: `\([^`]*\)`|echo "Deleting file: \1"; rm -f "\1"|g')
-    
-    echo "$processed_content"
-}
-
-# --- Main Logic ---
-COMMAND=${1:-}
-
-# Show help if no command is provided
-if [ -z "$COMMAND" ]; then
-    error "No command provided"
-    show_help
-    exit 1
-fi
-
-# Validate command
-if ! validate_command "$COMMAND"; then
-    exit 1
-fi
-
-# Shift to process arguments for the specific command
-shift
-
-# Initialize environment (always run basic validation)
-# CLI initialization message will be printed after command-specific flag parsing
-
-# Run validation unless bypassed
-if [ "$FORCE" != "true" ]; then
-    check_dependencies
-    validate_environment
-    auto_install_precommit
-fi
-
-# Load configuration
-load_configuration "$CONFIG_FILE"
-
-# Execute workflow with error handling
-execute_workflow() {
-    local workflow_path="$1"
+# --- AI Guide Execution Function ---
+execute_ai_guide() {
+    local guide_file="$1"
     local description="$2"
+    shift 2
+    local args="$*"
     
-    if [ ! -f "$workflow_path" ]; then
-        error "Workflow not found: $workflow_path"
+    title "🤖 $description"
+    
+    if [ ! -f "$guide_file" ]; then
+        error "Guide file not found: $guide_file"
         exit 1
     fi
     
-    if [ "$DRY_RUN" = "true" ]; then
-        info "DRY RUN: Would execute: $description"
-        info "Workflow: $workflow_path"
-        return 0
-    fi
+    log "Loading AI guide: $(basename "$guide_file")"
+    log "Arguments: $args"
     
-    info "Executing: $description"
-    log "Executing workflow: $workflow_path"
+    # Read the guide content and provide it as context for AI execution
+    echo -e "${CYAN}AI Guide Content:${NC}"
+    echo "=================="
+    cat "$guide_file"
+    echo "=================="
+    echo ""
     
-    # Parse and execute markdown workflow
-    if ! execute_md_workflow "$workflow_path"; then
-        error "Workflow execution failed: $workflow_path"
-        error "Run with --verbose for detailed output"
-        exit 1
-    fi
-    
-    success "Completed: $description"
-}
-
-# Parse and execute markdown workflow - Native bash implementation
-execute_md_workflow() {
-    local workflow_file="$1"
-    local temp_script="/tmp/ai_workflow_$$.sh"
+    # For now, we'll execute any bash sections in the guide
+    # In a real implementation, this would integrate with Claude Code or another AI
+    local temp_script="/tmp/ai_guide_$$.sh"
     local in_bash_block=false
     local bash_content=""
-    local line_num=0
-    local blocks_executed=0
     
-    # Check if file is empty
-    if [ ! -s "$workflow_file" ]; then
-        warning "Empty workflow file: $workflow_file"
-        return 0
-    fi
-    
-    # Extract bash code blocks from markdown
+    # Extract bash code blocks from the guide
     while IFS= read -r line; do
-        line_num=$((line_num + 1))
-        
         # Detect start of bash code block
         if [[ "$line" =~ ^\`\`\`bash$ ]]; then
             in_bash_block=true
             bash_content=""
-            [ "$VERBOSE" = "true" ] && echo "Found bash block at line $line_num"
             continue
         fi
         
         # Detect end of code block
         if [[ "$line" =~ ^\`\`\`$ ]] && [ "$in_bash_block" = true ]; then
             in_bash_block=false
-            blocks_executed=$((blocks_executed + 1))
             
-            # Process workflow calls in bash content
-            bash_content=$(process_workflow_calls "$bash_content")
-            
-            # Create temporary script with the processed bash code
-            echo "#!/bin/bash" > "$temp_script"
-            echo "set -euo pipefail" >> "$temp_script"
-            echo "# Extracted from $workflow_file - Block $blocks_executed" >> "$temp_script"
-            echo "" >> "$temp_script"
-            echo "# Framework function context injection" >> "$temp_script"
-            echo "call_workflow() { $(declare -f call_workflow | tail -n +2); }" >> "$temp_script"
-            echo "manage_workflow_state() { $(declare -f manage_workflow_state | tail -n +2); }" >> "$temp_script"
-            echo "log_workflow_event() { $(declare -f log_workflow_event | tail -n +2); }" >> "$temp_script"
-            echo "execute_abstract_tool() { $(declare -f execute_abstract_tool | tail -n +2); }" >> "$temp_script"
-            echo "handle_workflow_error() { $(declare -f handle_workflow_error | tail -n +2); }" >> "$temp_script"
-            echo "execute_md_workflow() { $(declare -f execute_md_workflow | tail -n +2); }" >> "$temp_script"
-            echo "process_workflow_calls() { $(declare -f process_workflow_calls | tail -n +2); }" >> "$temp_script"
-            echo "info() { $(declare -f info | tail -n +2); }" >> "$temp_script"
-            echo "warning() { $(declare -f warning | tail -n +2); }" >> "$temp_script"
-            echo "error() { $(declare -f error | tail -n +2); }" >> "$temp_script"
-            echo "success() { $(declare -f success | tail -n +2); }" >> "$temp_script"
-            echo "" >> "$temp_script"
-            echo "# Workflow content:" >> "$temp_script"
-            printf "%s" "$bash_content" >> "$temp_script"
-            chmod +x "$temp_script"
-            
-            [ "$VERBOSE" = "true" ] && echo "Executing bash block $blocks_executed..."
-            
-            # Execute the extracted bash code using source to preserve function context
-            if [ "$VERBOSE" = "true" ]; then
-                echo "--- Executing bash block $blocks_executed ---"
-                cat "$temp_script"
-                echo "--- End of bash block $blocks_executed ---"
-                source "$temp_script" || {
-                    error "Failed executing bash block $blocks_executed in $workflow_file"
-                    error "Script content was:"
-                    cat "$temp_script"
+            if [ -n "$bash_content" ]; then
+                # Create and execute bash script
+                echo "#!/bin/bash" > "$temp_script"
+                echo "set -euo pipefail" >> "$temp_script"
+                echo "# Arguments: $args" >> "$temp_script"
+                echo "$bash_content" >> "$temp_script"
+                chmod +x "$temp_script"
+                
+                log "Executing bash block from guide..."
+                if bash "$temp_script" $args; then
+                    success "Bash block executed successfully"
+                else
+                    error "Bash block execution failed"
                     rm -f "$temp_script"
-                    return 1
-                }
-            else
-                source "$temp_script" 2>/dev/null || {
-                    error "Failed executing bash block $blocks_executed in $workflow_file"
-                    error "Run with --verbose for detailed output"
-                    rm -f "$temp_script"
-                    return 1
-                }
+                    exit 1
+                fi
+                
+                rm -f "$temp_script"
             fi
-            
-            # Clean up temporary script
-            rm -f "$temp_script"
             continue
         fi
         
@@ -874,1357 +239,230 @@ execute_md_workflow() {
 "
         fi
         
-    done < "$workflow_file"
+    done < "$guide_file"
     
-    # Check for unclosed bash blocks
-    if [ "$in_bash_block" = true ]; then
-        error "Unclosed bash block detected in $workflow_file"
-        rm -f "$temp_script"
-        return 1
-    fi
-    
-    [ "$VERBOSE" = "true" ] && echo "Successfully executed $blocks_executed bash blocks from $workflow_file"
-    
-    # Clean up any remaining temp files
-    rm -f "$temp_script"
-    
-    return 0
+    success "$description completed"
 }
 
-# Command routing with enhanced validation
-case "$COMMAND" in
-    setup)
-        # Handle help option for setup command
-        if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-            cat << EOF
-${BLUE}Setup Command Help${NC}
+# --- Main Logic ---
+COMMAND=${1:-}
 
-${GREEN}Usage:${NC} ./ai-dev setup
+# Show help if no command is provided
+if [ -z "$COMMAND" ]; then
+    show_help
+    exit 0
+fi
+
+# Validate environment first
+validate_environment
+
+# Command routing
+case "$COMMAND" in
+    create-prd)
+        if [[ "${2:-}" == "--help" ]] || [[ "${2:-}" == "-h" ]]; then
+            cat << EOF
+${BLUE}Create PRD Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev create-prd
 
 ${GREEN}Description:${NC}
-Start the interactive project setup workflow. This command initializes a new AI Development 
-Framework project by creating the necessary directory structure, configuration files, and 
-setting up the development environment.
+Interactive PRD creation process that extracts maximum detail about your project
+through a comprehensive interview. Creates ultra-detailed Product Requirements
+Documents with 3000+ words covering all technical and business aspects.
 
 ${GREEN}What it does:${NC}
-- Creates .ai_workflow directory structure
-- Initializes configuration files
-- Sets up project templates
-- Configures git repository (if needed)
-- Validates framework installation
+- Comprehensive 5-section interview process
+- Business vision and problem statement extraction  
+- Technical architecture and requirements gathering
+- Functional requirements and user story creation
+- Implementation details and project planning
+- Creates detailed PRD saved to docs/prds/
 
-${GREEN}Examples:${NC}
-  ./ai-dev setup              # Start interactive setup
-  ./ai-dev setup --help       # Show this help
+${GREEN}Interview Sections:${NC}
+1. Project Overview & Vision
+2. Technical Requirements & Architecture  
+3. Functional Requirements & User Stories
+4. Implementation Details & Context
+5. Project Planning & Timeline
 
-${GREEN}Note:${NC} This command requires write permissions in the current directory.
+${GREEN}Output:${NC}
+- Ultra-detailed PRD file: docs/prds/prd-{project}-{timestamp}.md
+- 3000+ words with comprehensive coverage
+- Ready for task generation
+
+${GREEN}Example:${NC}
+  ./ai-dev create-prd
+
+${GREEN}Next Step:${NC}
+  ./ai-dev generate docs/prds/prd-{your-project}.md
 EOF
             exit 0
         fi
         
-        if [ "$QUIET" != "true" ]; then
-            info "AI Development Framework CLI v2.0"
-        fi
-        info "Starting project setup workflow"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/setup/01_start_setup.md" "Project Setup"
+        execute_ai_guide ".ai_workflow/simple/01_create_prd.md" "Creating Ultra-Detailed PRD"
         ;;
 
     generate)
-        PRD_FILE=${1:-}
+        if [[ "${2:-}" == "--help" ]] || [[ "${2:-}" == "-h" ]]; then
+            cat << EOF
+${BLUE}Generate Tasks Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev generate <prd_file>
+
+${GREEN}Description:${NC}
+Converts a PRD into a comprehensive, phase-based implementation plan with detailed
+tasks that any developer can execute step-by-step. Creates 5-phase breakdown with
+specific acceptance criteria and validation commands.
+
+${GREEN}Arguments:${NC}
+  prd_file        Path to PRD markdown file (required)
+
+${GREEN}What it does:${NC}
+- Analyzes PRD content and extracts technical requirements
+- Creates 5-phase implementation plan:
+  1. Foundation & Setup
+  2. Core Feature Development  
+  3. Quality Assurance & Testing
+  4. Deployment & Production
+  5. Monitoring & Maintenance
+- Detailed tasks with acceptance criteria
+- Technology-specific customizations
+- GitHub Actions workflow generation
+
+${GREEN}Output:${NC}
+- Comprehensive task file: docs/tasks/tasks-{project}-{timestamp}.md
+- 5 phases with detailed implementation steps
+- Ready for execution
+
+${GREEN}Examples:${NC}
+  ./ai-dev generate docs/prds/prd-my-app-20240101.md
+  ./ai-dev generate docs/prds/prd-ecommerce-site.md
+
+${GREEN}Next Step:${NC}
+  ./ai-dev execute docs/tasks/tasks-{your-project}.md
+EOF
+            exit 0
+        fi
+        
+        PRD_FILE=${2:-}
         if [ -z "$PRD_FILE" ]; then
             error "Missing required argument: <prd_file>"
-            show_help
+            echo ""
+            echo "Usage: ./ai-dev generate <prd_file>"
+            echo "Example: ./ai-dev generate docs/prds/prd-my-project.md"
             exit 1
         fi
         
         validate_file_path "$PRD_FILE" "prd"
         
-        info "Generating tasks from: $PRD_FILE"
-        export PRD_FILE_PATH="$PRD_FILE"
-        execute_workflow "${AI_WORKFLOW_DIR}/generate-tasks.md" "Task Generation"
+        execute_ai_guide ".ai_workflow/simple/02_generate_tasks.md" "Generating Implementation Tasks" "$PRD_FILE"
         ;;
 
-    run)
-        PRP_FILE=${1:-}
-        if [ -z "$PRP_FILE" ]; then
-            error "Missing required argument: <prp_file>"
-            show_help
-            exit 1
-        fi
-        
-        validate_file_path "$PRP_FILE" "prp"
-        
-        info "Executing PRP: $PRP_FILE"
-        export PRP_FILE_PATH="$PRP_FILE"
-        
-        # Execute the PRP file directly using the markdown parser
-        if [ "$DRY_RUN" = "true" ]; then
-            info "DRY RUN: Would execute PRP file: $PRP_FILE"
-            return 0
-        fi
-        
-        info "Parsing and executing PRP file: $PRP_FILE"
-        log "Executing PRP file: $PRP_FILE"
-        
-        # Use the native markdown parser to execute the PRP file
-        if ! execute_md_workflow "$PRP_FILE"; then
-            error "PRP execution failed: $PRP_FILE"
-            error "Run with --verbose for detailed output"
-            exit 1
-        fi
-        
-        success "PRP execution completed: $PRP_FILE"
-        ;;
-
-    optimize)
-        # Process optimize-specific flags
-        prompt_file=""
-        for arg in "$@"; do
-            case $arg in
-                -v|--verbose)
-                    VERBOSE=true
-                    ;;
-                -q|--quiet)
-                    QUIET=true
-                    ;;
-                --dry-run)
-                    DRY_RUN=true
-                    ;;
-                --force)
-                    FORCE=true
-                    ;;
-                -*)
-                    # Skip other flags
-                    ;;
-                *)
-                    # This should be the prompt file
-                    if [ -z "$prompt_file" ]; then
-                        prompt_file="$arg"
-                    fi
-                    ;;
-            esac
-        done
-        
-        PROMPT_FILE="$prompt_file"
-        if [ -z "$PROMPT_FILE" ]; then
-            error "Missing required argument: <prompt_file>"
-            show_help
-            exit 1
-        fi
-        
-        validate_file_path "$PROMPT_FILE"
-        
-        if [ "$DRY_RUN" = "true" ]; then
-            info "DRY RUN: Would optimize prompt file: $PROMPT_FILE"
-            exit 0
-        fi
-        
-        info "Optimizing prompt: $PROMPT_FILE"
-        export PROMPT_FILE_PATH="$PROMPT_FILE"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/monitoring/optimize_prompts.md" "Prompt Optimization"
-        ;;
-    
-    performance)
-        subcommand="${2:-optimize}"
-        
-        case "$subcommand" in
-            "optimize")
-                info "Running performance optimization"
-                bash "$AI_WORKFLOW_DIR/scripts/performance_optimizer.sh" optimize
-                ;;
-            "benchmark")
-                info "Running performance benchmarks"
-                bash "$AI_WORKFLOW_DIR/scripts/performance_optimizer.sh" benchmark
-                ;;
-            "validate")
-                info "Validating performance"
-                bash "$AI_WORKFLOW_DIR/scripts/performance_optimizer.sh" validate
-                ;;
-            "report")
-                info "Generating performance report"
-                bash "$AI_WORKFLOW_DIR/scripts/performance_optimizer.sh" report
-                ;;
-            *)
-                error "Usage: $0 performance {optimize|benchmark|validate|report}"
-                ;;
-        esac
-        ;;
-
-    audit)
-        info "Running comprehensive security audit"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/security/audit_security.md" "Security Audit"
-        ;;
-
-    enable-optimizations)
-        info "🚀 Enabling global optimizations for token economy"
-        
-        # Check if this is an existing installation
-        if [ -f "$AI_WORKFLOW_DIR/config/framework.json" ]; then
-            info "📋 Existing framework installation detected"
-            info "🔄 Upgrading to optimized version..."
-        else
-            info "🆕 New installation - applying optimizations..."
-        fi
-        
-        # Set environment variables for optimizations
-        export USE_COMPACT_WORKFLOWS=true
-        export USE_OPTIMIZATIONS=true
-        export ENABLE_TOKEN_OPTIMIZATION=true
-        
-        # Create persistent configuration
-        mkdir -p "$AI_WORKFLOW_DIR/config"
-        cat > "$AI_WORKFLOW_DIR/config/optimizations.conf" << EOF
-# Token Economy Optimization Configuration
-# Generated: $(date)
-USE_COMPACT_WORKFLOWS=true
-USE_OPTIMIZATIONS=true
-ENABLE_TOKEN_OPTIMIZATION=true
-OPTIMIZATION_LEVEL=moderate
-BATCH_OPTIMIZATION=true
-EOF
-        
-        # Apply optimizations to large files if they exist
-        echo "📄 Checking for large files to optimize..."
-        
-        # Find large markdown files (>1000 words)
-        optimized_count=0
-        total_original_words=0
-        total_optimized_words=0
-        
-        find "$AI_WORKFLOW_DIR" -name "*.md" -type f | while read -r file; do
-            # Skip backup directories and already optimized files
-            if [[ "$file" =~ (backups|obsolete_files|_optimized\.md)$ ]]; then
-                continue
-            fi
-            
-            word_count=$(wc -w < "$file" 2>/dev/null || echo 0)
-            if [ "$word_count" -gt 1000 ]; then
-                echo "  - Processing: $file ($word_count words)"
-                
-                # Create backup first
-                backup_file="${file%.md}_backup_$(date +%Y%m%d_%H%M%S).md"
-                cp "$file" "$backup_file"
-                
-                # Apply proven optimization technique
-                # Create temporary optimized version
-                temp_file="${file}.tmp"
-                
-                # Apply optimization: remove excess whitespace and empty lines
-                sed -e '/^[[:space:]]*$/N;/^\n$/d' -e 's/[[:space:]]*$//' "$file" > "$temp_file"
-                
-                # Calculate savings
-                optimized_words=$(wc -w < "$temp_file" 2>/dev/null || echo 0)
-                if [ "$optimized_words" -lt "$word_count" ]; then
-                    # Replace original with optimized version
-                    mv "$temp_file" "$file"
-                    echo "    ✅ Optimized: $word_count → $optimized_words words ($(( (word_count - optimized_words) * 100 / word_count ))% reduction)"
-                    optimized_count=$((optimized_count + 1))
-                    total_original_words=$((total_original_words + word_count))
-                    total_optimized_words=$((total_optimized_words + optimized_words))
-                else
-                    # No improvement, keep original and remove temp files
-                    rm "$temp_file"
-                    rm "$backup_file"
-                    echo "    ⚠️  No improvement detected, keeping original"
-                fi
-            fi
-        done
-        
-        echo "📊 Optimization Summary:"
-        echo "  - Files optimized: $optimized_count"
-        echo "  - Total words before: $total_original_words"
-        echo "  - Total words after: $total_optimized_words"
-        if [ "$total_original_words" -gt 0 ]; then
-            reduction_percent=$(( (total_original_words - total_optimized_words) * 100 / total_original_words ))
-            echo "  - Overall reduction: ${reduction_percent}%"
-        fi
-        
-        success "✅ Global optimizations enabled!"
-        success "📊 Configuration saved to: $AI_WORKFLOW_DIR/config/optimizations.conf"
-        success "💰 Expected token reduction: 40-70%"
-        success "🔧 Use optimized workflow files when available"
-        
-        # Clean up any obsolete files
-        info "🧹 Cleaning up obsolete files..."
-        obsolete_count=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
-        if [ "$obsolete_count" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
-            success "🗑️  Removed $obsolete_count obsolete *_optimized.md files"
-        else
-            success "✅ No obsolete files found"
-        fi
-        ;;
-
-    cleanup-optimizations)
-        info "🧹 Comprehensive cleanup of optimization artifacts"
-        
-        # Initialize counters
-        total_cleaned=0
-        
-        # 1. Remove obsolete optimized files
-        obsolete_optimized=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
-        if [ "$obsolete_optimized" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
-            success "🗑️  Removed $obsolete_optimized obsolete *_optimized.md files"
-            total_cleaned=$((total_cleaned + obsolete_optimized))
-        fi
-        
-        # 2. Remove old backup files (older than 30 days)
-        old_backups=$(find "$AI_WORKFLOW_DIR" -name "*_backup_*.md" -type f -mtime +30 2>/dev/null | wc -l)
-        if [ "$old_backups" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*_backup_*.md" -type f -mtime +30 -delete
-            success "🗑️  Removed $old_backups old backup files (>30 days)"
-            total_cleaned=$((total_cleaned + old_backups))
-        fi
-        
-        # 3. Remove temporary files
-        temp_files=$(find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f 2>/dev/null | wc -l)
-        if [ "$temp_files" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f -delete
-            success "🗑️  Removed $temp_files temporary files"
-            total_cleaned=$((total_cleaned + temp_files))
-        fi
-        
-        # 4. Clean up old log files (older than 30 days)
-        old_logs=$(find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +30 2>/dev/null | wc -l)
-        if [ "$old_logs" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +30 -delete
-            success "🗑️  Removed $old_logs old log files (>30 days)"
-            total_cleaned=$((total_cleaned + old_logs))
-        fi
-        
-        # 5. Clean up old backup directories (keep last 3)
-        if [ -d "$AI_WORKFLOW_DIR/backups" ]; then
-            backup_count=$(find "$AI_WORKFLOW_DIR/backups" -maxdepth 1 -type d -name "*_*" | wc -l)
-            if [ "$backup_count" -gt 3 ]; then
-                keep_count=3
-                remove_count=$((backup_count - keep_count))
-                
-                # Remove oldest backup directories
-                find "$AI_WORKFLOW_DIR/backups" -maxdepth 1 -type d -name "*_*" -printf '%T+ %p\n' | sort | head -n "$remove_count" | cut -d' ' -f2- | while read -r dir; do
-                    if [ -d "$dir" ]; then
-                        rm -rf "$dir"
-                    fi
-                done
-                
-                success "🗑️  Removed $remove_count old backup directories (keeping last $keep_count)"
-                total_cleaned=$((total_cleaned + remove_count))
-            fi
-        fi
-        
-        # 6. Clean up precommit backup files (older than 7 days)
-        if [ -d "$AI_WORKFLOW_DIR/precommit" ]; then
-            precommit_backups=$(find "$AI_WORKFLOW_DIR/precommit" -name "backup_*" -type f -mtime +7 2>/dev/null | wc -l)
-            if [ "$precommit_backups" -gt 0 ]; then
-                find "$AI_WORKFLOW_DIR/precommit" -name "backup_*" -type f -mtime +7 -delete
-                success "🗑️  Removed $precommit_backups old precommit backup files (>7 days)"
-                total_cleaned=$((total_cleaned + precommit_backups))
-            fi
-        fi
-        
-        # 7. Clean up obsolete files directory (older than 60 days)
-        if [ -d "$AI_WORKFLOW_DIR/obsolete_files" ]; then
-            obsolete_count=$(find "$AI_WORKFLOW_DIR/obsolete_files" -type f -mtime +60 2>/dev/null | wc -l)
-            if [ "$obsolete_count" -gt 0 ]; then
-                find "$AI_WORKFLOW_DIR/obsolete_files" -type f -mtime +60 -delete
-                success "🗑️  Removed $obsolete_count obsolete files (>60 days)"
-                total_cleaned=$((total_cleaned + obsolete_count))
-            fi
-        fi
-        
-        # Summary
-        if [ "$total_cleaned" -eq 0 ]; then
-            success "✅ No cleanup needed - system is clean"
-        else
-            success "🎉 Comprehensive cleanup completed: $total_cleaned items removed"
-            
-            # Show space saved
-            echo "💾 Estimated space saved: ~$((total_cleaned * 10))KB"
-        fi
-        ;;
-        
-    auto-cleanup)
-        info "🤖 Automated cleanup - running periodic maintenance"
-        
-        # Check if auto-cleanup is enabled
-        if [ ! -f "$AI_WORKFLOW_DIR/config/auto_cleanup.conf" ]; then
-            info "ℹ️  Auto-cleanup not configured. Run './ai-dev configure auto-cleanup' to enable."
-            exit 0
-        fi
-        
-        # Source configuration
-        source "$AI_WORKFLOW_DIR/config/auto_cleanup.conf"
-        
-        # Check last cleanup time
-        last_cleanup_file="$AI_WORKFLOW_DIR/cache/last_cleanup"
-        current_time=$(date +%s)
-        
-        if [ -f "$last_cleanup_file" ]; then
-            last_cleanup=$(cat "$last_cleanup_file")
-            time_diff=$((current_time - last_cleanup))
-            
-            # Default to 7 days if not configured
-            cleanup_interval=${AUTO_CLEANUP_INTERVAL:-604800}  # 7 days in seconds
-            
-            if [ "$time_diff" -lt "$cleanup_interval" ]; then
-                info "✅ Auto-cleanup not needed. Last cleanup was $(date -d @$last_cleanup)"
-                exit 0
-            fi
-        fi
-        
-        info "🧹 Running automatic cleanup..."
-        
-        # Run cleanup with less aggressive settings for auto mode
-        total_cleaned=0
-        
-        # Only clean very old files in auto mode
-        obsolete_optimized=$(find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f 2>/dev/null | wc -l)
-        if [ "$obsolete_optimized" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*_optimized.md" -type f -delete
-            total_cleaned=$((total_cleaned + obsolete_optimized))
-        fi
-        
-        old_logs=$(find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +60 2>/dev/null | wc -l)
-        if [ "$old_logs" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR/logs" -name "*.log" -type f -mtime +60 -delete
-            total_cleaned=$((total_cleaned + old_logs))
-        fi
-        
-        temp_files=$(find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f 2>/dev/null | wc -l)
-        if [ "$temp_files" -gt 0 ]; then
-            find "$AI_WORKFLOW_DIR" -name "*.tmp" -o -name "*.temp" -type f -delete
-            total_cleaned=$((total_cleaned + temp_files))
-        fi
-        
-        # Update last cleanup time
-        echo "$current_time" > "$last_cleanup_file"
-        
-        if [ "$total_cleaned" -gt 0 ]; then
-            success "🎉 Auto-cleanup completed: $total_cleaned items removed"
-        else
-            success "✅ Auto-cleanup completed - no items needed removal"
-        fi
-        ;;
-
-    update)
-        info "🔄 Updating AI Development Framework"
-        
-        # Check if we're in framework directory or user project
-        if [ -f "ai-dev" ] && [ -d ".ai_workflow" ] && [ -d ".github" ]; then
-            info "📁 Framework repository detected"
-            update_mode="framework"
-        elif [ -d ".ai_workflow" ] && [ ! -f "ai-dev" ]; then
-            info "📁 User project detected"
-            update_mode="user_project"
-        else
-            error "❌ Unable to determine update context"
-            echo "Run this command from either:"
-            echo "  - Framework repository directory"
-            echo "  - User project directory with .ai_workflow/"
-            exit 1
-        fi
-        
-        case "$update_mode" in
-            "framework")
-                info "🔄 Updating framework repository"
-                
-                # Check for uncommitted changes
-                if [ -n "$(git status --porcelain)" ]; then
-                    warning "⚠️  Uncommitted changes detected"
-                    echo "Please commit or stash your changes before updating"
-                    git status --short
-                    exit 1
-                fi
-                
-                # Update from remote
-                info "📥 Fetching latest changes from remote"
-                git fetch origin main
-                
-                # Check if update is needed
-                LOCAL=$(git rev-parse HEAD)
-                REMOTE=$(git rev-parse origin/main)
-                
-                if [ "$LOCAL" = "$REMOTE" ]; then
-                    success "✅ Framework is already up to date"
-                    exit 0
-                fi
-                
-                # Show what will be updated
-                info "📋 Changes to be applied:"
-                git log --oneline HEAD..origin/main | head -10
-                
-                # Apply update
-                git merge origin/main
-                
-                success "✅ Framework updated successfully"
-                success "🔄 Run './ai-dev diagnose' to verify integrity"
-                ;;
-                
-            "user_project")
-                info "🔄 Updating user project framework components"
-                
-                # Find framework installation
-                FRAMEWORK_PATH=""
-                if [ -f "../ai-dev" ]; then
-                    FRAMEWORK_PATH="../"
-                elif [ -f "../../ai-dev" ]; then
-                    FRAMEWORK_PATH="../../"
-                elif command -v ai-dev >/dev/null 2>&1; then
-                    FRAMEWORK_PATH=$(dirname $(which ai-dev))
-                else
-                    error "❌ Cannot locate framework installation"
-                    echo "Please specify framework path with --framework-path"
-                    exit 1
-                fi
-                
-                info "📁 Framework found at: $FRAMEWORK_PATH"
-                
-                # Create backup of user customizations
-                backup_dir=".ai_workflow_backup_$(date +%Y%m%d_%H%M%S)"
-                info "📦 Creating backup at: $backup_dir"
-                
-                # Backup user-specific files
-                mkdir -p "$backup_dir"
-                cp -r .ai_workflow/config "$backup_dir/" 2>/dev/null || true
-                cp -r .ai_workflow/PRPs "$backup_dir/" 2>/dev/null || true
-                cp -r .ai_workflow/state "$backup_dir/" 2>/dev/null || true
-                find .ai_workflow -name "*_custom.md" -exec cp {} "$backup_dir/" \; 2>/dev/null || true
-                
-                # Update framework components
-                info "📥 Updating framework components"
-                
-                # Update core workflows (preserve user customizations)
-                rsync -av --exclude='config/' --exclude='PRPs/' --exclude='state/' --exclude='*_custom.md' \
-                    "$FRAMEWORK_PATH/.ai_workflow/" .ai_workflow/ 2>/dev/null || {
-                    # Fallback to manual copy
-                    cp -r "$FRAMEWORK_PATH/.ai_workflow/workflows" .ai_workflow/ 2>/dev/null || true
-                    cp -r "$FRAMEWORK_PATH/.ai_workflow/commands" .ai_workflow/ 2>/dev/null || true
-                    cp -r "$FRAMEWORK_PATH/.ai_workflow/templates" .ai_workflow/ 2>/dev/null || true
-                }
-                
-                # Update documentation
-                cp "$FRAMEWORK_PATH/.ai_workflow/ARCHITECTURE.md" .ai_workflow/ 2>/dev/null || true
-                cp "$FRAMEWORK_PATH/.ai_workflow/GLOBAL_AI_RULES.md" .ai_workflow/ 2>/dev/null || true
-                cp "$FRAMEWORK_PATH/.ai_workflow/FRAMEWORK_GUIDE.md" .ai_workflow/ 2>/dev/null || true
-                
-                # Restore user customizations
-                info "🔄 Restoring user customizations"
-                cp -r "$backup_dir/config" .ai_workflow/ 2>/dev/null || true
-                cp -r "$backup_dir/PRPs" .ai_workflow/ 2>/dev/null || true
-                cp -r "$backup_dir/state" .ai_workflow/ 2>/dev/null || true
-                
-                # Update version info
-                echo "$(date): Updated from framework at $FRAMEWORK_PATH" >> .ai_workflow/update_history.log
-                
-                success "✅ User project updated successfully"
-                success "📦 Backup available at: $backup_dir"
-                success "🔄 Run './ai-dev diagnose' to verify setup"
-                ;;
-        esac
-        ;;
-
-    migrate-user-project)
-        info "🔄 Migrating existing user project to optimized framework"
-        
-        # Validate we're in a user project (not the framework itself)
-        if [ -f "package.json" ] || [ -f "requirements.txt" ] || [ -f "Cargo.toml" ] || [ -f "pom.xml" ]; then
-            info "✅ User project detected"
-        else
-            warning "⚠️  No user project detected. This command is for user projects, not the framework itself."
-            echo "Run this command in your project directory that uses the AI Framework."
-            exit 1
-        fi
-        
-        # Check if framework is already present
-        if [ -d ".ai_workflow" ]; then
-            info "📋 Existing .ai_workflow directory found"
-            
-            # Create backup before migration
-            backup_dir=".ai_workflow_backup_$(date +%Y%m%d_%H%M%S)"
-            cp -r .ai_workflow "$backup_dir"
-            success "📦 Backup created: $backup_dir"
-            
-            # Apply optimizations to user's workflows
-            info "🔄 Applying optimizations to user workflows..."
-            
-            find .ai_workflow -name "*.md" -type f | while read -r file; do
-                word_count=$(wc -w < "$file" 2>/dev/null || echo 0)
-                if [ "$word_count" -gt 500 ]; then  # Lower threshold for user projects
-                    echo "  - Optimizing: $file ($word_count words)"
-                    
-                    # Create optimized version
-                    sed -e '/^[[:space:]]*$/N;/^\n$/d' -e 's/[[:space:]]*$//' "$file" > "${file}.tmp"
-                    optimized_words=$(wc -w < "${file}.tmp" 2>/dev/null || echo 0)
-                    
-                    if [ "$optimized_words" -lt "$word_count" ]; then
-                        mv "${file}.tmp" "$file"
-                        reduction=$(( (word_count - optimized_words) * 100 / word_count ))
-                        echo "    ✅ Reduced: $word_count → $optimized_words words (${reduction}% reduction)"
-                    else
-                        rm "${file}.tmp"
-                    fi
-                fi
-            done
-            
-            # Update configuration
-            mkdir -p .ai_workflow/config
-            cat > .ai_workflow/config/user_optimizations.conf << EOF
-# User Project Optimization Configuration
-# Generated: $(date)
-PROJECT_TYPE=user_project
-USE_COMPACT_WORKFLOWS=true
-USE_OPTIMIZATIONS=true
-OPTIMIZATION_LEVEL=moderate
-MIGRATED_FROM_FRAMEWORK=true
-MIGRATION_DATE=$(date)
-EOF
-            
-            success "✅ User project migration completed!"
-            success "📊 Configuration saved to: .ai_workflow/config/user_optimizations.conf"
-            success "🔄 Backup available at: $backup_dir"
-            
-        else
-            info "🆕 No existing .ai_workflow directory found"
-            info "💡 Consider running './ai-dev setup' first to initialize the framework"
-        fi
-        ;;
-
-    sync)
-        SUBCOMMAND=${1:-feedback}
-        shift || true
-        
-        case "$SUBCOMMAND" in
-            feedback)
-                info "Synchronizing with external feedback (Enhanced)"
-                bash "${AI_WORKFLOW_DIR}/scripts/feedback_integrator.sh" integrate
-                ;;
-            feedback-collect)
-                info "Collecting external feedback"
-                bash "${AI_WORKFLOW_DIR}/scripts/feedback_integrator.sh" collect
-                ;;
-            feedback-process)
-                info "Processing collected feedback"
-                bash "${AI_WORKFLOW_DIR}/scripts/feedback_integrator.sh" process
-                ;;
-            feedback-report)
-                info "Generating feedback integration report"
-                bash "${AI_WORKFLOW_DIR}/scripts/feedback_integrator.sh" report
-                ;;
-            framework)
-                info "Synchronizing with framework updates"
-                if [ -f "${AI_WORKFLOW_DIR}/workflows/sync/sync_framework_updates.md" ]; then
-                    execute_workflow "${AI_WORKFLOW_DIR}/workflows/sync/sync_framework_updates.md" "Framework Sync"
-                else
-                    warning "Framework sync workflow not yet implemented"
-                    info "This feature will be available in the next phase"
-                fi
-                ;;
-            --help|-h)
-                cat << EOF
-${BLUE}Sync Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev sync <subcommand> [options]
-
-${GREEN}Subcommands:${NC}
-  feedback           Integrate external feedback from GitHub issues/PRs (Enhanced)
-  feedback-collect   Collect feedback from external sources
-  feedback-process   Process collected feedback into tasks
-  feedback-report    Generate integration report
-  framework          Synchronize with framework updates (coming soon)
-
-${GREEN}Examples:${NC}
-  ./ai-dev sync feedback          # Full integration process
-  ./ai-dev sync feedback-collect  # Collect only
-  ./ai-dev sync feedback-process  # Process only
-  ./ai-dev sync feedback-report   # Generate report
-  ./ai-dev sync framework         # Sync framework updates
-EOF
-                exit 0
-                ;;
-            *)
-                error "Unknown sync subcommand: '$SUBCOMMAND'"
-                echo ""
-                info "Available subcommands: feedback, feedback-collect, feedback-process, feedback-report, framework"
-                echo "Use './ai-dev sync --help' for more information"
-                exit 1
-                ;;
-        esac
-        ;;
-
-    configure)
-        # Handle help option for configure command
-        if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    execute)
+        if [[ "${2:-}" == "--help" ]] || [[ "${2:-}" == "-h" ]]; then
             cat << EOF
-${BLUE}Configure Command Help${NC}
+${BLUE}Execute Tasks Command Help${NC}
 
-${GREEN}Usage:${NC} ./ai-dev configure [options]
+${GREEN}Usage:${NC} ./ai-dev execute <tasks_file>
 
 ${GREEN}Description:${NC}
-Configure framework settings and preferences. This command allows you to customize
-the AI Development Framework behavior, set default values, and manage configuration
-files across your development environment.
+Executes the implementation plan step-by-step, writing production-ready code,
+setting up infrastructure, and ensuring everything works perfectly while
+maintaining GitHub backup throughout the process.
 
-${GREEN}Options:${NC}
-  --user                Configure user-specific settings
-  --system              Configure system-wide settings  
-  --reset               Reset configuration to defaults
-  --show                Show current configuration
-  --help, -h            Show this help
+${GREEN}Arguments:${NC}
+  tasks_file      Path to tasks markdown file (required)
 
 ${GREEN}What it does:${NC}
-- Configure framework preferences
-- Set default command options
-- Manage environment settings
-- Validate configuration files
-- Set up integrations
+- Executes 5-phase implementation plan systematically
+- Writes actual production-ready code with comprehensive error handling
+- Sets up development environment and project architecture
+- Implements features with testing and quality validation
+- Configures deployment pipeline and monitoring
+- Continuous GitHub backup at each milestone
+- Creates comprehensive project documentation
+
+${GREEN}Execution Process:${NC}
+1. Environment preparation and GitHub setup
+2. Phase-by-phase execution with milestone backups
+3. Code quality validation and testing
+4. Production deployment configuration
+5. Final release creation and handover
+
+${GREEN}Output:${NC}
+- Fully implemented project with production-ready code
+- Complete Git history with milestone commits
+- Comprehensive documentation and tests
+- Deployment-ready infrastructure
 
 ${GREEN}Examples:${NC}
-  ./ai-dev configure              # Interactive configuration
-  ./ai-dev configure --user       # Configure user settings
-  ./ai-dev configure --show       # Show current config
-  ./ai-dev configure --help       # Show this help
+  ./ai-dev execute docs/tasks/tasks-my-app-20240101.md
+  ./ai-dev execute docs/tasks/tasks-ecommerce-site.md
 
-${GREEN}Note:${NC} Configuration changes affect all framework commands.
+${GREEN}GitHub Integration:${NC}
+- Automatic milestone commits with detailed messages
+- Progressive backup strategy throughout development
+- Final release tagging and documentation
+- Complete project handover package
 EOF
             exit 0
         fi
         
-        info "Configuring framework settings"
-        export CONFIGURE_OPTIONS="$*"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/configure_framework.md" "Framework Configuration"
-        ;;
-
-    diagnose)
-        # Handle diagnose subcommands
-        SUBCOMMAND=${1:-standard}
-        shift || true
-        
-        case "$SUBCOMMAND" in
-            "standard")
-                info "Diagnosing framework health"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/cli/diagnose_framework.md" "Framework Diagnosis"
-                ;;
-            "github-actions" | "--github-actions")
-                info "🤖 Checking GitHub Actions integration"
-                
-                # Check if we're in a GitHub repository
-                if [ ! -d ".github/workflows" ]; then
-                    error "❌ No GitHub Actions found"
-                    echo "This directory doesn't contain .github/workflows/"
-                    echo ""
-                    echo "📋 GitHub Actions Status: NOT AVAILABLE"
-                    echo ""
-                    echo "🛠️ Alternatives for non-GitHub users:"
-                    echo "  - Manual updates: ./ai-dev update"
-                    echo "  - Manual security: ./ai-dev audit"
-                    echo "  - Manual diagnostics: ./ai-dev diagnose"
-                    echo "  - Manual cleanup: ./ai-dev cleanup-optimizations"
-                    exit 1
-                fi
-                
-                # Count GitHub Actions
-                total_actions=$(find .github/workflows -name "*.yml" -o -name "*.yaml" | wc -l)
-                
-                echo "🤖 GitHub Actions Integration Status"
-                echo "======================================"
-                echo ""
-                echo "📊 Repository Status:"
-                echo "  - GitHub Actions files: $total_actions"
-                echo "  - Workflows directory: ✅ Found"
-                echo "  - Integration: ✅ Enabled"
-                echo ""
-                
-                # List key automation workflows
-                echo "🔄 Available Automation:"
-                if [ -f ".github/workflows/update-distribution.yml" ]; then
-                    echo "  - Update Distribution: ✅ Active"
-                else
-                    echo "  - Update Distribution: ❌ Missing"
-                fi
-                
-                if [ -f ".github/workflows/update-notifications.yml" ]; then
-                    echo "  - Update Notifications: ✅ Active"
-                else
-                    echo "  - Update Notifications: ❌ Missing"
-                fi
-                
-                if [ -f ".github/workflows/security-audit.yml" ]; then
-                    echo "  - Security Audits: ✅ Active"
-                else
-                    echo "  - Security Audits: ❌ Missing"
-                fi
-                
-                if [ -f ".github/workflows/ai-cost-optimization.yml" ]; then
-                    echo "  - Cost Optimization: ✅ Active"
-                else
-                    echo "  - Cost Optimization: ❌ Missing"
-                fi
-                
-                if [ -f ".github/workflows/repository-cleanliness-audit.yml" ]; then
-                    echo "  - Repository Cleanup: ✅ Active"
-                else
-                    echo "  - Repository Cleanup: ❌ Missing"
-                fi
-                
-                echo ""
-                echo "📋 All GitHub Actions ($total_actions total):"
-                find .github/workflows -name "*.yml" -o -name "*.yaml" | sort | while read -r file; do
-                    basename "$file" .yml | sed 's/^/  - /'
-                done
-                
-                echo ""
-                echo "🎯 GitHub Actions Benefits:"
-                echo "  - 🔄 Automatic updates and notifications"
-                echo "  - 🔐 Continuous security monitoring"
-                echo "  - 📊 Performance and usage analytics"
-                echo "  - 🧹 Automated maintenance and cleanup"
-                echo "  - 🚀 Streamlined development workflow"
-                
-                success "✅ GitHub Actions integration is fully operational"
-                ;;
-            "--help" | "-h")
-                echo "Usage: ./ai-dev diagnose [option]"
-                echo ""
-                echo "Options:"
-                echo "  standard           Run standard framework diagnosis (default)"
-                echo "  github-actions     Check GitHub Actions integration status"
-                echo "  --help, -h         Show this help message"
-                ;;
-            *)
-                error "Unknown diagnose option: $SUBCOMMAND"
-                echo "Use './ai-dev diagnose --help' for available options"
-                exit 1
-                ;;
-        esac
-        ;;
-
-    quality)
-        PROJECT_PATH=${1:-"."}
-        if [ ! -d "$PROJECT_PATH" ]; then
-            error "Directory not found: $PROJECT_PATH"
+        TASKS_FILE=${2:-}
+        if [ -z "$TASKS_FILE" ]; then
+            error "Missing required argument: <tasks_file>"
+            echo ""
+            echo "Usage: ./ai-dev execute <tasks_file>"
+            echo "Example: ./ai-dev execute docs/tasks/tasks-my-project.md"
             exit 1
         fi
         
-        info "Running quality validation on: $PROJECT_PATH"
-        export PROJECT_PATH
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/quality/quality_gates.md" "Quality Validation"
-        ;;
-
-    status)
-        # Check for status-specific flags after the command
-        for arg in "$@"; do
-            case $arg in
-                -q|--quiet)
-                    QUIET=true
-                    ;;
-                -v|--verbose)
-                    VERBOSE=true
-                    ;;
-            esac
-        done
+        validate_file_path "$TASKS_FILE" "tasks"
         
-        # Show CLI initialization message only if not in quiet mode
-        if [ "$QUIET" != "true" ]; then
-            info "AI Development Framework CLI v2.0"
-            info "Framework Status Report"
-            echo ""
-            echo "Framework Directory: $AI_WORKFLOW_DIR"
-            echo "Config File: $CONFIG_FILE"
-            echo "Cache Directory: $CACHE_DIR"
-            echo "Log File: $LOG_FILE"
-            echo ""
-        fi
-        
-        if [ -f "$CONFIG_FILE" ]; then
-            echo "Configuration: ✅ Found"
-        else
-            echo "Configuration: ❌ Not found"
-        fi
-        
-        if [ -d "${AI_WORKFLOW_DIR}/workflows" ]; then
-            workflow_count=$(find "${AI_WORKFLOW_DIR}/workflows" -name "*.md" | wc -l)
-            echo "Workflows: ✅ $workflow_count found"
-        else
-            echo "Workflows: ❌ Directory missing"
-        fi
-        
-        if [ -w "$CACHE_DIR" ]; then
-            echo "Cache Directory: ✅ Writable"
-        else
-            echo "Cache Directory: ❌ Not writable"
-        fi
-        ;;
-
-    version)
-        echo "AI Development Framework CLI v2.0"
-        echo "Enhanced with robust validation, integration testing, and pre-commit system"
-        echo "Framework Version: $(get_framework_version)"
-        echo "Platform: $PLATFORM ($(uname -s))"
-        show_version_info
+        execute_ai_guide ".ai_workflow/simple/03_execute_tasks.md" "Executing Implementation Plan" "$TASKS_FILE"
         ;;
 
     help|--help|-h)
         show_help
         ;;
-    
-    platform)
-        show_platform_info
+
+    version)
+        echo "AI Development Framework CLI v3.0"
+        echo "Ultra-Simple: 3 Steps to Production"
+        echo "Commands: create-prd, generate, execute"
         ;;
 
-    test-workflow-calling)
-        info "Testing workflow calling mechanism"
-        execute_workflow "${AI_WORKFLOW_DIR}/testing/test_workflow_calling.md" "Workflow Calling Test"
-        ;;
-
-    test-simple-audit)
-        info "Testing simple audit workflow"
-        execute_workflow "${AI_WORKFLOW_DIR}/testing/simple_audit_test.md" "Simple Audit Test"
-        ;;
-
-    detect-manual)
-        shift
-        if [[ -x "$AI_WORKFLOW_DIR/scripts/execute_manual_detection.sh" ]]; then
-            bash "$AI_WORKFLOW_DIR/scripts/execute_manual_detection.sh" "$@"
-        else
-            error "Manual detection script not found"
-            exit 1
-        fi
-        ;;
-
-    precommit)
-        # Handle precommit subcommands
-        SUBCOMMAND=${1:-validate}
-        shift || true
+    status)
+        title "🔍 Framework Status"
         
-        case "$SUBCOMMAND" in
-            validate)
-                info "Running pre-commit validation"
-                execute_workflow "${AI_WORKFLOW_DIR}/precommit/validators/precommit_validation.md" "Pre-commit Validation"
-                ;;
-            install-hooks)
-                info "Installing git hooks"
-                execute_workflow "${AI_WORKFLOW_DIR}/precommit/install_hooks.md" "Install Git Hooks"
-                ;;
-            configure)
-                info "Configuring pre-commit system"
-                execute_workflow "${AI_WORKFLOW_DIR}/precommit/configure_precommit.md" "Configure Pre-commit"
-                ;;
-            report)
-                info "Generating pre-commit report"
-                execute_workflow "${AI_WORKFLOW_DIR}/precommit/generate_report.md" "Generate Pre-commit Report"
-                ;;
-            --help|-h)
-                cat << EOF
-${BLUE}Pre-commit Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev precommit <subcommand> [options]
-
-${GREEN}Subcommands:${NC}
-  validate           Run pre-commit validation on current changes
-  install-hooks      Install git hooks for automatic validation
-  configure          Configure pre-commit validation rules
-  report             Generate quality and validation report
-
-${GREEN}Examples:${NC}
-  ./ai-dev precommit validate       # Validate current changes
-  ./ai-dev precommit install-hooks  # Install git hooks
-  ./ai-dev precommit configure      # Configure validation rules
-  ./ai-dev precommit report         # Generate validation report
-EOF
-                exit 0
-                ;;
-            *)
-                error "Unknown precommit subcommand: '$SUBCOMMAND'"
-                echo ""
-                info "Available subcommands: validate, install-hooks, configure, report"
-                echo "Use './ai-dev precommit --help' for more information"
-                exit 1
-                ;;
-        esac
-        ;;
-
-    generate-architecture)
-        info "Generating project architecture documentation"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/documentation/generate_project_architecture.md" "Generate Architecture Documentation"
-        ;;
-
-    update-architecture)
-        info "Updating project architecture documentation"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/documentation/generate_project_architecture.md" "Update Architecture Documentation"
-        ;;
-
-    cleanup)
-        # Handle cleanup subcommands
-        SUBCOMMAND=${1:-}
+        echo "Version: AI Development Framework CLI v3.0"
+        echo "Mode: Ultra-Simple (3 commands)"
+        echo ""
         
-        case "$SUBCOMMAND" in
-            --help|-h)
-                cat << EOF
-${BLUE}Cleanup Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev cleanup [OPTION]
-
-${GREEN}Description:${NC}
-Manage obsolete files in the framework and user projects using the automated
-obsolete files management system.
-
-${GREEN}Options:${NC}
-  (no args)           Show cleanup status and candidates
-  --auto              Run automatic cleanup (archive obsolete files)
-  --confirm           Permanently delete old archived files (>30 days)
-  --recover <file>    Recover specific archived file
-  --status            Show cleanup system status
-  --help, -h          Show this help
-
-${GREEN}Examples:${NC}
-  ./ai-dev cleanup                    # Show cleanup status
-  ./ai-dev cleanup --auto             # Run automatic cleanup
-  ./ai-dev cleanup --confirm          # Delete old archived files
-  ./ai-dev cleanup --recover file.md  # Recover specific file
-  ./ai-dev cleanup --status           # Show system status
-
-${GREEN}Note:${NC} All cleanup operations are reversible except --confirm.
-EOF
-                exit 0
-                ;;
-            --auto)
-                info "Running automatic obsolete files cleanup"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/manage_obsolete_files.md" "Automatic Cleanup"
-                ;;
-            --confirm)
-                info "Permanently deleting old archived files (>30 days)"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/permanent_cleanup.md" "Permanent Cleanup"
-                ;;
-            --recover)
-                RECOVER_FILE=${2:-}
-                if [ -z "$RECOVER_FILE" ]; then
-                    error "Missing required argument: <file>"
-                    echo "Usage: ./ai-dev cleanup --recover <file>"
-                    exit 1
-                fi
-                info "Recovering archived file: $RECOVER_FILE"
-                export RECOVER_FILE_PATH="$RECOVER_FILE"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/recover_file.md" "File Recovery"
-                ;;
-            --status)
-                info "Showing cleanup system status"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/cleanup_status.md" "Cleanup Status"
-                ;;
-            "")
-                info "Showing cleanup candidates and system status"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/cleanup_status.md" "Cleanup Status"
-                ;;
-            *)
-                error "Unknown cleanup option: $SUBCOMMAND"
-                echo "Run './ai-dev cleanup --help' for available options"
-                exit 1
-                ;;
-        esac
-        ;;
-
-    update-gitignore)
-        info "Updating .gitignore with latest patterns and technology detection"
-        execute_workflow "${AI_WORKFLOW_DIR}/workflows/setup/auto_gitignore_setup.md" "Auto GitIgnore Update"
-        ;;
-
-    maintenance)
-        # Handle maintenance subcommands
-        MAINTENANCE_LEVEL=${1:-daily}
+        echo "📁 Directory Structure:"
+        echo "  .ai_workflow/simple/     ✅ $(ls .ai_workflow/simple/*.md 2>/dev/null | wc -l) guide files"
+        echo "  docs/prds/              ✅ $(ls docs/prds/*.md 2>/dev/null | wc -l) PRD files"
+        echo "  docs/tasks/             ✅ $(ls docs/tasks/*.md 2>/dev/null | wc -l) task files"
+        echo "  docs/reports/           ✅ Ready for reports"
+        echo ""
         
-        case "$MAINTENANCE_LEVEL" in
-            --help|-h)
-                cat << EOF
-${BLUE}Maintenance Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev maintenance [LEVEL]
-
-${GREEN}Description:${NC}
-Run periodic repository maintenance tasks to keep your repository clean and optimized.
-
-${GREEN}Levels:${NC}
-  daily               Daily maintenance (default)
-  weekly              Weekly maintenance + daily tasks
-  monthly             Monthly maintenance + weekly + daily tasks
-  --help, -h          Show this help
-
-${GREEN}Examples:${NC}
-  ./ai-dev maintenance            # Run daily maintenance
-  ./ai-dev maintenance weekly     # Run weekly maintenance
-  ./ai-dev maintenance monthly    # Run monthly maintenance
-
-${GREEN}What it does:${NC}
-  Daily:   Update .gitignore, clean obsolete files, health check
-  Weekly:  + Delete old archived files, update documentation
-  Monthly: + Deep analysis, duplicate detection, git optimization
-
-${GREEN}Note:${NC} All maintenance tasks are zero-friction and safe.
-EOF
-                exit 0
-                ;;
-            daily|weekly|monthly)
-                info "Running $MAINTENANCE_LEVEL repository maintenance"
-                export MAINTENANCE_LEVEL="$MAINTENANCE_LEVEL"
-                execute_workflow "${AI_WORKFLOW_DIR}/workflows/maintenance/periodic_repository_maintenance.md" "Repository Maintenance"
-                ;;
-            *)
-                error "Unknown maintenance level: $MAINTENANCE_LEVEL"
-                echo "Available levels: daily, weekly, monthly"
-                echo "Run './ai-dev maintenance --help' for more information"
-                exit 1
-                ;;
-        esac
-        ;;
-
-    generate-visualizations)
-        if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-            cat << EOF
-${BLUE}Generate Visualizations Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev generate-visualizations [OPTIONS]
-
-${GREEN}Description:${NC}
-Generate comprehensive visual representations of the AI Framework including mind maps, 
-flowcharts, architecture diagrams, and interactive dashboards.
-
-${GREEN}Options:${NC}
-  --type TYPE         Type of visualization (architecture, workflows, commands, actions, all)
-  --format FORMAT     Output format (mermaid, svg, html, all)
-  --output DIR        Output directory (default: .ai_workflow/docs/visualizations)
-  --interactive       Generate interactive HTML dashboards
-  --help, -h          Show this help
-
-${GREEN}Examples:${NC}
-  ./ai-dev generate-visualizations                    # Generate all visualizations
-  ./ai-dev generate-visualizations --type architecture # Generate architecture diagrams
-  ./ai-dev generate-visualizations --format svg       # Generate SVG files
-  ./ai-dev generate-visualizations --interactive      # Generate interactive dashboards
-
-${GREEN}What it generates:${NC}
-- 🏗️ Architecture diagrams and component maps
-- 🔄 Workflow mind maps and execution flows
-- 🎮 Command reference trees and usage patterns
-- 🤖 GitHub Actions timelines and schedules
-- 📊 Data flow diagrams and system relationships
-- 🎯 Interactive HTML dashboards with real-time metrics
-
-${GREEN}Note:${NC} Generated visualizations help understand the framework structure and relationships.
-EOF
-            exit 0
-        fi
+        echo "🤖 AI Guides Available:"
+        [ -f ".ai_workflow/simple/01_create_prd.md" ] && echo "  ✅ PRD Creation Guide" || echo "  ❌ PRD Creation Guide"
+        [ -f ".ai_workflow/simple/02_generate_tasks.md" ] && echo "  ✅ Task Generation Guide" || echo "  ❌ Task Generation Guide"
+        [ -f ".ai_workflow/simple/03_execute_tasks.md" ] && echo "  ✅ Execution Guide" || echo "  ❌ Execution Guide"
+        echo ""
         
-        info "🎨 Generating framework visualizations"
-        
-        # Check if visualization script exists
-        VIZ_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_visualizations.sh"
-        if [[ -f "$VIZ_SCRIPT" ]]; then
-            # Execute visualization generator
-            bash "$VIZ_SCRIPT" "$@"
-        else
-            error "Visualization generator script not found at: $VIZ_SCRIPT"
-            echo ""
-            echo "📋 Manual generation steps:"
-            echo "1. Install mermaid-cli: npm install -g @mermaid-js/mermaid-cli"
-            echo "2. Generate diagrams from: .ai_workflow/docs/FRAMEWORK_VISUALIZATION.md"
-            echo "3. Use online editor: https://mermaid.live/"
-            exit 1
-        fi
-        ;;
-
-    dashboard)
-        if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-            cat << EOF
-${BLUE}Dashboard Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev dashboard [OPTIONS]
-
-${GREEN}Description:${NC}
-Open the interactive framework dashboard in your web browser for real-time monitoring
-and visualization of the AI Framework status, metrics, and GitHub Actions.
-
-${GREEN}Options:${NC}
-  --generate          Generate dashboard before opening
-  --browser BROWSER   Specify browser to use (default: system default)
-  --port PORT         Port for local server (default: 8080)
-  --no-open          Don't open browser automatically
-  --help, -h          Show this help
-
-${GREEN}Examples:${NC}
-  ./ai-dev dashboard                    # Open dashboard in default browser
-  ./ai-dev dashboard --generate         # Generate and open dashboard
-  ./ai-dev dashboard --browser firefox  # Open in Firefox
-  ./ai-dev dashboard --port 3000        # Use port 3000
-
-${GREEN}Dashboard Features:${NC}
-- 🏥 Real-time system health monitoring
-- 📊 Performance metrics and analytics
-- 🤖 GitHub Actions status and schedules
-- 🔄 Workflow execution tracking
-- 📈 Usage statistics and trends
-- 🎯 Interactive navigation and controls
-
-${GREEN}Note:${NC} Dashboard provides comprehensive framework monitoring and visualization.
-EOF
-            exit 0
-        fi
-        
-        info "🎯 Opening framework dashboard"
-        
-        # Parse dashboard options
-        GENERATE_FIRST=false
-        BROWSER=""
-        PORT=8080
-        NO_OPEN=false
-        
-        while [[ $# -gt 0 ]]; do
-            case $1 in
-                --generate)
-                    GENERATE_FIRST=true
-                    shift
-                    ;;
-                --browser)
-                    BROWSER="$2"
-                    shift 2
-                    ;;
-                --port)
-                    PORT="$2"
-                    shift 2
-                    ;;
-                --no-open)
-                    NO_OPEN=true
-                    shift
-                    ;;
-                *)
-                    shift
-                    ;;
-            esac
-        done
-        
-        # Generate dashboard if requested
-        if [[ "$GENERATE_FIRST" == "true" ]]; then
-            info "📊 Generating dashboard with real data..."
-            
-            # Generate dashboard data first
-            DATA_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_dashboard_data.sh"
-            if [[ -f "$DATA_SCRIPT" ]]; then
-                bash "$DATA_SCRIPT"
-            else
-                warning "Dashboard data script not found, generating basic dashboard"
-            fi
-            
-            # Generate visualizations
-            VIZ_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_visualizations.sh"
-            if [[ -f "$VIZ_SCRIPT" ]]; then
-                bash "$VIZ_SCRIPT"
-            else
-                warning "Visualization script not found, using existing dashboard"
-            fi
-        else
-            # Always refresh data when opening dashboard
-            info "📊 Refreshing dashboard data..."
-            DATA_SCRIPT="${AI_WORKFLOW_DIR}/scripts/generate_dashboard_data.sh"
-            if [[ -f "$DATA_SCRIPT" ]]; then
-                bash "$DATA_SCRIPT" >/dev/null 2>&1
-            fi
-        fi
-        
-        # Check if dashboard exists
-        DASHBOARD_FILE="${AI_WORKFLOW_DIR}/docs/interactive/dashboard.html"
-        if [[ ! -f "$DASHBOARD_FILE" ]]; then
-            error "Dashboard not found at: $DASHBOARD_FILE"
-            echo ""
-            echo "📋 Generate dashboard first:"
-            echo "  ./ai-dev generate-visualizations"
-            echo "  ./ai-dev dashboard --generate"
-            exit 1
-        fi
-        
-        # Open dashboard
-        if [[ "$NO_OPEN" != "true" ]]; then
-            info "🌐 Opening dashboard in browser..."
-            
-            # Convert to absolute path for file:// URL
-            DASHBOARD_PATH="$(cd "$(dirname "$DASHBOARD_FILE")" && pwd)/$(basename "$DASHBOARD_FILE")"
-            DASHBOARD_URL="file://$DASHBOARD_PATH"
-            
-            # Open in specified browser or system default
-            if [[ -n "$BROWSER" ]]; then
-                if command -v "$BROWSER" &> /dev/null; then
-                    "$BROWSER" "$DASHBOARD_URL" &
-                    success "Dashboard opened in $BROWSER"
-                else
-                    error "Browser '$BROWSER' not found"
-                    exit 1
-                fi
-            else
-                # Use system default browser
-                if command -v xdg-open &> /dev/null; then
-                    xdg-open "$DASHBOARD_URL" &
-                    success "Dashboard opened in default browser"
-                elif command -v open &> /dev/null; then
-                    open "$DASHBOARD_URL" &
-                    success "Dashboard opened in default browser"
-                elif command -v start &> /dev/null; then
-                    start "$DASHBOARD_URL" &
-                    success "Dashboard opened in default browser"
-                else
-                    warning "Could not detect system browser"
-                    echo ""
-                    echo "📋 Manual access:"
-                    echo "  Open in browser: $DASHBOARD_URL"
-                fi
-            fi
-        fi
-        
-        # Show dashboard path
-        DASHBOARD_PATH="$(cd "$(dirname "$DASHBOARD_FILE")" && pwd)/$(basename "$DASHBOARD_FILE")"
-        DASHBOARD_URL="file://$DASHBOARD_PATH"
-        success "Dashboard ready at: $DASHBOARD_URL"
-        ;;
-
-    verify-installation|verify)
-        # Handle help option for verify-installation command
-        if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
-            cat << EOF
-${BLUE}Verify Installation Command Help${NC}
-
-${GREEN}Usage:${NC} ./ai-dev verify-installation [action]
-
-${GREEN}Description:${NC}
-Verifies that all critical framework files are present and properly configured.
-This is useful after downloading the framework from GitHub or when troubleshooting
-installation issues.
-
-${GREEN}Actions:${NC}
-  verify        Check installation status (default)
-  fix-dirs      Create missing directories
-  fix-perms     Fix file permissions
-  fix-all       Create directories and fix permissions
-
-${GREEN}Examples:${NC}
-  ./ai-dev verify-installation              # Check installation
-  ./ai-dev verify-installation fix-all      # Fix common issues
-EOF
-            exit 0
-        fi
-        
-        ACTION="${1:-verify}"
-        info "Verifying framework installation..."
-        
-        if [[ -f ".ai_workflow/scripts/verify_installation.sh" ]]; then
-            bash .ai_workflow/scripts/verify_installation.sh "$ACTION"
-        else
-            error "Installation verification script not found"
-            error "This indicates a corrupted framework installation"
-            echo ""
-            info "Please re-download the framework from GitHub"
-            exit 1
-        fi
+        echo "🔄 Recent Activity:"
+        echo "  PRDs Created: $(ls docs/prds/*.md 2>/dev/null | wc -l)"
+        echo "  Tasks Generated: $(ls docs/tasks/*.md 2>/dev/null | wc -l)"
+        echo "  Last Modified: $(find docs -name "*.md" -type f -exec stat -c %y {} \; 2>/dev/null | sort -r | head -1 | cut -d' ' -f1 || echo "None")"
         ;;
 
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform, generate-visualizations, dashboard, verify-installation"
+        echo "Available commands: create-prd, generate, execute, help, version, status"
+        echo ""
         show_help
         exit 1
         ;;
