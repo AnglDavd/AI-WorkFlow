@@ -80,8 +80,8 @@ for file in $changed_files; do
         continue
     fi
     
-    # Check if file matches include patterns
-    if [[ "$file" =~ \.(sh|md|json|yml|yaml)$ ]] || [[ "$file" == "ai-dev" ]]; then
+    # Check if file matches include patterns (web development and common file types)
+    if [[ "$file" =~ \.(sh|md|json|yml|yaml|js|jsx|ts|tsx|html|htm|css|scss|sass|less|py|php|java|cpp|c|h|hpp|rb|go|rs|kt|swift)$ ]] || [[ "$file" == "ai-dev" ]]; then
         # Check if file doesn't match exclude patterns
         if [[ ! "$file" =~ ^\.git/ ]] && [[ ! "$file" =~ ^\.ai_workflow/cache/ ]] && [[ ! "$file" =~ ^\.ai_workflow/logs/ ]] && [[ ! "$file" =~ \.log$ ]] && [[ ! "$file" =~ \.tmp$ ]] && [[ ! "$file" =~ ^capturas/ ]]; then
             filtered_files="$filtered_files$file"$'\n'
@@ -356,7 +356,7 @@ else
     fi
     
     echo ""
-    echo "Please address these issues and run validation again."
+    echo "Address these issues and re-run: ./ai-dev precommit validate"
     validation_result=1
 fi
 

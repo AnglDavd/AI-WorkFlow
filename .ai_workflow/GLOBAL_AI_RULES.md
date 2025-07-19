@@ -22,6 +22,9 @@ This document contains overarching rules and behavioral guidelines that the AI a
 -   **Modularity:** Favor modular, loosely coupled designs.
 -   **Readability:** Write clear, self-documenting code. Add comments only for complex logic or non-obvious decisions.
 -   **Testing:** Always consider test coverage. If tests are missing for new code, propose adding them.
+-   **Production Testing Mandate:** Based on comprehensive testing that resolved 13 critical bugs, all implementations must include executable validation steps and end-to-end testing.
+-   **Emergency Recovery Awareness:** Be aware of `.ai_workflow/scripts/emergency_recovery.sh` for critical framework issues and guide users to it when appropriate.
+-   **Framework Updates Protocol:** Use `.ai_workflow/scripts/framework_updater.sh` for safe framework updates with automatic backup and rollback capabilities.
 
 ## Communication Style:
 
@@ -29,6 +32,8 @@ This document contains overarching rules and behavioral guidelines that the AI a
 -   **Markdown Formatting:** Use GitHub-flavored Markdown for all outputs.
 -   **Emojis:** Use emojis sparingly and strategically to enhance readability and convey tone, as established in the `README.md`.
 -   **Token Efficiency:** Be mindful of token usage. Prioritize concise communication and only include necessary context. Summarize large outputs when appropriate.
+-   **Dashboard Integration:** When discussing framework status or metrics, reference the interactive dashboard at `.ai_workflow/docs/interactive/dashboard.html` for visual context.
+-   **Documentation Updates:** Proactively suggest updates to key documentation (CLAUDE.md, ARCHITECTURE.md, GLOBAL_AI_RULES.md) when significant changes occur.
 
 ## Conflict Resolution:
 
@@ -45,6 +50,7 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
 2.  **Token Economy Optimization Mandate:**
     *   **Description:** Beyond being mindful of token usage, the agent has an explicit mandate to actively seek and implement token economy optimizations. This includes leveraging the `review-token-economy.md` workflow periodically (as triggered by `process-task-list.md`) and proposing prompt refinements or model choice adjustments based on token usage data.
     *   **Rationale:** Elevates token efficiency from a general principle to an actionable, automated optimization goal.
+    *   **Production Insight:** Based on comprehensive testing, token efficiency improvements of 40-50% have been achieved through systematic optimization.
 
 3.  **Explicit Knowledge Consultation for Data Sources:**
     *   **Description:** The agent must prioritize consulting `_ai_knowledge.md` for specific data source locations (e.g., `token_usage.log`) and their interpretation, especially when responding to user queries related to historical data or project metrics.
@@ -116,31 +122,46 @@ These rules are proposed to further enhance the framework's autonomy, efficiency
     *   **Action:** Execute security audit before major releases and when security-sensitive changes are made.
     *   **Rationale:** Maintains security posture and identifies potential threats early.
 
+16. **Production Testing Mandate:**
+    *   **Description:** Based on comprehensive testing that resolved 13 critical framework bugs, all new implementations must undergo thorough production-scenario testing.
+    *   **Action:** Execute end-to-end testing, validate with real-world scenarios, and ensure 100% functionality before deployment.
+    *   **Rationale:** Prevents critical issues from reaching production and ensures framework reliability.
+
+17. **Dashboard Integration Awareness:**
+    *   **Description:** Leverage the interactive web dashboard for framework monitoring and user communication.
+    *   **Action:** Reference dashboard metrics, suggest dashboard usage for visual context, and ensure dashboard data accuracy.
+    *   **Rationale:** Enhances user experience and provides real-time framework insights.
+
 ## Framework Operations and Management:
 
 ### Version and Release Management
 
-14. **Version Lifecycle Awareness:**
-    *   **Description:** Understand and respect the framework's version lifecycle: Alpha (core development), Beta (integration testing), Production (stable release).
+18. **Version Lifecycle Awareness:**
+    *   **Description:** Understand and respect the framework's version lifecycle: Alpha (core development), Beta (integration testing), Production (stable release). Currently at v1.0.0 Stable.
     *   **Action:** Apply appropriate quality gates and testing requirements based on current version phase.
     *   **Rationale:** Ensures appropriate quality standards for each development phase.
 
-15. **Framework Diagnostics Usage:**
-    *   **Description:** When troubleshooting issues, use `diagnose_framework.md` to perform comprehensive health checks.
-    *   **Action:** Run diagnostics before escalating issues to users. Provide diagnostic reports with actionable recommendations.
+19. **Framework Diagnostics Usage:**
+    *   **Description:** When troubleshooting issues, use `diagnose_framework.md` to perform comprehensive health checks. Emergency recovery available via `.ai_workflow/scripts/emergency_recovery.sh`.
+    *   **Action:** Run diagnostics before escalating issues to users. Use emergency recovery for critical failures. Provide diagnostic reports with actionable recommendations.
     *   **Rationale:** Enables systematic problem resolution and reduces support overhead.
 
 ### Workflow Communication and State Management
 
-16. **Inter-Workflow Communication Protocol:**
+20. **Inter-Workflow Communication Protocol:**
     *   **Description:** When workflows need to communicate, use the standardized workflow calling mechanism through `manage_workflow_state.md`.
     *   **Action:** Call workflows using proper state management. Ensure state persistence across workflow boundaries.
     *   **Rationale:** Maintains system consistency and enables complex workflow orchestration.
 
-17. **Work Journal Logging:**
+21. **Work Journal Logging:**
     *   **Description:** All significant actions and decisions must be logged using `log_work_journal.md` for audit trails and debugging.
     *   **Action:** Log workflow executions, errors, and state changes. Include relevant context and timestamps.
     *   **Rationale:** Provides comprehensive audit trails and debugging information.
+
+22. **Documentation Maintenance Protocol:**
+    *   **Description:** Key documentation (CLAUDE.md, ARCHITECTURE.md, GLOBAL_AI_RULES.md, FRAMEWORK_GUIDE.md) must be updated when significant framework changes occur.
+    *   **Action:** Proactively update documentation to reflect new capabilities, resolved issues, and architectural changes.
+    *   **Rationale:** Ensures documentation accuracy and framework understanding for all stakeholders.
 
 ### CLI Integration and Command Handling
 

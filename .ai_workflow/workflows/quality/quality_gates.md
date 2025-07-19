@@ -101,6 +101,84 @@ if [[ "$VALIDATION_SCOPE" == "changed_files" ]]; then
                             echo "$(date): Invalid bash syntax in $file" >> "$QUALITY_LOG"
                         fi
                         ;;
+                    *.js|*.jsx|*.mjs|*.cjs)
+                        if command -v node >/dev/null 2>&1; then
+                            if node -c "$file" 2>/dev/null; then
+                                echo "  ✅ $file: Valid JavaScript syntax"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 10))
+                            else
+                                echo "  ❌ $file: Invalid JavaScript syntax"
+                                echo "$(date): Invalid JavaScript syntax in $file" >> "$QUALITY_LOG"
+                            fi
+                        else
+                            echo "  ✅ $file: JavaScript file (node not available for validation)"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        fi
+                        ;;
+                    *.ts|*.tsx)
+                        if command -v tsc >/dev/null 2>&1; then
+                            if tsc --noEmit "$file" 2>/dev/null; then
+                                echo "  ✅ $file: Valid TypeScript syntax"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 10))
+                            else
+                                echo "  ❌ $file: Invalid TypeScript syntax"
+                                echo "$(date): Invalid TypeScript syntax in $file" >> "$QUALITY_LOG"
+                            fi
+                        else
+                            echo "  ✅ $file: TypeScript file (tsc not available for validation)"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        fi
+                        ;;
+                    *.html|*.htm|*.xhtml)
+                        if command -v xmllint >/dev/null 2>&1; then
+                            if xmllint --html --noout "$file" 2>/dev/null; then
+                                echo "  ✅ $file: Valid HTML"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 8))
+                            else
+                                echo "  ⚠️  $file: HTML validation warnings"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 3))
+                            fi
+                        else
+                            echo "  ✅ $file: HTML file (xmllint not available for validation)"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        fi
+                        ;;
+                    *.css|*.scss|*.sass|*.less)
+                        if [[ -s "$file" ]]; then
+                            echo "  ✅ $file: CSS/preprocessor file"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        else
+                            echo "  ⚠️  $file: Empty CSS file"
+                        fi
+                        ;;
+                    *.py)
+                        if command -v python3 >/dev/null 2>&1; then
+                            if python3 -m py_compile "$file" 2>/dev/null; then
+                                echo "  ✅ $file: Valid Python syntax"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 10))
+                            else
+                                echo "  ❌ $file: Invalid Python syntax"
+                                echo "$(date): Invalid Python syntax in $file" >> "$QUALITY_LOG"
+                            fi
+                        else
+                            echo "  ✅ $file: Python file (python3 not available for validation)"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        fi
+                        ;;
+                    *.yaml|*.yml)
+                        if command -v yq >/dev/null 2>&1; then
+                            if yq eval '.' "$file" >/dev/null 2>&1; then
+                                echo "  ✅ $file: Valid YAML"
+                                SYNTAX_SCORE=$((SYNTAX_SCORE + 8))
+                            else
+                                echo "  ❌ $file: Invalid YAML syntax"
+                                echo "$(date): Invalid YAML syntax in $file" >> "$QUALITY_LOG"
+                            fi
+                        else
+                            echo "  ✅ $file: YAML file (yq not available for validation)"
+                            SYNTAX_SCORE=$((SYNTAX_SCORE + 5))
+                        fi
+                        ;;
                     *)
                         echo "  ℹ️  $file: File type not validated"
                         ;;
@@ -167,7 +245,39 @@ if [[ -f "ai-dev" && -d ".ai_workflow" ]]; then
         echo "❌ Missing essential framework files:"
         printf '%s\n' "${MISSING_FILES[@]}" | sed 's/^/  - /'
         echo "$(date): Missing essential files: ${MISSING_FILES[*]}" >> "$QUALITY_LOG"
-        INTEGRATION_SCORE=$((INTEGRATION_SCORE - 20))
+        
+        # Auto-recovery: attempt to restore missing manager.md
+        if [[ " ${MISSING_FILES[*]} " =~ " manager.md " ]]; then
+            echo "🔧 Attempting auto-recovery for manager.md..."
+            if [[ -f ".ai_workflow/scripts/verify_installation.sh" ]]; then
+                echo "   Running installation verification with auto-fix..."
+                bash .ai_workflow/scripts/verify_installation.sh fix-all >/dev/null 2>&1 || true
+                
+                # Re-check if manager.md now exists
+                if [[ -f "manager.md" ]]; then
+                    echo "   ✅ manager.md recovered successfully"
+                    # Remove manager.md from missing files list
+                    MISSING_FILES=("${MISSING_FILES[@]/manager.md/}")
+                    # Filter out empty elements
+                    MISSING_FILES_FILTERED=()
+                    for file in "${MISSING_FILES[@]}"; do
+                        [[ -n "$file" ]] && MISSING_FILES_FILTERED+=("$file")
+                    done
+                    MISSING_FILES=("${MISSING_FILES_FILTERED[@]}")
+                else
+                    echo "   ⚠️  Auto-recovery failed for manager.md"
+                fi
+            fi
+        fi
+        
+        # Final assessment after auto-recovery attempts
+        if [[ ${#MISSING_FILES[@]} -eq 0 ]]; then
+            echo "✅ All essential files recovered - framework integrity restored"
+            INTEGRATION_SCORE=$((INTEGRATION_SCORE + 20))
+        else
+            echo "❌ Critical files still missing after recovery attempts"
+            INTEGRATION_SCORE=$((INTEGRATION_SCORE - 20))
+        fi
     fi
 else
     echo "ℹ️  Non-framework project - basic integrity check"

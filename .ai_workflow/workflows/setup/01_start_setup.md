@@ -16,42 +16,40 @@ This node starts the project setup process by gathering the new project's name f
 # Log workflow start
 ./.ai_workflow/workflows/common/log_work_journal.md "INFO" "Starting Project Setup workflow."
 
-# Use environment variable or interactive prompt with auto-confirmation support
-if [ -n "${PROJECT_NAME:-}" ]; then
-    echo "Using PROJECT_NAME from environment: $PROJECT_NAME"
-elif [ "${AUTO_CONFIRM:-}" = "true" ]; then
-    PROJECT_NAME="my-awesome-app"
-    echo "Auto-confirmation enabled, using default project name: $PROJECT_NAME"
+# Use robust interactive input system
+if [ -f ".ai_workflow/scripts/interactive_input.sh" ]; then
+    echo "📋 Getting project name..."
+    PROJECT_NAME=$(bash .ai_workflow/scripts/interactive_input.sh project-name)
+    echo "Project name set: $PROJECT_NAME"
 else
-    echo -n 'Enter your new project name (e.g., my-awesome-app): '
-    
-    # Force interactive mode by using /dev/tty
-    if [ -r /dev/tty ]; then
-        echo "[DEBUG] Using /dev/tty for interactive input..."
-        read PROJECT_NAME < /dev/tty
-    elif [ -t 0 ]; then
-        echo "[DEBUG] Interactive terminal detected, waiting for input..."
-        read PROJECT_NAME
-    else
-        echo "[DEBUG] Non-interactive terminal detected, using default..."
+    # Fallback to simple input for compatibility
+    if [ -n "${PROJECT_NAME:-}" ]; then
+        echo "Using PROJECT_NAME from environment: $PROJECT_NAME"
+    elif [ "${AUTO_CONFIRM:-}" = "true" ]; then
         PROJECT_NAME="my-awesome-app"
-    fi
-    
-    if [ -z "$PROJECT_NAME" ]; then
-        # Fallback to directory name if user just presses Enter
-        PROJECT_NAME=$(basename "$(pwd)")
-        echo "Using directory name as project name: $PROJECT_NAME"
+        echo "Auto-confirmation enabled, using default project name: $PROJECT_NAME"
     else
-        echo "Project name entered: $PROJECT_NAME"
+        echo -n 'Enter your new project name (e.g., my-awesome-app): '
+        read PROJECT_NAME || PROJECT_NAME="my-awesome-app"
+        
+        if [ -z "$PROJECT_NAME" ]; then
+            PROJECT_NAME=$(basename "$(pwd)" 2>/dev/null || echo "my-awesome-app")
+            echo "Using directory-based project name: $PROJECT_NAME"
+        else
+            echo "Project name entered: $PROJECT_NAME"
+        fi
     fi
 fi
 
+# Validate project name
 if [ -z "$PROJECT_NAME" ]; then
-    echo "PROJECT_NAME is empty. Aborting."
+    echo "❌ PROJECT_NAME is empty. Aborting."
     ./.ai_workflow/workflows/common/error.md "Project name cannot be empty."
     exit 1
 fi
-PROJECT_NAME=$(echo "$PROJECT_NAME" | sed 's/ /_/g')
+
+# Clean project name (remove/replace invalid characters)
+PROJECT_NAME=$(echo "$PROJECT_NAME" | sed 's/[^a-zA-Z0-9._-]/-/g' | tr '[:upper:]' '[:lower:]')
 echo "export PROJECT_NAME=\"$PROJECT_NAME\"" > ./.ai_workflow/temp_state.vars
 ```
 

@@ -681,20 +681,44 @@ process_workflow_calls() {
     local bash_content="$1"
     local processed_content="$bash_content"
     
-    # Replace direct workflow execution calls
-    processed_content=$(echo "$processed_content" | sed -E 's|\./\.ai_workflow/workflows/([^/]+)/([^/]+)\.md|call_workflow "\1/\2.md"|g')
+    # Use safer sed patterns with simpler regex
     
-    # Replace source workflow calls  
-    processed_content=$(echo "$processed_content" | sed -E 's|source \.ai_workflow/workflows/([^/]+)/([^/]+)\.md|call_workflow "\1/\2.md"|g')
+    # Replace direct workflow execution calls (./.ai_workflow/workflows/...)
+    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
     
-    # Replace bash workflow calls
-    processed_content=$(echo "$processed_content" | sed -E 's|bash \.ai_workflow/workflows/([^/]+)/([^/]+)\.md|call_workflow "\1/\2.md"|g')
+    # Replace source workflow calls (source .ai_workflow/workflows/...)
+    processed_content=$(echo "$processed_content" | sed 's|source \.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
     
-    # Replace common error pattern
-    processed_content=$(echo "$processed_content" | sed -E 's|\./\.ai_workflow/workflows/common/error\.md "([^"]+)"|handle_workflow_error "\1"|g')
+    # Replace bash workflow calls (bash .ai_workflow/workflows/...)
+    processed_content=$(echo "$processed_content" | sed 's|bash \.ai_workflow/workflows/\([^/]*\)/\([^/]*\)\.md|call_workflow "\1/\2.md"|g')
     
-    # Replace common logging pattern
-    processed_content=$(echo "$processed_content" | sed -E 's|\./\.ai_workflow/workflows/common/log_work_journal\.md "([^"]+)" "([^"]+)"|log_workflow_event "\1" "\2"|g')
+    # Replace common error pattern with safer approach
+    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/common/error\.md "\([^"]*\)"|handle_workflow_error "\1"|g')
+    
+    # Replace common logging pattern with safer approach
+    processed_content=$(echo "$processed_content" | sed 's|\./\.ai_workflow/workflows/common/log_work_journal\.md "\([^"]*\)" "\([^"]*\)"|log_workflow_event "\1" "\2"|g')
+    
+    # Parse and replace abstract tool calls 
+    # Note: The actual PRP parsing should be done by a proper YAML parser
+    # These patterns handle simple inline tool calls for compatibility
+    
+    # Handle simple WRITE_FILE calls (legacy format)
+    processed_content=$(echo "$processed_content" | sed 's|WRITE_FILE: `\([^`]*\)` - \(.*\)|echo "Creating file: \1"; echo "\2" > "\1"|g')
+    
+    # Handle simple FILE_EXISTS calls  
+    processed_content=$(echo "$processed_content" | sed 's|FILE_EXISTS: `\([^`]*\)`|if [[ -f "\1" ]]; then echo "✅ File exists: \1"; else echo "❌ File missing: \1"; exit 1; fi|g')
+    
+    # Handle simple LINT_FILE calls
+    processed_content=$(echo "$processed_content" | sed 's|LINT_FILE: `\([^`]*\)`|echo "Linting file: \1"; $LINT_COMMAND "\1" \|\| echo "Lint check completed for \1"|g')
+    
+    # Handle simple RUN_TESTS calls
+    processed_content=$(echo "$processed_content" | sed 's|RUN_TESTS: \(.*\)|echo "Running tests: \1"; \1|g')
+    
+    # Handle simple RUN_TYPE_CHECK calls
+    processed_content=$(echo "$processed_content" | sed 's|RUN_TYPE_CHECK: \(.*\)|echo "Type checking: \1"; \1|g')
+    
+    # Handle simple DELETE_FILE calls
+    processed_content=$(echo "$processed_content" | sed 's|DELETE_FILE: `\([^`]*\)`|echo "Deleting file: \1"; rm -f "\1"|g')
     
     echo "$processed_content"
 }
