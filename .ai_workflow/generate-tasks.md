@@ -1,53 +1,80 @@
 ---
-description: AI prompt for generating one or more executable, abstract Product Requirement Prompts (PRPs) from a Product Requirements Document (PRD).
+description: Executable workflow for generating Product Requirement Prompts (PRPs) from a Product Requirements Document (PRD).
 globs:
   alwaysApply: false
 ---
-# Rule: Generating Abstract, Executable PRPs from a PRD
+# Workflow: Generate PRPs from PRD
 
 ## Goal
 
-To guide an AI assistant in creating one or more detailed, executable **Product Requirement Prompts (PRPs)** in Markdown format, based on an existing Product Requirements Document (PRD). Each PRP must be a self-contained, actionable plan that uses the **abstract tool-based engine** to guide implementation.
+Generate one or more detailed, executable **Product Requirement Prompts (PRPs)** in Markdown format from an existing Product Requirements Document (PRD). Each PRP will be a self-contained, actionable plan using the abstract tool-based engine.
 
-## Role & Approach
+## Commands
 
-You are a **Senior Technical Lead**. Your primary responsibility is to translate high-level product requirements from a PRD into low-level, executable plans (PRPs) that are **language and framework agnostic**. Your approach is:
+```bash
+# 1. Validate PRD file exists
+if [[ -z "$PRD_FILE_PATH" ]]; then
+    echo "❌ PRD_FILE_PATH environment variable not set"
+    exit 1
+fi
 
-- **Decomposition**: Break down the PRD into logical, independent features or epics. Each of these will become a separate PRP.
-- **Abstraction**: Define all implementation and validation steps using the official **abstract tool catalog**. Do not generate shell commands, source code, or pseudocode. Your task is to describe *what* to do, not write the code yourself.
-- **Contextualization**: Enrich each PRP with all necessary context (documentation links, relevant file examples, integration points) required for implementation.
-- **Validation-Driven**: Ensure every task has a corresponding validation step, creating a tight, self-correcting feedback loop for the execution engine.
+if [[ ! -f "$PRD_FILE_PATH" ]]; then
+    echo "❌ PRD file not found: $PRD_FILE_PATH"
+    exit 1
+fi
 
-**Before proceeding, you MUST consult `.ai_workflow/GLOBAL_AI_RULES.md` for overarching guidelines.**
+echo "📋 Found PRD file: $PRD_FILE_PATH"
 
-## Process
+# 2. Setup logging
+mkdir -p .ai_workflow/logs
+GENERATE_LOG=".ai_workflow/logs/generate_$(date +%Y%m%d_%H%M%S).log"
+echo "[START] Generating PRPs from: $PRD_FILE_PATH at $(date)" > "$GENERATE_LOG"
 
-### Phase 1: PRD Analysis & Decomposition
-1.  **Receive PRD Reference**: The path to the PRD file is provided via the `PRD_FILE_PATH` environment variable. If this variable is not set, ask the user for the path.
-2.  **Analyze PRD**: Thoroughly read the PRD file to understand the full scope, business goals, user stories, and technical requirements.
-3.  **Identify Epics/Features**: Decompose the PRD into a list of 1-N distinct features or epics.
-4.  **Propose PRP Plan**: Present the list of proposed PRPs to the user for confirmation. For example:
-    *   "Based on the PRD, I will generate the following PRPs:"
-    *   "1. `prp-user-authentication.md`: Handles user sign-up, login, and session management."
-    *   "2. `prp-product-catalog.md`: Implements the product viewing and search features."
-5.  **Await Confirmation**: Do not proceed until the user confirms the plan.
+# 3. Execute PRP generation using the executable script
+if [[ -f ".ai_workflow/scripts/generate_prps.sh" ]]; then
+    echo "🔧 Using PRP generator script..."
+    bash .ai_workflow/scripts/generate_prps.sh "$PRD_FILE_PATH"
+    GENERATOR_EXIT_CODE=$?
+    
+    if [[ $GENERATOR_EXIT_CODE -eq 0 ]]; then
+        echo "✅ PRP generation completed successfully"
+        
+        # Show generated files to user
+        echo ""
+        echo "🎉 PRPs generated successfully!"
+        echo "📁 Location: .ai_workflow/PRPs/generated/"
+        echo ""
+        echo "Generated files:"
+        ls -la .ai_workflow/PRPs/generated/prp-*.md 2>/dev/null | while read -r line; do
+            echo "   - $(basename "$(echo "$line" | awk '{print $NF}')")"
+        done
+        echo ""
+        echo "💡 Next steps:"
+        echo "   - Review the generated PRPs"
+        echo "   - Execute them with: ./ai-dev run <prp-file>"
+        echo "   - Modify PRPs as needed for your requirements"
+        
+    else
+        echo "❌ PRP generation failed with exit code: $GENERATOR_EXIT_CODE"
+        exit $GENERATOR_EXIT_CODE
+    fi
+else
+    echo "❌ PRP generator script not found: .ai_workflow/scripts/generate_prps.sh"
+    echo "   This is a framework installation issue."
+    exit 1
+fi
 
-### Phase 2: PRP Generation
-1.  **Consult the Master Template**: Before generating anything, you **MUST** read and perfectly adhere to the structure defined in **`.ai_workflow/PRPs/templates/prp_base.md`**. This is the single source of truth for PRP format.
-2.  **Consult the Tool Catalog**: You **MUST** also read and exclusively use the tools defined in **`.ai_workflow/docs/tool_abstraction_design.md`**.
-3.  **Iterate and Generate**: For each confirmed feature/epic, generate a separate PRP file.
-4.  **Populate All Sections**:
-    *   Fill in every section of the template (`Goal`, `Why`, `What`, `Context`, `Integration Points`, etc.).
-    *   In the `Implementation Plan`, create a logical sequence of tasks.
-    *   For each task, define `actions` and `validations` using **only** the abstract tools.
-    *   The `content` field for `WRITE_FILE` must be a clear, language-agnostic description of the required logic, not actual code.
-5.  **Save Files**: Save each PRP to the `.ai_workflow/PRPs/generated/` directory with a descriptive name (e.g., `prp-user-authentication.md`).
+echo "[END] PRP generation finished at $(date)" >> "$GENERATE_LOG"
+```
 
-## Final Instructions
+## Verification Criteria
+- PRD file must exist and be readable
+- PRP generator script must be available
+- Generated PRPs must be saved to .ai_workflow/PRPs/generated/
+- Each generated PRP must follow the proper template structure
 
-1.  **Analyze the PRD thoroughly**.
-2.  **Propose a clear PRP decomposition plan** to the user.
-3.  **Await user confirmation**.
-4.  For each feature, **generate one PRP file**, meticulously following the master template and using only the allowed abstract tools.
-5.  **Save each file** to `.ai_workflow/PRPs/generated/`.
-6.  **CRITICAL**: After saving a PRP, you must immediately invoke the critique workflow by passing the path to the generated file to the `.ai_workflow/workflows/prp/critique-prp.md` prompt. Your task is complete only after the critique workflow finishes.
+## Output
+- Multiple PRP files in .ai_workflow/PRPs/generated/
+- Generation log in .ai_workflow/logs/
+- User feedback about generated files and next steps
+

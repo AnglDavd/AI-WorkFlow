@@ -187,7 +187,7 @@ validate_command() {
         "setup" "generate" "run" "optimize" "performance" "audit" "enable-optimizations" "cleanup-optimizations" "auto-cleanup" "migrate-user-project" "update" "sync" "configure" 
         "diagnose" "quality" "precommit" "generate-architecture" 
         "update-architecture" "cleanup" "update-gitignore" "maintenance"
-        "help" "version" "status" "detect-manual" "platform" "generate-visualizations" "dashboard"
+        "help" "version" "status" "detect-manual" "platform" "generate-visualizations" "dashboard" "verify-installation" "verify"
     )
     
     # Check if command exists
@@ -528,6 +528,7 @@ ${GREEN}Utility Commands:${NC}
   help                     Show this help message
   version                  Show framework version information
   status                   Show current framework status
+  verify-installation      Verify framework installation integrity
 
 ${GREEN}Options:${NC}
   --verbose, -v           Enable verbose output
@@ -2156,10 +2157,50 @@ EOF
         success "Dashboard ready at: $DASHBOARD_URL"
         ;;
 
+    verify-installation|verify)
+        # Handle help option for verify-installation command
+        if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+            cat << EOF
+${BLUE}Verify Installation Command Help${NC}
+
+${GREEN}Usage:${NC} ./ai-dev verify-installation [action]
+
+${GREEN}Description:${NC}
+Verifies that all critical framework files are present and properly configured.
+This is useful after downloading the framework from GitHub or when troubleshooting
+installation issues.
+
+${GREEN}Actions:${NC}
+  verify        Check installation status (default)
+  fix-dirs      Create missing directories
+  fix-perms     Fix file permissions
+  fix-all       Create directories and fix permissions
+
+${GREEN}Examples:${NC}
+  ./ai-dev verify-installation              # Check installation
+  ./ai-dev verify-installation fix-all      # Fix common issues
+EOF
+            exit 0
+        fi
+        
+        ACTION="${1:-verify}"
+        info "Verifying framework installation..."
+        
+        if [[ -f ".ai_workflow/scripts/verify_installation.sh" ]]; then
+            bash .ai_workflow/scripts/verify_installation.sh "$ACTION"
+        else
+            error "Installation verification script not found"
+            error "This indicates a corrupted framework installation"
+            echo ""
+            info "Please re-download the framework from GitHub"
+            exit 1
+        fi
+        ;;
+
     *)
         error "Unknown command: '$COMMAND'"
         echo ""
-        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform, generate-visualizations, dashboard"
+        info "Available commands: setup, generate, run, optimize, audit, sync, configure, diagnose, quality, status, version, help, precommit, generate-architecture, update-architecture, test-workflow-calling, test-simple-audit, cleanup, update-gitignore, maintenance, detect-manual, platform, generate-visualizations, dashboard, verify-installation"
         show_help
         exit 1
         ;;
