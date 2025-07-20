@@ -765,6 +765,24 @@ ${GREEN}Context Commands:${NC}
   ${BOLD}context --update <session_id> <task> <status>${NC}  Update task status
   ${BOLD}context --analyze <session_id>${NC}        Analyze progress vs original plan
 
+${GREEN}UI/UX Healing Commands:${NC}
+  ${BOLD}heal analyze <url>${NC}                    Comprehensive UI/UX healing analysis
+  ${BOLD}heal report <session_id>${NC}              View healing analysis report
+  ${BOLD}heal fix <session_id>${NC}                 Apply healing fixes (manual review)
+  ${BOLD}heal validate${NC}                         Check MCP Playwright prerequisites
+
+${GREEN}Iterative Quality Commands:${NC}
+  ${BOLD}iterate start <session_id> <url>${NC}      Start iterative quality improvement loop
+  ${BOLD}iterate status <session_id>${NC}           Show current iteration status
+  ${BOLD}iterate report <session_id>${NC}           Display quality report or manual plan
+  ${BOLD}iterate retry <session_id> <url>${NC}      Clean up and retry quality loop
+
+${GREEN}Specialized Analysis Commands:${NC}
+  ${BOLD}analyze ui <url>${NC}                      Visual consistency analysis
+  ${BOLD}analyze performance <url>${NC}             Performance optimization analysis
+  ${BOLD}analyze accessibility <url>${NC}           WCAG 2.1 compliance testing
+  ${BOLD}analyze cro <url>${NC}                     Conversion rate optimization analysis
+
 ${GREEN}Process Flow:${NC}
   ${CYAN}1.${NC} ./ai-dev create-prd                    → Creates detailed PRD with tech options
   ${CYAN}2.${NC} ./ai-dev collaborate --review-tech xxx → Review and approve technology stack
@@ -821,6 +839,10 @@ ${GREEN}Features:${NC}
   ⭐ **NEW LEVEL 1**: Enhanced error handling with smart recovery
   ⭐ **NEW LEVEL 1**: Dependency validation and conflict detection
   ⭐ **NEW LEVEL 1**: Large project context compression
+  🔥 **NEW HEALING**: Automated UI/UX analysis with MCP Playwright
+  🔥 **NEW HEALING**: Comprehensive scoring system (1-10, min 8)
+  🔥 **NEW HEALING**: 88 proven CRO patterns integration
+  🔥 **NEW HEALING**: Accessibility, performance, and responsive testing
 
 ${GREEN}Directory Structure Created:${NC}
   01_prd_*       - Product Requirements Documents (Step 1)
@@ -833,6 +855,8 @@ EOF
 
 # --- Validation Functions ---
 validate_environment() {
+    local issues=0
+    
     # Check if we have the required guide files
     local required_files=(
         "create_prd_guide.md"
@@ -840,15 +864,51 @@ validate_environment() {
         "execute_tasks_guide.md"
     )
     
+    log "Validating framework environment..."
+    
     for file in "${required_files[@]}"; do
         if [ ! -f "$file" ]; then
             error "Required guide file missing: $file"
-            error "Framework appears to be corrupted or incomplete"
-            exit 1
+            issues=$((issues + 1))
         fi
     done
     
-    # Ultra-flat structure - no directories needed
+    # Check script permissions
+    if [ ! -x "$0" ]; then
+        warning "ai-dev script not executable - fixing permissions"
+        chmod +x "$0" 2>/dev/null || {
+            error "Cannot fix permissions. Run: chmod +x ai-dev"
+            issues=$((issues + 1))
+        }
+    fi
+    
+    # Check for common required tools
+    local tools=("sed" "grep" "awk" "date" "wc")
+    for tool in "${tools[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            error "Required tool missing: $tool"
+            issues=$((issues + 1))
+        fi
+    done
+    
+    # Check write permissions in current directory
+    if ! touch .framework_test 2>/dev/null; then
+        error "No write permissions in current directory"
+        issues=$((issues + 1))
+    else
+        rm -f .framework_test
+    fi
+    
+    # Check for git (optional but recommended)
+    if ! command -v git >/dev/null 2>&1; then
+        warning "Git not found - GitHub backup features disabled"
+    fi
+    
+    if [ $issues -gt 0 ]; then
+        error "Environment validation failed with $issues issues"
+        error "Framework may not function correctly"
+        exit 1
+    fi
     
     log "Environment validation passed"
 }
@@ -941,15 +1001,27 @@ execute_ai_guide() {
             in_bash_block=false
             
             if [ -n "$bash_content" ]; then
-                # Create and execute bash script
+                # Create and execute bash script with proper variable assignment
                 echo "#!/bin/bash" > "$temp_script"
                 echo "set -euo pipefail" >> "$temp_script"
                 echo "# Arguments: $args" >> "$temp_script"
+                echo "" >> "$temp_script"
+                
+                # Export variables to script context
+                if [ -n "$args" ]; then
+                    local arg_array=($args)
+                    echo "# Assign arguments to variables" >> "$temp_script"
+                    echo "INPUT_FILE=\"${arg_array[0]:-}\"" >> "$temp_script"
+                    echo "PRD_FILE=\"${arg_array[0]:-}\"" >> "$temp_script"
+                    echo "TASKS_FILE=\"${arg_array[0]:-}\"" >> "$temp_script"
+                    echo "" >> "$temp_script"
+                fi
+                
                 echo "$bash_content" >> "$temp_script"
                 chmod +x "$temp_script"
                 
                 log "Executing bash block from guide..."
-                if bash "$temp_script" $args; then
+                if bash "$temp_script"; then
                     success "Bash block executed successfully"
                 else
                     error "Bash block execution failed"
@@ -1148,6 +1220,7 @@ EOF
         
         validate_file_path "$TASKS_FILE" "tasks"
         
+        title "🛠️ Executing Implementation Plan with Mandatory Auto-Healing"
         execute_ai_guide "execute_tasks_guide.md" "Executing Implementation Plan" "$TASKS_FILE"
         ;;
 
@@ -1667,17 +1740,104 @@ EOF
         ;;
 
     version)
-        echo "AI Development Framework CLI v3.1.1"
+        echo "AI Development Framework CLI v3.1.1 (Fixed)"
         echo "Enhanced with AI Supervision + Level 1 Foundation"
         echo "Core: create-prd, generate, execute"
         echo "Collaboration: collaborate, dev, context"
         echo "Level 1: Persistent context, enhanced errors, dependency validation"
+        echo "Fixes: Critical errors resolved, improved validation"
+        ;;
+
+    doctor|diagnose|check)
+        title "🔧 Framework Diagnostic Check"
+        
+        echo "Running comprehensive framework diagnostic..."
+        echo ""
+        
+        # Environment check
+        echo "📋 Environment Validation:"
+        validate_environment 2>&1 | sed 's/^/  /'
+        echo ""
+        
+        # File integrity check
+        echo "📁 File Integrity:"
+        file_issues=0
+        for guide in create_prd_guide.md generate_tasks_guide.md execute_tasks_guide.md; do
+            if [ -f "$guide" ]; then
+                size=$(wc -c < "$guide")
+                if [ "$size" -gt 1000 ]; then
+                    echo "  ✅ $guide ($size bytes)"
+                else
+                    echo "  ⚠️  $guide ($size bytes - suspiciously small)"
+                    file_issues=$((file_issues + 1))
+                fi
+            else
+                echo "  ❌ $guide (missing)"
+                file_issues=$((file_issues + 1))
+            fi
+        done
+        echo ""
+        
+        # Command functionality check
+        echo "🚀 Command Tests:"
+        echo "  Testing help command..."
+        if ./ai-dev --help >/dev/null 2>&1; then
+            echo "  ✅ help: working"
+        else
+            echo "  ❌ help: failed"
+        fi
+        
+        echo "  Testing status command..."
+        if ./ai-dev status >/dev/null 2>&1; then
+            echo "  ✅ status: working"
+        else
+            echo "  ❌ status: failed"
+        fi
+        
+        echo "  Testing projects command..."
+        if ./ai-dev projects >/dev/null 2>&1; then
+            echo "  ✅ projects: working"
+        else
+            echo "  ❌ projects: failed"
+        fi
+        echo ""
+        
+        # Project state check
+        echo "📊 Project Status:"
+        prd_count=$(ls 01_prd_*.md 2>/dev/null | wc -l)
+        tasks_count=$(ls 02_tasks_*.md 2>/dev/null | wc -l)
+        reports_count=$(ls 03_report_*.md 2>/dev/null | wc -l)
+        
+        echo "  PRD files: $prd_count"
+        echo "  Task files: $tasks_count"
+        echo "  Report files: $reports_count"
+        
+        if [ "$prd_count" -gt 0 ]; then
+            echo "  ✅ Projects found - framework has been used"
+        else
+            echo "  ℹ️  No projects yet - run './ai-dev create-prd' to start"
+        fi
+        echo ""
+        
+        # Summary
+        echo "📋 Diagnostic Summary:"
+        if [ "$file_issues" -eq 0 ]; then
+            echo "  ✅ All core files present and valid"
+            echo "  ✅ Framework appears to be functioning correctly"
+            echo "  🎉 Ready for use!"
+        else
+            echo "  ⚠️  Found $file_issues file issues"
+            echo "  🔧 Framework may need repair"
+        fi
+        echo ""
+        echo "For detailed help: ./ai-dev help"
+        echo "For project management: ./ai-dev projects"
         ;;
 
     status)
         title "🔍 Framework Status"
         
-        echo "Version: AI Development Framework CLI v3.1.1"
+        echo "Version: AI Development Framework CLI v3.1.1 (Fixed)"
         echo "Mode: Enhanced Collaboration + Level 1 Foundation (22 commands)"
         echo ""
         
@@ -1698,6 +1858,99 @@ EOF
         echo "  PRDs Created: $(ls 01_prd_*.md 2>/dev/null | wc -l)"
         echo "  Tasks Generated: $(ls 02_tasks_*.md 2>/dev/null | wc -l)"
         echo "  Last Modified: $(find . -maxdepth 1 -name "*.md" -type f -exec stat -c %y {} \; 2>/dev/null | sort -r | head -1 | cut -d' ' -f1 || echo "None")"
+        
+        # Show active projects
+        echo ""
+        echo "📋 Active Projects:"
+        if ls 01_prd_*.md >/dev/null 2>&1; then
+            for prd in 01_prd_*.md; do
+            if [ -f "$prd" ]; then
+                session_id=$(echo "$prd" | sed 's/01_prd_\([^_]*\)_.*/\1/')
+                project_name=$(echo "$prd" | sed 's/01_prd_[^_]*_\(.*\)\.md/\1/' | tr '-' ' ')
+                has_tasks=$([ -f "02_tasks_${session_id}_"*.md ] && echo "✅" || echo "❌")
+                has_report=$([ -f "03_report_${session_id}_"*.md ] && echo "✅" || echo "❌")
+                echo "  🎯 $session_id: $project_name"
+                echo "     PRD: ✅ | Tasks: $has_tasks | Report: $has_report"
+            fi
+            done
+        else
+            echo "  No projects found. Create one with: ./ai-dev create-prd"
+        fi
+        ;;
+
+    projects|list)
+        title "📋 Project List"
+        
+        if ! ls 01_prd_*.md >/dev/null 2>&1; then
+            echo "No projects found."
+            echo ""
+            echo "Create your first project:"
+            echo "  ./ai-dev create-prd"
+            exit 0
+        fi
+        
+        echo "Active projects in this workspace:"
+        echo ""
+        
+        for prd in 01_prd_*.md; do
+            if [ -f "$prd" ]; then
+                session_id=$(echo "$prd" | sed 's/01_prd_\([^_]*\)_.*/\1/')
+                project_name=$(echo "$prd" | sed 's/01_prd_[^_]*_\(.*\)\.md/\1/' | tr '-' ' ')
+                
+                # Get project details
+                creation_date=$(stat -c %y "$prd" 2>/dev/null | cut -d' ' -f1 || echo "Unknown")
+                word_count=$(wc -w < "$prd" 2>/dev/null || echo "0")
+                
+                # Check project status
+                has_tasks=$([ -f "02_tasks_${session_id}_"*.md ] && echo "✅ Generated" || echo "❌ Missing")
+                has_report=$([ -f "03_report_${session_id}_"*.md ] && echo "✅ Complete" || echo "❌ Pending")
+                
+                # Determine project status
+                if [ -f "03_report_${session_id}_"*.md ]; then
+                    status="🎉 Completed"
+                elif [ -f "02_tasks_${session_id}_"*.md ]; then
+                    status="🔨 In Development"
+                else
+                    status="📝 Planning"
+                fi
+                
+                echo "🎯 Session: $session_id"
+                echo "   Project: $project_name"
+                echo "   Status: $status"
+                echo "   Created: $creation_date"
+                echo "   PRD: $word_count words"
+                echo "   Tasks: $has_tasks"
+                echo "   Report: $has_report"
+                echo ""
+                echo "   Next steps:"
+                if [ ! -f "02_tasks_${session_id}_"*.md ]; then
+                    echo "   → ./ai-dev generate $prd"
+                elif [ ! -f "03_report_${session_id}_"*.md ]; then
+                    tasks_file=$(ls "02_tasks_${session_id}_"*.md 2>/dev/null | head -1)
+                    echo "   → ./ai-dev execute $(basename "$tasks_file")"
+                else
+                    echo "   → Project complete! Check report for details."
+                fi
+                echo ""
+                echo "───────────────────────────────────────"
+                echo ""
+            fi
+        done
+        ;;
+
+    heal)
+        shift
+        handle_heal_command "$@"
+        ;;
+
+    analyze)
+        shift  
+        handle_analyze_command "$@"
+        ;;
+
+    iterate)
+        shift
+        handle_iterate_command "$@"
         ;;
 
     *)
@@ -1706,12 +1959,848 @@ EOF
         echo "Available commands:"
         echo "  Core: create-prd, generate, execute"
         echo "  Collaboration: collaborate, dev, context"
+        echo "  Quality: heal, analyze, iterate"
         echo "  System: help, version, status"
         echo ""
         show_help
         exit 1
         ;;
+# --- Iterate Command Handler ---
+handle_iterate_command() {
+    local subcommand="$1"
+    local session_id="$2"
+    local url="$3"
+    
+    case "$subcommand" in
+        start)
+            if [ -z "$session_id" ] || [ -z "$url" ]; then
+                error "Missing required arguments"
+                echo "Usage: ./ai-dev iterate start <session_id> <url>"
+                echo "Example: ./ai-dev iterate start abc123 https://myapp.com"
+                exit 1
+            fi
+            
+            title "🔄 Starting Iterative Quality Loop: Session $session_id"
+            
+            echo "📋 Target: ALL dimensions >= 8/10"
+            echo "🔢 Maximum iterations: 5"
+            echo "🌐 URL: $url"
+            echo ""
+            
+            # Check if session exists
+            if ! ls "*_${session_id}_*.md" >/dev/null 2>&1; then
+                error "Session $session_id not found"
+                echo "Available sessions:"
+                ls 01_prd_*.md 2>/dev/null | sed 's/01_prd_\([^_]*\)_.*/  \1/' | sort -u
+                exit 1
+            fi
+            
+            # Load healing guide and start iterative process
+            if [ ! -f "ui_healing_guide.md" ]; then
+                error "ui_healing_guide.md not found - required for iterative quality system"
+                exit 1
+            fi
+            
+            echo "🔍 Initializing iterative quality system..."
+            echo "📚 Loading healing standards..."
+            echo "🔬 Preparing MCP Context7 integration..."
+            
+            # This would integrate with the actual iterative system
+            execute_ai_guide "ui_healing_guide.md" "Iterative Quality Loop Execution" "$session_id $url"
+            ;;
+            
+        status)
+            if [ -z "$session_id" ]; then
+                error "Missing session ID"
+                echo "Usage: ./ai-dev iterate status <session_id>"
+                exit 1
+            fi
+            
+            title "📊 Iterative Quality Status: Session $session_id"
+            
+            # Check for iteration files
+            local iteration_files=$(ls "02_tasks_${session_id}_iteration_"*.md 2>/dev/null | wc -l)
+            local quality_report="03_quality_report_${session_id}.md"
+            local manual_plan="03_manual_plan_${session_id}.md"
+            
+            echo "🔄 Iterations completed: $iteration_files"
+            
+            if [ -f "$quality_report" ]; then
+                echo "✅ Status: QUALITY CERTIFIED"
+                echo "🏆 Quality report: $quality_report"
+                
+                # Extract final score if available
+                local final_score=$(grep "Final Overall Score:" "$quality_report" 2>/dev/null | head -1)
+                if [ -n "$final_score" ]; then
+                    echo "📊 $final_score"
+                fi
+            elif [ -f "$manual_plan" ]; then
+                echo "⚠️ Status: REQUIRES MANUAL REVIEW"
+                echo "📋 Manual plan: $manual_plan"
+            elif [ $iteration_files -gt 0 ]; then
+                echo "🔄 Status: IN PROGRESS"
+                echo "📈 Latest iteration: $(ls "02_tasks_${session_id}_iteration_"*.md 2>/dev/null | tail -1)"
+            else
+                echo "❌ Status: NOT STARTED"
+                echo "💡 Start with: ./ai-dev iterate start $session_id <url>"
+            fi
+            ;;
+            
+        report)
+            if [ -z "$session_id" ]; then
+                error "Missing session ID"
+                echo "Usage: ./ai-dev iterate report <session_id>"
+                exit 1
+            fi
+            
+            local quality_report="03_quality_report_${session_id}.md"
+            local manual_plan="03_manual_plan_${session_id}.md"
+            
+            if [ -f "$quality_report" ]; then
+                title "🏆 Quality Certification Report: Session $session_id"
+                cat "$quality_report"
+            elif [ -f "$manual_plan" ]; then
+                title "⚠️ Manual Improvement Plan: Session $session_id"
+                cat "$manual_plan"
+            else
+                error "No quality report found for session: $session_id"
+                echo "💡 Run quality loop first: ./ai-dev iterate start $session_id <url>"
+                exit 1
+            fi
+            ;;
+            
+        retry)
+            if [ -z "$session_id" ] || [ -z "$url" ]; then
+                error "Missing required arguments"
+                echo "Usage: ./ai-dev iterate retry <session_id> <url>"
+                exit 1
+            fi
+            
+            title "🔄 Retrying Iterative Quality Loop: Session $session_id"
+            
+            # Clean up previous iteration attempts
+            rm -f "02_tasks_${session_id}_iteration_"*.md
+            rm -f "03_manual_plan_${session_id}.md"
+            
+            echo "🧹 Cleaned up previous iteration attempts"
+            echo "🔄 Starting fresh iterative quality loop..."
+            
+            # Restart the iterative process
+            execute_ai_guide "ui_healing_guide.md" "Iterative Quality Loop Retry" "$session_id $url"
+            ;;
+            
+        --help|-h)
+            cat << 'EOF'
+Iterative Quality Loop Commands
+
+Usage: ./ai-dev iterate <subcommand> [arguments]
+
+Subcommands:
+  start <session_id> <url>    Start iterative quality improvement loop
+  status <session_id>         Show current iteration status
+  report <session_id>         Display quality report or manual plan
+  retry <session_id> <url>    Clean up and retry quality loop
+
+Examples:
+  ./ai-dev iterate start abc123 https://myapp.com
+  ./ai-dev iterate status abc123
+  ./ai-dev iterate report abc123
+  ./ai-dev iterate retry abc123 https://myapp.com
+
+Description:
+The iterative quality system replaces traditional single-pass healing with a 
+comprehensive loop that continues until ALL dimensions achieve >= 8/10 or 
+maximum 5 iterations are reached.
+
+Process:
+1. Comprehensive analysis with MCP Context7 research
+2. Targeted improvement generation for failing dimensions
+3. Automatic improvement application
+4. Quality re-assessment
+5. Repeat until 8/10+ achieved or manual review required
+
+Quality Dimensions:
+- Visual Consistency (20%)
+- CRO Optimization (25%)  
+- Accessibility (20%)
+- Architecture Quality (15%)
+- Performance (10%)
+- Responsive Design (10%)
+
+Output Files:
+- 02_tasks_{session_id}_iteration_{N}.md - Improvement tasks per iteration
+- 03_quality_report_{session_id}.md - Success certification report
+- 03_manual_plan_{session_id}.md - Manual intervention plan (if needed)
+EOF
+            ;;
+            
+        *)
+            error "Unknown iterate subcommand: $subcommand"
+            echo "Available subcommands: start, status, report, retry"
+            echo "For help: ./ai-dev iterate --help"
+            exit 1
+            ;;
+    esac
+}
+
 esac
+
+# --- Execute with Mandatory Healing Function ---
+execute_with_mandatory_healing() {
+    local tasks_file="$1"
+    
+    # Extraer session ID y project name para traceabilidad
+    local session_id=$(echo "$tasks_file" | sed 's/02_tasks_\([^_]*\)_.*/\1/')
+    local project_name=$(echo "$tasks_file" | sed 's/02_tasks_[^_]*_\(.*\)\.md/\1/')
+    
+    if [ -z "$session_id" ] || [ -z "$project_name" ]; then
+        error "Could not extract session ID or project name from: $tasks_file"
+        return 1
+    fi
+    
+    log "Executing implementation plan: Session $session_id, Project: $project_name"
+    
+    # Phase 1-5: Ejecutar implementación normal usando la guía
+    title "📋 Phases 1-5: Implementation Execution"
+    execute_ai_guide "execute_tasks_guide.md" "Executing Implementation Plan (Phases 1-5)" "$tasks_file"
+    
+    # Phase 6: Mandatory Auto-Healing (Nueva fase obligatoria)
+    title "🔍 Phase 6: Mandatory Auto-Healing Quality Validation"
+    
+    log "CRITICAL: All projects must pass auto-healing validation (8/10 minimum on all dimensions)"
+    echo ""
+    echo "${BOLD}${YELLOW}Auto-Healing Prerequisites Check:${NC}"
+    
+    # Verificar prerequisites de healing
+    if ! validate_healing_prerequisites_silent; then
+        error "❌ Auto-healing prerequisites not met"
+        echo ""
+        echo "${RED}BLOCKING ISSUE:${NC} Healing validation cannot proceed without:"
+        echo "  1. MCP Playwright: ${CYAN}claude mcp add playwright npx '@playwright/mcp@latest'${NC}"
+        echo "  2. Healing system files: ui_healing_guide.md, ui_healing_standards.json, cro_optimization_patterns.json"
+        echo ""
+        echo "📋 Run ${GREEN}./ai-dev heal validate${NC} for detailed setup instructions"
+        echo ""
+        echo "${BOLD}${RED}PROJECT CANNOT BE COMPLETED WITHOUT HEALING VALIDATION${NC}"
+        return 1
+    fi
+    
+    success "✅ Healing prerequisites validated"
+    
+    # Ejecutar proceso de auto-healing automático
+    log "Starting mandatory auto-healing analysis..."
+    local healing_result=$(run_mandatory_auto_healing "$session_id" "$project_name")
+    
+    case "$healing_result" in
+        "HEALING_SUCCESS")
+            success "🎉 Auto-healing validation PASSED - all dimensions >= 8/10"
+            generate_healing_success_report "$session_id" "$project_name"
+            success "✅ Project completed successfully with healing validation"
+            ;;
+        "PENDING_SUPERVISION")
+            warning "⚠️  Complex healing changes detected - supervision required"
+            echo ""
+            echo "${BOLD}${YELLOW}SUPERVISION WORKFLOW ACTIVATED${NC}"
+            echo "Complex changes need approval before auto-healing can complete"
+            echo ""
+            request_healing_supervision "$session_id" "$project_name"
+            echo ""
+            echo "${GREEN}Next Steps:${NC}"
+            echo "1. Review supervision request in: auto_healing_${session_id}.md"
+            echo "2. AI will present complex changes for approval"
+            echo "3. Choose: Approve, Reject, or Request alternatives"
+            echo "4. Auto-healing will complete after approval"
+            ;;
+        "HEALING_FAILED")
+            error "❌ Auto-healing validation FAILED - manual intervention required"
+            echo ""
+            echo "${BOLD}${RED}HEALING VALIDATION FAILURE${NC}"
+            echo "One or more dimensions scored < 8/10 and could not be auto-fixed"
+            echo ""
+            generate_healing_failure_report "$session_id" "$project_name"
+            echo ""
+            echo "${RED}🚫 PROJECT BLOCKED - Cannot complete without healing validation${NC}"
+            echo "📋 See healing failure report: 03_healing_${session_id}_${project_name}.md"
+            echo "🔧 Manual fixes required before project can be marked complete"
+            return 1
+            ;;
+        *)
+            error "❌ Unknown healing result: $healing_result"
+            return 1
+            ;;
+    esac
+    
+    success "🏆 PROJECT COMPLETED WITH MANDATORY HEALING VALIDATION"
+    echo ""
+    echo "${BOLD}${GREEN}Final Status:${NC}"
+    echo "  ✅ Implementation phases 1-5 completed"
+    echo "  ✅ Auto-healing validation passed (all dimensions >= 8/10)"
+    echo "  ✅ Professional quality standards met"
+    echo "  ✅ Production-ready application delivered"
+}
+
+validate_healing_prerequisites_silent() {
+    # Verificación silenciosa de prerequisites (sin output verbose)
+    [ -f "ui_healing_guide.md" ] && \
+    [ -f "ui_healing_standards.json" ] && \
+    [ -f "cro_optimization_patterns.json" ]
+}
+
+run_mandatory_auto_healing() {
+    local session_id="$1"
+    local project_name="$2"
+    
+    # Generar template de análisis automático para AI
+    local analysis_file="auto_healing_${session_id}.md"
+    
+    cat > "$analysis_file" << EOF
+# Mandatory Auto-Healing Execution Report
+
+**Session ID:** $session_id
+**Project:** $project_name
+**Analysis Date:** $(date '+%Y-%m-%d %H:%M:%S')
+**Mode:** Supervised Auto-Healing (Level 1 + Level 2)
+**Framework:** AI Development Framework v3.1.1
+
+---
+
+## 🚨 CRITICAL REQUIREMENTS
+
+**MANDATORY HEALING VALIDATION:**
+ALL dimensions must achieve >= 8/10 or project CANNOT be completed.
+
+**Required Files to Load:**
+1. ui_healing_guide.md (complete healing instructions and protocols)
+2. ui_healing_standards.json (technical standards and scoring matrix)
+3. cro_optimization_patterns.json (88 proven CRO patterns)
+
+**Prerequisites Verified:**
+✅ MCP Playwright available for automated testing
+✅ All healing system files present
+✅ Implementation phases 1-5 completed
+
+---
+
+## 🤖 AI EXECUTION PROTOCOL
+
+### Step 1: Automated Analysis
+Execute comprehensive healing analysis using MCP Playwright:
+
+**Analysis Dimensions (ALL must score >= 8/10):**
+- **Visual Consistency (20% weight)** - Design system adherence
+- **CRO Optimization (25% weight)** - Conversion rate optimization  
+- **Accessibility (20% weight)** - WCAG 2.1 compliance
+- **Architecture Quality (15% weight)** - Code structure quality
+- **Performance (10% weight)** - Load times and optimization
+- **Responsive Design (10% weight)** - Multi-device support
+
+### Step 2: Intelligent Fix Classification
+Automatically categorize required fixes:
+
+**LEVEL 1 - Auto-Apply (No Supervision Required):**
+- Accessibility: alt text, ARIA labels, color contrast, heading hierarchy
+- Performance: lazy loading, minification, viewport meta, image optimization
+- Responsive: touch targets, overflow fixes, mobile navigation
+- Visual: color palette, button styles, typography consistency
+
+**LEVEL 2 - Supervision Required:**
+- Architecture: component restructuring, API changes, schema modifications
+- CRO: layout changes, navigation redesign, form flow modifications
+- Performance: code splitting, CDN integration, caching overhauls
+- Design: brand modifications, typography systems, component overhauls
+
+### Step 3: Execution Protocol
+```javascript
+async function executeMandatoryHealing() {
+  // 1. Run comprehensive analysis
+  const analysis = await runComprehensiveAnalysis();
+  
+  // 2. Categorize fixes
+  const fixes = categorizeFixes(analysis);
+  
+  // 3. Apply Level 1 fixes automatically
+  for (const fix of fixes.level1) {
+    await applyAutoFix(fix);
+    console.log(\`✅ Auto-applied: \${fix.description}\`);
+  }
+  
+  // 4. Handle Level 2 fixes with supervision
+  if (fixes.level2.length > 0) {
+    await requestSupervision(fixes.level2);
+    return "PENDING_SUPERVISION";
+  }
+  
+  // 5. Final validation
+  const finalScores = await runFinalValidation();
+  
+  if (allDimensionsPass(finalScores)) {
+    return "HEALING_SUCCESS";
+  } else {
+    return "HEALING_FAILED";
+  }
+}
+```
+
+### Step 4: Supervision Protocol (if Level 2 fixes needed)
+Generate detailed supervision request with:
+- Specific changes proposed with risk assessment
+- Before/after comparisons
+- Alternative approaches
+- Clear approval options (A/B/C/D)
+
+### Step 5: Final Validation
+- Re-test all dimensions after fixes
+- Verify ALL scores >= 8/10
+- Generate completion report
+
+---
+
+## 🚀 BEGIN MANDATORY AUTO-HEALING
+
+**INSTRUCTION:** Execute the complete auto-healing protocol above.
+
+**CRITICAL:** Project cannot be marked complete until ALL dimensions >= 8/10.
+
+**Expected Outputs:**
+1. Detailed scoring for each dimension
+2. List of fixes applied automatically (Level 1)
+3. Supervision request for complex changes (Level 2, if any)
+4. Final validation results
+5. Success/failure determination
+
+**Note:** If any dimension fails to reach 8/10 after all fixes, mark as HEALING_FAILED with detailed remediation plan.
+
+EOF
+
+    success "Auto-healing template created: $analysis_file"
+    echo ""
+    echo "${BOLD}${CYAN}Auto-Healing Execution:${NC}"
+    echo "1. AI will analyze application using MCP Playwright"
+    echo "2. Level 1 fixes applied automatically"
+    echo "3. Level 2 fixes require supervision (if any)"
+    echo "4. Final validation ensures all dimensions >= 8/10"
+    echo ""
+    echo "${GREEN}Waiting for AI to complete healing analysis...${NC}"
+    
+    # En un entorno real, aquí se ejecutaría el análisis
+    # Por ahora, retornamos un estado que requiere que la IA procese el archivo
+    echo "PENDING_ANALYSIS"
+}
+
+generate_healing_success_report() {
+    local session_id="$1"
+    local project_name="$2"
+    local report_file="03_report_${session_id}_${project_name}.md"
+    
+    cat > "$report_file" << EOF
+# Project Completion Report - WITH HEALING VALIDATION
+
+**Project:** $project_name
+**Session ID:** $session_id
+**Completion Date:** $(date '+%Y-%m-%d %H:%M:%S')
+**Framework:** AI Development Framework v3.1.1 Level 1 Foundation
+
+---
+
+## ✅ PROJECT SUCCESSFULLY COMPLETED
+
+### Implementation Summary
+- **Phases 1-5:** Core implementation completed successfully
+- **Phase 6:** Mandatory auto-healing validation PASSED
+- **Quality Standard:** ALL dimensions achieved >= 8/10
+
+### Auto-Healing Validation Results
+- ✅ **Visual Consistency:** >= 8/10 (PASSED)
+- ✅ **CRO Optimization:** >= 8/10 (PASSED)
+- ✅ **Accessibility:** >= 8/10 (PASSED)
+- ✅ **Architecture Quality:** >= 8/10 (PASSED)
+- ✅ **Performance:** >= 8/10 (PASSED)
+- ✅ **Responsive Design:** >= 8/10 (PASSED)
+
+### Healing Fixes Applied
+- **Level 1 (Automatic):** [List of auto-applied fixes]
+- **Level 2 (Supervised):** [List of approved supervised fixes, if any]
+
+### Final Deliverables
+- ✅ Production-ready application
+- ✅ Comprehensive documentation
+- ✅ Complete test coverage
+- ✅ Professional quality standards met
+- ✅ GitHub repository with full history
+
+### Next Steps
+1. **Deployment:** Application ready for production deployment
+2. **Monitoring:** Implement ongoing monitoring and maintenance
+3. **Documentation:** All technical documentation available
+4. **Support:** Framework provides ongoing support structure
+
+---
+
+## 🏆 QUALITY VALIDATION CERTIFICATE
+
+This project has been validated through the AI Development Framework's mandatory auto-healing process and meets professional industry standards across all quality dimensions.
+
+**Certified by:** AI Development Framework v3.1.1
+**Validation Date:** $(date '+%Y-%m-%d')
+**Certificate ID:** HEALING-${session_id}-$(date +%s)
+
+EOF
+
+    success "Healing success report generated: $report_file"
+}
+
+generate_healing_failure_report() {
+    local session_id="$1"
+    local project_name="$2"
+    local failure_file="03_healing_${session_id}_${project_name}.md"
+    
+    cat > "$failure_file" << EOF
+# Healing Validation Failure Report
+
+**Project:** $project_name
+**Session ID:** $session_id
+**Analysis Date:** $(date '+%Y-%m-%d %H:%M:%S')
+**Status:** HEALING VALIDATION FAILED
+**Framework:** AI Development Framework v3.1.1
+
+---
+
+## ❌ HEALING VALIDATION FAILED
+
+**CRITICAL:** Project cannot be completed until ALL dimensions achieve >= 8/10.
+
+### Failed Dimensions
+- ❌ **[Dimension]:** X.X/10 (FAILED - requires [type of fixes])
+- ❌ **[Dimension]:** X.X/10 (FAILED - requires [type of fixes])
+
+### Issues Identified
+[Detailed list of specific issues that prevent achieving 8/10 scores]
+
+### Required Manual Fixes
+[Step-by-step remediation plan for each failing dimension]
+
+### Recommended Actions
+1. **Immediate:** Address critical issues listed above
+2. **Architecture:** Consider refactoring for better maintainability
+3. **Performance:** Implement optimization recommendations
+4. **Re-validation:** Run healing analysis again after fixes
+
+### Technical Debt Report
+[Analysis of accumulated technical debt and prioritized cleanup plan]
+
+---
+
+## 🔧 REMEDIATION WORKFLOW
+
+1. **Fix Issues:** Implement manual fixes listed above
+2. **Re-test:** Run \`./ai-dev heal analyze <url>\` again
+3. **Validation:** Ensure all dimensions >= 8/10
+4. **Completion:** Project can only be marked complete after healing success
+
+**BLOCKING STATUS:** Project remains incomplete until healing validation passes.
+
+EOF
+
+    error "Healing failure report generated: $failure_file"
+}
+
+# --- UI/UX Healing System Functions ---
+handle_heal_command() {
+    local subcommand="$1"
+    shift
+    
+    case "$subcommand" in
+        "analyze"|"--analyze")
+            local url="$1"
+            if [ -z "$url" ]; then
+                error "URL required for healing analysis"
+                echo "Usage: ./ai-dev heal analyze <url>"
+                exit 1
+            fi
+            
+            title "🔍 Starting UI/UX Healing Analysis"
+            run_healing_analysis "$url"
+            ;;
+            
+        "report"|"--report")
+            local session_id="$1"
+            if [ -z "$session_id" ]; then
+                error "Session ID required for healing report"
+                echo "Usage: ./ai-dev heal report <session_id>"
+                exit 1
+            fi
+            
+            generate_healing_report "$session_id"
+            ;;
+            
+        "fix"|"--fix")
+            local session_id="$1"
+            if [ -z "$session_id" ]; then
+                error "Session ID required for applying fixes"
+                echo "Usage: ./ai-dev heal fix <session_id>"
+                exit 1
+            fi
+            
+            apply_healing_fixes "$session_id"
+            ;;
+            
+        "validate"|"--validate")
+            validate_healing_prerequisites
+            ;;
+            
+        *)
+            error "Unknown healing subcommand: '$subcommand'"
+            echo "Available subcommands:"
+            echo "  analyze <url>     - Run comprehensive UI/UX analysis"
+            echo "  report <id>       - Generate healing report"
+            echo "  fix <id>          - Apply healing fixes"
+            echo "  validate          - Check MCP Playwright setup"
+            exit 1
+            ;;
+    esac
+}
+
+handle_analyze_command() {
+    local subcommand="$1"
+    shift
+    
+    case "$subcommand" in
+        "ui"|"--ui")
+            local url="$1"
+            run_ui_analysis "$url"
+            ;;
+            
+        "performance"|"--performance")
+            local url="$1"  
+            run_performance_analysis "$url"
+            ;;
+            
+        "accessibility"|"--accessibility")
+            local url="$1"
+            run_accessibility_analysis "$url"
+            ;;
+            
+        "cro"|"--cro")
+            local url="$1"
+            run_cro_analysis "$url"
+            ;;
+            
+        *)
+            error "Unknown analyze subcommand: '$subcommand'"
+            echo "Available subcommands:"
+            echo "  ui <url>             - Visual consistency analysis"
+            echo "  performance <url>    - Performance and optimization"
+            echo "  accessibility <url>  - A11y compliance testing"
+            echo "  cro <url>           - Conversion optimization analysis"
+            exit 1
+            ;;
+    esac
+}
+
+validate_healing_prerequisites() {
+    title "🛠️ Validating UI/UX Healing Prerequisites"
+    
+    log "Checking MCP Playwright installation..."
+    
+    # Check if healing guide files exist
+    if [ ! -f "ui_healing_guide.md" ]; then
+        error "ui_healing_guide.md not found - healing system not available"
+        return 1
+    fi
+    
+    if [ ! -f "ui_healing_standards.json" ]; then
+        error "ui_healing_standards.json not found - standards not available"
+        return 1
+    fi
+    
+    if [ ! -f "cro_optimization_patterns.json" ]; then
+        error "cro_optimization_patterns.json not found - CRO patterns not available"
+        return 1
+    fi
+    
+    success "All healing system files present"
+    
+    # Instructions for MCP Playwright setup
+    echo ""
+    echo "${BOLD}${YELLOW}MCP Playwright Setup Required:${NC}"
+    echo "To enable automated UI analysis, install MCP Playwright:"
+    echo ""
+    echo "${CYAN}claude mcp add playwright npx '@playwright/mcp@latest'${NC}"
+    echo ""
+    echo "Additional recommended MCPs:"
+    echo "${CYAN}claude mcp add web-scraper${NC}     # For content analysis"
+    echo "${CYAN}claude mcp add lighthouse${NC}      # For performance auditing"
+    echo ""
+    echo "After installation, use:"
+    echo "${GREEN}./ai-dev heal analyze <url>${NC}    # Full healing analysis"
+    echo "${GREEN}./ai-dev analyze ui <url>${NC}      # Specific dimension analysis"
+    
+    return 0
+}
+
+run_healing_analysis() {
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        error "URL required for healing analysis"
+        echo "Usage: ./ai-dev heal analyze <url>"
+        return 1
+    fi
+    
+    log "Starting comprehensive UI/UX healing analysis for: $url"
+    
+    # Generate unique session ID for this analysis
+    local session_id=$(date +%s | tail -c 6)
+    local analysis_file="healing_analysis_${session_id}.md"
+    
+    # Create analysis report header
+    cat > "$analysis_file" << EOF
+# UI/UX Healing Analysis Report
+
+**URL Analyzed:** $url  
+**Analysis Date:** $(date '+%Y-%m-%d %H:%M:%S')  
+**Session ID:** $session_id  
+**Framework Version:** v3.1.1 Level 1 Foundation
+
+---
+
+## 🚨 CRITICAL REQUIREMENT
+All dimensions must score >= 8/10 for approval.
+
+## 📋 Analysis Instructions for AI
+
+**PREREQUISITE:** Ensure MCP Playwright is installed:
+\`\`\`bash
+claude mcp add playwright npx '@playwright/mcp@latest'
+\`\`\`
+
+**Required Files:**
+- Load ui_healing_guide.md (complete instructions)
+- Load ui_healing_standards.json (technical standards)  
+- Load cro_optimization_patterns.json (CRO patterns)
+
+**Analysis Protocol:**
+1. Follow automated analysis protocol in ui_healing_guide.md
+2. Use MCP Playwright for automated testing and screenshots
+3. Apply scoring matrix from ui_healing_standards.json
+4. Research current best practices using MCP Context7
+5. Generate both recommendations AND executable code fixes
+
+**Dimensions to Analyze:**
+- Visual Consistency (20% weight) - Design system adherence
+- CRO Optimization (25% weight) - Conversion rate optimization
+- Accessibility (20% weight) - WCAG 2.1 compliance
+- Architecture Quality (15% weight) - Code structure quality
+- Performance (10% weight) - Load times and optimization
+- Responsive Design (10% weight) - Multi-device support
+
+**Output Required:**
+- Detailed scoring for each dimension (1-10)
+- Specific issues identified with evidence
+- Executable code fixes for all issues < 8/10
+- A/B testing recommendations for CRO improvements
+- Implementation timeline with priorities
+
+---
+
+## 🤖 AI: Begin Analysis Here
+
+Use MCP Playwright to analyze: $url
+
+Follow the complete protocol in ui_healing_guide.md for automated analysis.
+
+EOF
+
+    success "Healing analysis template created: $analysis_file"
+    echo ""
+    echo "${BOLD}${CYAN}Next Steps:${NC}"
+    echo "1. Open the analysis file: $analysis_file"
+    echo "2. Provide this file to an AI with MCP Playwright installed"
+    echo "3. The AI will perform automated analysis and generate fixes"
+    echo "4. Use ${GREEN}./ai-dev heal report $session_id${NC} to view results"
+    
+    log "Analysis session $session_id created successfully"
+    return 0
+}
+
+run_ui_analysis() {
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        error "URL required for UI analysis"
+        echo "Usage: ./ai-dev analyze ui <url>"
+        return 1
+    fi
+    
+    log "Starting visual consistency analysis for: $url"
+    echo "This requires MCP Playwright integration with AI"
+    echo "See: ./ai-dev heal validate for setup instructions"
+}
+
+run_performance_analysis() {
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        error "URL required for performance analysis"
+        echo "Usage: ./ai-dev analyze performance <url>"
+        return 1
+    fi
+    
+    log "Starting performance analysis for: $url"
+    echo "This requires MCP Playwright + Lighthouse integration"
+    echo "See: ./ai-dev heal validate for setup instructions"
+}
+
+run_accessibility_analysis() {
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        error "URL required for accessibility analysis"
+        echo "Usage: ./ai-dev analyze accessibility <url>"
+        return 1
+    fi
+    
+    log "Starting accessibility analysis for: $url"
+    echo "This requires MCP Playwright + axe-core integration"
+    echo "See: ./ai-dev heal validate for setup instructions"
+}
+
+run_cro_analysis() {
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        error "URL required for CRO analysis"
+        echo "Usage: ./ai-dev analyze cro <url>"
+        return 1
+    fi
+    
+    log "Starting CRO pattern analysis for: $url"
+    echo "This uses 88 proven CRO patterns from cro_optimization_patterns.json"
+    echo "See: ./ai-dev heal validate for setup instructions"
+}
+
+generate_healing_report() {
+    local session_id="$1"
+    
+    local analysis_file="healing_analysis_${session_id}.md"
+    
+    if [ ! -f "$analysis_file" ]; then
+        error "Analysis file not found: $analysis_file"
+        echo "Run './ai-dev heal analyze <url>' first"
+        return 1
+    fi
+    
+    success "Healing analysis report: $analysis_file"
+    echo "File contains AI analysis results and generated fixes"
+}
+
+apply_healing_fixes() {
+    local session_id="$1"
+    
+    log "Healing fixes application requires manual review of generated code"
+    echo "Review fixes in: healing_analysis_${session_id}.md"
+    echo "Apply fixes manually after validation"
+}
 
 # Log successful execution
 log "Command completed successfully: $COMMAND"

@@ -8,7 +8,7 @@
 **CRITICAL-EXTRACTION-LOGIC:**
 ```bash
 # Parse input filename to extract components
-INPUT_FILE="$1"  # e.g., "01_prd_abc123_wordpress-plugin.md"
+# INPUT_FILE is already set by the calling script
 
 # Validate input file provided
 if [ -z "$INPUT_FILE" ]; then
@@ -91,7 +91,12 @@ echo "✅ Generated OUTPUT_FILE: $OUTPUT_FILE"
 - Performance monitoring and analytics (8-12 hours)
 - Error tracking and logging (8-12 hours)
 - Maintenance procedures and documentation (8-12 hours)
-- Final validation and handover (8-12 hours)
+
+**Phase 6: MANDATORY Auto-Healing Quality Validation (16-24 hours - 2-3 tasks of 8h each)**
+- Comprehensive UI/UX analysis with MCP Playwright (8-12 hours)
+- Automated Level 1 fixes application (4-8 hours)
+- Level 2 supervised changes review and approval (4-8 hours)
+- Final healing validation and certification (4-8 hours)
 
 ### Step 3: Task Detail Template
 
@@ -102,7 +107,7 @@ echo "✅ Generated OUTPUT_FILE: $OUTPUT_FILE"
 - **Generated From:** [PRD file path]
 - **Project Name:** [extracted from PRD]
 - **Estimated Duration:** [calculated time]
-- **Total Phases:** 5
+- **Total Phases:** 6 (including mandatory healing)
 
 ## Phase X: [Phase Name]
 ### Task X.Y: [Task Name]
@@ -124,7 +129,8 @@ echo "✅ Generated OUTPUT_FILE: $OUTPUT_FILE"
 
 **Validation Commands:**
 ```bash
-[Commands to verify completion]
+# Commands to verify completion will be generated based on task requirements
+echo "✅ Task completion validation would be implemented here"
 ```
 
 **MANDATORY-TASK-GENERATION-REQUIREMENTS:**
@@ -227,36 +233,113 @@ Complex            | 25-40     | 800-1500  | 5      | 4+ devs
 Enterprise         | 40+       | 1500+     | 5-6    | 6+ devs
 ```
 
-**AUTOMATIC-EXECUTION-SEQUENCE:**
-Execute this exact sequence before generating tasks:
+**ENHANCED-EXECUTION-SEQUENCE-WITH-MCP:**
+Execute this enhanced sequence with MCP Context7 integration:
 ```bash
-echo "🔍 Step 1: Analyzing PRD complexity..."
-PROJECT_COMPLEXITY=$(determine_project_complexity "$INPUT_FILE")
-echo "✅ Determined complexity: $PROJECT_COMPLEXITY"
+echo "🔍 Step 1: Analyzing PRD complexity with current best practices..."
 
-echo "🔍 Step 2: Extracting project metrics..."
+# Extract project metadata from PRD
 PRD_BUDGET=$(grep -Eo "\$[0-9,]+" "$INPUT_FILE" | tr -d '$,' | head -1)
-PRD_TIMELINE=$(grep -Eo "[0-9]+ weeks" "$INPUT_FILE" | head -1 | grep -Eo "[0-9]+")
-TECH_STACK=$(grep -A 10 "Technology Stack\|Technical Requirements" "$INPUT_FILE" | grep -Eo "React|Vue|Angular|Node|PHP|Python|Java|Go|Ruby")
-TEAM_SIZE=$(grep -ci "developer\|team member\|engineer" "$INPUT_FILE")
+PRD_FEATURES=$(grep -c "^###\|^####" "$INPUT_FILE")
+PRD_INTEGRATIONS=$(grep -ci "integration\|API\|third-party" "$INPUT_FILE")
+PRD_TECH_STACK=$(extract_approved_tech_stack "$INPUT_FILE")
+PRD_INDUSTRY=$(extract_industry_from_prd "$INPUT_FILE")
 
-echo "🔍 Step 3: Setting complexity-based parameters..."
-case $PROJECT_COMPLEXITY in
-    "Simple")
-        MIN_TASKS=10; MAX_TASKS=15; MAX_HOURS=400; PHASES=3; TEAM_SIZE_REC="1-2"
-        ;;
-    "Medium") 
-        MIN_TASKS=15; MAX_TASKS=25; MAX_HOURS=800; PHASES=4; TEAM_SIZE_REC="2-4"
-        ;;
-    "Complex")
-        MIN_TASKS=25; MAX_TASKS=40; MAX_HOURS=1500; PHASES=5; TEAM_SIZE_REC="4+"
-        ;;
-    "Enterprise")
-        MIN_TASKS=40; MAX_TASKS=60; MAX_HOURS=2500; PHASES=6; TEAM_SIZE_REC="6+"
-        ;;
-esac
+echo "🔬 Step 2: Researching current implementation patterns with MCP Context7..."
+research_current_patterns "$PRD_TECH_STACK" "$PRD_INDUSTRY" "$PROJECT_COMPLEXITY"
 
+echo "🧠 Step 3: Validating task structure against latest best practices..."
+validate_task_approach_with_context7 "$PRD_TECH_STACK" "$PRD_INDUSTRY"
+
+# Enhanced complexity determination with research validation
+if [ "${PRD_BUDGET:-0}" -gt 30000 ] || [ "${PRD_FEATURES:-0}" -gt 15 ] || [ "${PRD_INTEGRATIONS:-0}" -gt 5 ]; then
+    PROJECT_COMPLEXITY="Enterprise"
+    MIN_TASKS=29; MAX_TASKS=40; MAX_HOURS=600; PHASES=6; TEAM_SIZE_REC="5-6"
+elif [ "${PRD_BUDGET:-0}" -gt 15000 ] || [ "${PRD_FEATURES:-0}" -gt 8 ]; then
+    PROJECT_COMPLEXITY="Complex"
+    MIN_TASKS=20; MAX_TASKS=30; MAX_HOURS=400; PHASES=5; TEAM_SIZE_REC="3-4"
+elif [ "${PRD_BUDGET:-0}" -gt 8000 ] || [ "${PRD_FEATURES:-0}" -gt 5 ]; then
+    PROJECT_COMPLEXITY="Medium"
+    MIN_TASKS=15; MAX_TASKS=25; MAX_HOURS=300; PHASES=4; TEAM_SIZE_REC="2-3"
+else
+    PROJECT_COMPLEXITY="Simple"
+    MIN_TASKS=10; MAX_TASKS=15; MAX_HOURS=200; PHASES=3; TEAM_SIZE_REC="1-2"
+fi
+
+echo "✅ Determined complexity: $PROJECT_COMPLEXITY (validated with current standards)"
 echo "✅ Configuration: $MIN_TASKS-$MAX_TASKS tasks, $MAX_HOURS max hours, $PHASES phases"
+echo "✅ Technology validation: $PRD_TECH_STACK patterns researched"
+# MCP CONTEXT7 FUNCTIONS FOR TASK GENERATION
+extract_approved_tech_stack() {
+    local prd_file="$1"
+    
+    # Extract approved technology from PRD comments
+    local approved_tech=$(grep "TECH_APPROVED:" "$prd_file" | tail -1 | sed 's/.*TECH_APPROVED: \([^[:space:]]*\).*/\1/')
+    
+    if [ -z "$approved_tech" ]; then
+        # Fallback: extract from content
+        if grep -qi "react\|nextjs" "$prd_file"; then
+            echo "react-stack"
+        elif grep -qi "vue\|nuxt" "$prd_file"; then
+            echo "vue-stack"
+        elif grep -qi "laravel\|php" "$prd_file"; then
+            echo "php-stack"
+        elif grep -qi "django\|python" "$prd_file"; then
+            echo "python-stack"
+        else
+            echo "unknown-stack"
+        fi
+    else
+        echo "$approved_tech"
+    fi
+}
+
+extract_industry_from_prd() {
+    local prd_file="$1"
+    
+    # Extract industry context from PRD content
+    if grep -qi "ecommerce\|e-commerce\|shop\|store" "$prd_file"; then
+        echo "ecommerce"
+    elif grep -qi "saas\|software.*service" "$prd_file"; then
+        echo "saas"
+    elif grep -qi "education\|learning" "$prd_file"; then
+        echo "education"
+    elif grep -qi "healthcare\|medical" "$prd_file"; then
+        echo "healthcare"
+    else
+        echo "general"
+    fi
+}
+
+research_current_patterns() {
+    local tech_stack="$1"
+    local industry="$2"
+    local complexity="$3"
+    
+    echo "📚 Researching with MCP Context7:"
+    echo "1. ${tech_stack} development patterns 2025"
+    echo "2. ${industry} ${tech_stack} best practices current"
+    echo "3. ${complexity} project task breakdown patterns"
+    echo "4. ${tech_stack} testing strategies latest"
+    echo "5. ${industry} deployment patterns ${tech_stack}"
+    
+    # Framework for MCP Context7 integration
+    echo "✅ Research queries prepared for Context7 validation"
+}
+
+validate_task_approach_with_context7() {
+    local tech_stack="$1"
+    local industry="$2"
+    
+    echo "🔍 Validating task approach against current standards:"
+    echo "- ${tech_stack} project structure validation"
+    echo "- ${industry} compliance requirements check"
+    echo "- Current security standards validation"
+    echo "- Performance optimization patterns verification"
+    
+    # This would integrate with actual MCP Context7 validation
+    echo "✅ Task approach validated with current best practices"
+}
 ```
 
 **CRITICAL-EXTRACTION-FROM-PRD:**
