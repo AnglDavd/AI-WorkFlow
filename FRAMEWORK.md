@@ -1,4 +1,4 @@
-# Claude AI Development Framework - Memory & Best Practices
+# AI Development Framework - Memory & Best Practices
 
 **Framework Version:** v3.1.1 Enhanced with Context7 Integration  
 **Last Updated:** 2025-01-20 (Repository Structure Streamlined)  

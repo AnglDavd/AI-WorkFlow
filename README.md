@@ -340,7 +340,7 @@ chmod +x ai-dev
 
 ## 🔄 Framework Memory System
 
-### **Persistent Learning (CLAUDE.md)**
+### **Persistent Learning (FRAMEWORK.md)**
 The framework now includes persistent memory that remembers:
 - ✅ All documentation must be in English
 - ✅ Session-based workflow requirements
