@@ -1,12 +1,12 @@
 # 🚀 AI Development Framework - v3.1.1 Enhanced
 
 [![Version](https://img.shields.io/badge/version-v3.1.1--enhanced-success.svg)](https://github.com/AnglDavd/AI-WorkFlow/releases)
-[![Framework Status](https://img.shields.io/badge/framework-context7--enhanced-brightgreen.svg)](https://github.com/AnglDavd/AI-WorkFlow)
+[![Framework Status](https://img.shields.io/badge/framework-streamlined--stable-brightgreen.svg)](https://github.com/AnglDavd/AI-WorkFlow)
 [![Efficiency](https://img.shields.io/badge/efficiency-60%25%20faster-success.svg)](https://github.com/AnglDavd/AI-WorkFlow#enhanced-features)
 [![Quality](https://img.shields.io/badge/quality-8%2F10%20guaranteed-brightgreen.svg)](https://github.com/AnglDavd/AI-WorkFlow)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
-> **🎉 v3.1.1 ENHANCED**: 60% faster PRD creation, Context7 research integration, iterative quality loop until 8/10+ achieved, and MCP Playwright visual analysis.
+> **🎉 v3.1.1 ENHANCED**: 60% faster PRD creation, Context7 research integration, iterative quality loop until 8/10+ achieved, MCP Playwright visual analysis, and streamlined ultra-flat repository structure.
 
 ---
 
@@ -28,7 +28,7 @@
 
 ---
 
-## 🚀 NEW in v3.1.1 Enhanced - Major Efficiency Improvements
+## 🚀 NEW in v3.1.1 Enhanced - Major Efficiency Improvements + Streamlined Structure
 
 ### ⚡ **60% Faster PRD Creation**
 - **Smart Project Classification** - 1 question detects project type (vs 15+ follow-ups)
@@ -50,6 +50,12 @@
 - **MCP Playwright Integration** - Automated browser testing and analysis
 - **Multi-breakpoint testing** - Responsive design validation
 - **Real-time quality scoring** - 6 dimensions with weighted analysis
+
+### 📁 **Ultra-Flat Repository Structure**
+- **Simplified maintenance** - Removed complex GitHub workflows for easier management
+- **Core focus** - All essential files in root directory for direct access
+- **Reduced complexity** - Streamlined structure eliminates unnecessary automation
+- **Faster setup** - No complex CI/CD dependencies or pre-commit conflicts
 
 ---
 
@@ -267,7 +273,7 @@ claude mcp add context7  # For real-time research
 claude mcp list
 ```
 
-### **Framework Installation**
+### **Framework Installation (Streamlined)**
 ```bash
 # 1. Download the enhanced framework
 git clone https://github.com/AnglDavd/AI-WorkFlow.git
@@ -275,12 +281,14 @@ git clone https://github.com/AnglDavd/AI-WorkFlow.git
 # 2. Go to the folder
 cd AI-WorkFlow
 
-# 3. Give permissions
+# 3. Give permissions (all files in root directory)
 chmod +x ai-dev
 
 # 4. Verify enhanced features
-./ai-dev status --enhanced
+./ai-dev --help
 ```
+
+**Note:** The repository now uses an ultra-flat structure with all core files in the root directory, eliminating complex GitHub workflows and focusing on the essential framework functionality.
 
 ### **Your first enhanced project:**
 ```bash
@@ -450,7 +458,7 @@ Watch as the framework:
 **License:** GPL-3.0 (Free and open source)  
 **Created by:** AnglDavd with Claude Code Enhanced  
 **Version:** v3.1.1 Enhanced with Context7 Integration  
-**Status:** Production stable with quality guarantee
+**Status:** Production stable with streamlined architecture
 
 **Enhancement Features:**
 - Context7 real-time research integration
@@ -458,5 +466,7 @@ Watch as the framework:
 - Iterative quality loop system
 - Smart contextual questioning
 - Market-validated estimates
+- Ultra-flat repository structure for simplified maintenance
+- Removed complex GitHub workflows for easier contribution
 
 **Problems or suggestions?** Open an issue on GitHub or contact us.

@@ -1,8 +1,8 @@
 # Claude AI Development Framework - Memory & Best Practices
 
 **Framework Version:** v3.1.1 Enhanced with Context7 Integration  
-**Last Updated:** 2025-01-20  
-**Status:** Production Ready with Iterative Quality Loop
+**Last Updated:** 2025-01-20 (Repository Structure Streamlined)  
+**Status:** Production Ready with Ultra-Flat Structure and Iterative Quality Loop
 
 ---
 
@@ -15,6 +15,8 @@ This is an ultra-efficient AI development framework optimized for speed, quality
 - **Realistic automatic estimates** based on current market rates
 - **Iterative quality loop** until 8/10+ achieved across all dimensions
 - **MCP integration** for Playwright visual analysis and Context7 research
+- **Ultra-flat repository structure** for simplified maintenance and contribution
+- **Streamlined architecture** with removed complex GitHub workflows
 
 ---
 
@@ -93,6 +95,12 @@ claude mcp add playwright npx '@playwright/mcp@latest'
 # Verify installation
 claude mcp list | grep playwright
 ```
+
+### Simplified Repository Structure
+- **Ultra-flat design** - All core files in root directory
+- **No complex workflows** - Removed GitHub Actions for easier maintenance
+- **Direct access** - All guides and tools immediately accessible
+- **Reduced dependencies** - Eliminated pre-commit conflicts and CI/CD complexity
 
 ### Context7 Integration
 - Used for real-time research of current best practices
@@ -495,6 +503,8 @@ Enterprise  | 40+ tasks    | $60K+      | 24+ weeks  | 5+ devs
 4. **Context7 integration** - Use real-time research for all decisions
 5. **MCP Playwright validation** - Visual analysis is mandatory
 6. **Explain before implementing** - Always provide short, concise explanation before proposing code changes
+7. **Ultra-flat structure** - Maintain simplified repository architecture
+8. **No complex automation** - Focus on core framework functionality
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
