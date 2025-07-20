@@ -1965,6 +1965,8 @@ EOF
         show_help
         exit 1
         ;;
+esac
+
 # --- Iterate Command Handler ---
 handle_iterate_command() {
     local subcommand="$1"
@@ -2142,8 +2144,6 @@ EOF
             ;;
     esac
 }
-
-esac
 
 # --- Execute with Mandatory Healing Function ---
 execute_with_mandatory_healing() {
