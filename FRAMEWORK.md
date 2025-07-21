@@ -860,6 +860,192 @@ Every execution session MUST maintain real-time progress tracking through the ex
 
 ---
 
+## 🎭 Mandatory Playwright Integration Protocol (ISSUE-010 Resolution)
+
+### CRITICAL: AI Must Actually USE Playwright for Quality Analysis
+
+### **Problem: AI Claims to Use Playwright But Doesn't**
+❌ AI provides quality scores without actually using Playwright  
+❌ No screenshots or visual evidence provided  
+❌ Subjective assessment instead of systematic analysis  
+❌ Quality certification without actual browser testing  
+
+### **MANDATORY Playwright Usage Protocol**
+
+#### **Phase 6: Quality Analysis - Playwright Integration Required**
+
+##### **QA-1: Initial Quality Analysis - MANDATORY Playwright Steps**
+
+```markdown
+## QA-1: Playwright Visual Analysis (MANDATORY)
+
+### Step 1: Navigate to Application
+**Required Actions:**
+- [ ] Use mcp__playwright__browser_navigate to open application URL
+- [ ] Take initial screenshot with mcp__playwright__browser_take_screenshot
+- [ ] Use mcp__playwright__browser_snapshot to get accessibility tree
+- [ ] Document: URL accessed, initial load time, any console errors
+
+### Step 2: Responsive Breakpoint Testing
+**Required Actions:**
+- [ ] Test Mobile (375x667): mcp__playwright__browser_resize width=375 height=667
+- [ ] Take screenshot: filename="mobile_view.png"
+- [ ] Test Tablet (768x1024): mcp__playwright__browser_resize width=768 height=1024  
+- [ ] Take screenshot: filename="tablet_view.png"
+- [ ] Test Desktop (1440x900): mcp__playwright__browser_resize width=1440 height=900
+- [ ] Take screenshot: filename="desktop_view.png"
+- [ ] Document: Layout breaks, content overflow, usability issues at each breakpoint
+
+### Step 3: Interactive Element Testing
+**Required Actions:**
+- [ ] Identify all clickable elements with mcp__playwright__browser_snapshot
+- [ ] Test primary navigation: mcp__playwright__browser_click on each menu item
+- [ ] Test forms: mcp__playwright__browser_type in form fields, test validation
+- [ ] Test buttons: hover states, click feedback, loading states
+- [ ] Document: All interaction results, broken functionality, UX issues
+
+### Step 4: Accessibility Validation
+**Required Actions:**
+- [ ] Use mcp__playwright__browser_snapshot to analyze accessibility tree
+- [ ] Test keyboard navigation: mcp__playwright__browser_press_key with Tab, Enter, Space
+- [ ] Check color contrast ratios using browser developer tools
+- [ ] Verify ARIA labels and semantic HTML structure
+- [ ] Document: Accessibility violations, keyboard navigation issues, contrast problems
+
+### Evidence Documentation REQUIRED:
+**For EACH dimension analysis, you MUST provide:**
+1. **Screenshots** - Actual images showing current state
+2. **Console Messages** - Any errors or warnings found
+3. **Interaction Results** - What happened when testing features
+4. **Specific Issues** - Exact problems identified with locations
+```
+
+##### **QA-3: 6-Dimension Scoring - MANDATORY Evidence-Based**
+
+```markdown
+## QA-3: Systematic Quality Scoring with Playwright Evidence
+
+### Visual Consistency (20% weight) - Score: __/10
+**Playwright Analysis Required:**
+- [ ] Take screenshots of all major pages/sections
+- [ ] Compare design system consistency across pages
+- [ ] Check component reuse and styling uniformity
+- [ ] Verify typography consistency (font sizes, weights, spacing)
+- [ ] Document color usage consistency throughout
+
+**Evidence:** [Attach screenshots showing design consistency/inconsistency]
+**Issues Found:** [List specific visual inconsistencies with locations]
+**Score Justification:** [Explain why this score based on evidence]
+
+### CRO Optimization (25% weight) - Score: __/10  
+**Playwright Analysis Required:**
+- [ ] Navigate through user journey: Homepage → Product → Checkout
+- [ ] Test call-to-action buttons: visibility, placement, contrast
+- [ ] Analyze trust signals: testimonials, security badges, guarantees
+- [ ] Test form usability: field labels, error messages, completion flow
+- [ ] Check loading speed and user feedback during interactions
+
+**Evidence:** [Screenshots of CTA buttons, user flow, trust signals]
+**Conversion Barriers:** [List specific issues blocking conversions]
+**Score Justification:** [Explain score based on CRO best practices found/missing]
+
+### Accessibility (20% weight) - Score: __/10
+**Playwright Analysis Required:**
+- [ ] Full accessibility tree analysis with browser_snapshot
+- [ ] Keyboard navigation testing: Tab order, focus indicators
+- [ ] Color contrast measurement: Text/background ratios
+- [ ] Screen reader compatibility: ARIA labels, semantic HTML
+- [ ] Form accessibility: Labels, error messages, validation
+
+**Evidence:** [Accessibility tree snapshots, keyboard navigation screenshots]
+**WCAG Violations:** [List specific accessibility issues found]
+**Score Justification:** [Based on WCAG 2.1 compliance level achieved]
+
+### Architecture Quality (15% weight) - Score: __/10
+**Playwright Analysis Required:**
+- [ ] Analyze HTML structure quality from page snapshots
+- [ ] Check CSS organization: class naming, structure
+- [ ] Test page performance: loading times, resource optimization
+- [ ] Verify responsive implementation quality
+- [ ] Check JavaScript functionality and error handling
+
+**Evidence:** [Code structure analysis, performance metrics]
+**Technical Issues:** [Specific architectural problems found]
+**Score Justification:** [Based on code quality and structure analysis]
+
+### Performance (10% weight) - Score: __/10
+**Playwright Analysis Required:**
+- [ ] Measure page load times for different pages
+- [ ] Check Core Web Vitals: LCP, FID, CLS
+- [ ] Test image loading and optimization
+- [ ] Analyze network requests and resource loading
+- [ ] Test performance on different device sizes
+
+**Evidence:** [Performance metrics, load time measurements]
+**Performance Issues:** [Specific slow loading elements or processes]
+**Score Justification:** [Based on actual performance measurements]
+
+### Responsive Design (10% weight) - Score: __/10
+**Playwright Analysis Required:**
+- [ ] Test ALL breakpoints: 320px, 375px, 768px, 1024px, 1440px+
+- [ ] Check layout adaptation at each breakpoint
+- [ ] Verify touch targets on mobile (minimum 44px)
+- [ ] Test horizontal scrolling issues
+- [ ] Check content readability at all sizes
+
+**Evidence:** [Screenshots at each breakpoint showing layout]
+**Responsive Issues:** [Specific layout problems at different sizes]
+**Score Justification:** [Based on responsive behavior quality]
+```
+
+##### **Mandatory Evidence Requirements**
+
+#### **For EVERY Quality Dimension - Must Provide:**
+1. **Playwright Command Used** - Exact MCP command executed
+2. **Screenshot Evidence** - Visual proof of current state  
+3. **Specific Issues List** - Exact problems found with locations
+4. **Improvement Recommendations** - Specific fixes needed
+5. **Score Justification** - Why this score based on evidence
+
+#### **Playwright Commands Reference - MUST USE**
+```bash
+# Navigation and Setup
+mcp__playwright__browser_navigate --url "http://localhost:3000"
+mcp__playwright__browser_resize --width 375 --height 667
+
+# Visual Analysis  
+mcp__playwright__browser_take_screenshot --filename "analysis_desktop.png"
+mcp__playwright__browser_snapshot  # Gets accessibility tree
+
+# Interaction Testing
+mcp__playwright__browser_click --element "navigation menu" --ref "[data-element-ref]"
+mcp__playwright__browser_type --element "search input" --text "test query"
+mcp__playwright__browser_press_key --key "Tab"
+
+# Multiple Device Testing
+mcp__playwright__browser_resize --width 320 --height 568  # Mobile small
+mcp__playwright__browser_resize --width 768 --height 1024 # Tablet  
+mcp__playwright__browser_resize --width 1440 --height 900 # Desktop
+```
+
+### **Quality Validation Enforcement**
+
+#### **NO Quality Certification Without:**
+1. **Actual Playwright usage** - Commands executed and documented
+2. **Visual evidence** - Screenshots for each dimension analysis
+3. **Specific issue identification** - Exact problems with locations
+4. **Evidence-based scoring** - Scores justified by actual findings
+5. **Improvement documentation** - Specific fixes for issues found
+
+#### **Red Flags - Invalid Quality Analysis:**
+- ❌ Quality scores without screenshots
+- ❌ General statements without specific evidence
+- ❌ No Playwright commands documented
+- ❌ Subjective assessments without measurable criteria
+- ❌ Missing responsive breakpoint testing
+
+---
+
 ## 🎨 UI/UX Task Specification System (ISSUE-009 Resolution)
 
 ### CRITICAL: UI/UX Tasks Must Be Detailed and Specific
@@ -1266,6 +1452,7 @@ Every discovered issue MUST result in:
 13. **DoD validation required** - NEVER mark any task complete without executing full Definition of Done validation protocol
 14. **Try before escalating** - NEVER create impediment report without attempting at least 2 different solution approaches first
 15. **Detailed UI/UX specification** - NEVER create vague UI/UX tasks, always break down into specific components with detailed deliverables
+16. **Mandatory Playwright execution** - NEVER provide quality scores without actually executing Playwright commands and providing screenshot evidence
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
