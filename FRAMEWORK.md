@@ -506,6 +506,83 @@ git push -u origin main
 
 ---
 
+## 🧠 Error Memory System
+
+### Framework Learning & Continuous Improvement
+The framework includes a sophisticated error memory system to ensure continuous improvement and prevent recurring issues.
+
+### **Core Memory Files**
+- **KNOWN_ISSUES.md** - Complete database of discovered bugs, solutions, and prevention measures
+- **FRAMEWORK.md** - This file, updated with lessons learned
+- **Session logs** - Individual project experiences and outcomes
+
+### **Error Memory Protocol for AI Assistants**
+
+#### **1. Always Start with Memory Check**
+```bash
+# Before any framework operation:
+1. Read KNOWN_ISSUES.md completely
+2. Identify any relevant known issues
+3. Apply documented solutions proactively
+4. Watch for symptoms of documented problems
+```
+
+#### **2. Proactive Error Prevention**
+- **Validate assumptions** - Never assume features work as documented
+- **Test critical paths** - Verify Git setup, MCP tools, file permissions
+- **Cross-reference docs** - Ensure README promises match implementation
+- **Apply known workarounds** - Use documented solutions immediately
+
+#### **3. Real-Time Issue Documentation**
+When encountering ANY new problem:
+```markdown
+### ISSUE-XXX: [Brief Description]
+**Status:** 🔄 INVESTIGATING
+**Discovered:** [Date] during [Specific context]
+**Problem:** [Detailed description]
+**Symptoms:** [Observable behaviors]
+**Current Workaround:** [Temporary solution]
+**Next Steps:** [Investigation plan]
+```
+
+#### **4. Knowledge Sharing Requirements**
+- **Document immediately** - Don't wait until "later"
+- **Include context** - What were you doing when it happened?
+- **Share solutions** - What worked to resolve it?
+- **Update prevention** - How can we avoid this in future?
+
+### **Error Categories & Response Protocols**
+
+#### **Critical Errors (Framework Blocking)**
+- **Git configuration failures** → Apply ISSUE-001/002 solutions
+- **MCP integration problems** → Check tool installation and permissions
+- **File permission issues** → Validate ultra-flat structure requirements
+
+#### **Workflow Inconsistencies** 
+- **Documentation vs implementation gaps** → Update both immediately
+- **Missing features** → Document as known limitation
+- **Assistant behavior gaps** → Add specific rules to Critical Rules
+
+#### **Quality System Issues**
+- **Healing loop failures** → Check MCP Playwright setup
+- **Context7 research problems** → Implement graceful fallbacks
+- **Scoring inconsistencies** → Validate against ui_healing_standards.json
+
+### **Success Metrics for Error Memory**
+- **Issue Discovery Rate** - How quickly we find problems
+- **Resolution Time** - How fast we implement solutions
+- **Prevention Effectiveness** - How well we avoid recurring issues
+- **Framework Reliability** - Overall system stability improvement
+
+### **Learning Integration Requirements**
+Every discovered issue MUST result in:
+1. **Immediate documentation** in KNOWN_ISSUES.md
+2. **Framework rule updates** if behavioral changes needed
+3. **Prevention measures** added to relevant guides
+4. **Cross-validation** of similar potential issues
+
+---
+
 ## 📈 Success Metrics
 
 ### Framework Efficiency
@@ -562,6 +639,7 @@ git push -u origin main
 8. **No complex automation** - Focus on core framework functionality
 9. **Proactive commit reminders** - ALWAYS remind user to commit after completing any file generation or major milestone
 10. **Git workflow integration** - Follow conventional commits with session-id traceability
+11. **Error memory system** - Always check KNOWN_ISSUES.md first and document new issues immediately
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
