@@ -506,6 +506,95 @@ git push -u origin main
 
 ---
 
+## 📊 Execution Tracking System
+
+### Mandatory Task Completion Reporting
+Every execution session MUST maintain real-time progress tracking through the execution report file.
+
+### **Report File Creation (MANDATORY)**
+```
+03_report_{session-id}_{project-name}.md
+```
+
+**When to create:** Immediately upon starting task execution (before first task)  
+**When to update:** After EVERY single task completion  
+**Format:** Structured markdown with checkboxes and progress tracking
+
+### **Required Report Structure**
+```markdown
+# Project Execution Report
+**Project:** {project-name}
+**Session ID:** {session-id}
+**Started:** {inicio}
+**Last Updated:** {timestamp actual}
+**Framework:** AI Development Framework v3.1.1
+
+## 📋 Task Execution Progress
+
+### Phase 1: Foundation & Setup
+- [ ] Task 1.1: Description - Status: Pending
+- [x] Task 1.2: Description - Status: COMPLETED ✅
+
+### Phase 2: Core Development  
+- [ ] Task 2.1: Description - Status: In Progress 🔄
+- [ ] Task 2.2: Description - Status: Pending
+
+(Continue for all phases)
+
+## ✅ Completed Tasks Log
+**[2025-01-20 14:30]** - Task 1.2: Setup development environment - COMPLETED
+**[2025-01-20 15:45]** - Task 2.1: Create database models - COMPLETED
+
+## 📊 Progress Summary
+- **Total Tasks:** 24
+- **Completed:** 2  
+- **In Progress:** 1
+- **Pending:** 21
+- **Completion Rate:** 2/24 (8.3%)
+```
+
+### **Assistant Behavior Requirements**
+
+#### **1. Report Initialization**
+- **IMMEDIATELY** after receiving execute command, create the report file
+- Load all tasks from 02_tasks file into report structure
+- Set all tasks to "Pending" status initially
+- Create timestamp for session start
+
+#### **2. Real-Time Updates (CRITICAL)**
+- **After completing ANY task:** Update report file immediately
+- Change task status from [ ] to [x] 
+- Add entry to Completed Tasks Log with timestamp
+- Update Progress Summary percentages
+- **NEVER forget** to update the report
+
+#### **3. Progress Communication**
+```bash
+# After each task completion:
+"✅ Task X.Y completed! Updating execution report..."
+"📊 Progress: X/Y tasks completed (Z%)"
+"💾 Report updated: 03_report_{session-id}_{project-name}.md"
+"🔄 Next task: Task X.Z - [description]"
+```
+
+#### **4. Commit Integration**
+- Include report updates in commit messages
+- Example: `feat: complete task 1.2 and update execution tracking for {session-id}`
+
+### **Quality Gates for Execution Tracking**
+- **No task completion** without report update
+- **No phase advancement** without updated progress summary  
+- **No session completion** without 100% completion rate in report
+- **Mandatory final commit** including complete execution report
+
+### **Error Prevention**
+- Validate report file exists before starting any task
+- Verify task completion is reflected in report before moving to next
+- Cross-check task count in report matches task file
+- Ensure progress percentages are mathematically correct
+
+---
+
 ## 🧠 Error Memory System
 
 ### Framework Learning & Continuous Improvement
@@ -640,6 +729,7 @@ Every discovered issue MUST result in:
 9. **Proactive commit reminders** - ALWAYS remind user to commit after completing any file generation or major milestone
 10. **Git workflow integration** - Follow conventional commits with session-id traceability
 11. **Error memory system** - Always check KNOWN_ISSUES.md first and document new issues immediately
+12. **Execution tracking mandatory** - Create and maintain 03_report_{session-id}_{project-name}.md with real-time task completion updates
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
