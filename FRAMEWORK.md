@@ -595,6 +595,142 @@ Every execution session MUST maintain real-time progress tracking through the ex
 
 ---
 
+## ✅ Task Completion Validation System
+
+### CRITICAL: Definition of Done (DoD) Requirements
+**Purpose:** Prevent false completion reporting (ISSUE-005)  
+**Enforcement:** MANDATORY before marking any task as complete
+
+### **Universal DoD Criteria (ALL tasks must meet these)**
+1. **Functional Requirement Met** - The specific deliverable exists and works
+2. **Acceptance Criteria Satisfied** - All task requirements fulfilled completely  
+3. **Dependencies Resolved** - No blockers remain for subsequent tasks
+4. **Validation Evidence** - Proof of completion available (files, screenshots, tests)
+5. **Integration Verified** - Works correctly with existing project components
+
+### **Task-Type Specific DoD Criteria**
+
+#### **Development Tasks**
+- [ ] **Code Written** - All required code implemented
+- [ ] **Code Tested** - Manual verification or automated tests pass
+- [ ] **Code Documented** - Comments and documentation added where needed
+- [ ] **Dependencies Installed** - All required packages/libraries working
+- [ ] **Integration Working** - New code integrates with existing codebase
+- [ ] **No Breaking Changes** - Existing functionality still works
+
+#### **Configuration Tasks**
+- [ ] **Configuration Applied** - Settings actually changed in target system
+- [ ] **Configuration Tested** - New settings work as expected
+- [ ] **Backup Created** - Previous configuration saved if needed
+- [ ] **Documentation Updated** - Configuration changes documented
+- [ ] **Permissions Set** - Correct access rights applied
+
+#### **File/Content Creation Tasks**
+- [ ] **File Created** - Target file exists at specified location
+- [ ] **Content Complete** - All required content included
+- [ ] **Format Correct** - File format and structure as specified
+- [ ] **Permissions Set** - File accessible to required users/systems
+- [ ] **Content Validated** - Content quality checked and approved
+
+#### **Setup/Installation Tasks**
+- [ ] **Software Installed** - Target software successfully installed
+- [ ] **Installation Verified** - Software runs without errors
+- [ ] **Dependencies Met** - All prerequisites satisfied
+- [ ] **Configuration Applied** - Initial setup completed
+- [ ] **Functionality Tested** - Basic operations work correctly
+
+### **Mandatory Validation Protocol**
+
+#### **Before Marking ANY Task Complete - MUST Execute:**
+
+```markdown
+## 🔍 Task Completion Validation Checklist
+
+**Task ID:** [X.Y]
+**Task Description:** [Brief description]
+**Attempted Completion Date:** [Timestamp]
+
+### Step 1: Universal DoD Verification
+- [ ] Functional requirement met
+- [ ] Acceptance criteria satisfied  
+- [ ] Dependencies resolved
+- [ ] Validation evidence exists
+- [ ] Integration verified
+
+### Step 2: Task-Type Specific DoD
+[Use appropriate checklist from above]
+
+### Step 3: Evidence Documentation
+**Proof of Completion:**
+- [ ] Screenshot/file evidence attached
+- [ ] Testing results documented
+- [ ] Error logs reviewed (if applicable)
+- [ ] Dependencies verified working
+
+### Step 4: Final Validation Decision
+**DECISION:** 
+- [ ] ✅ COMPLETE - All DoD criteria met, task genuinely finished
+- [ ] 🔄 BLOCKED - Cannot complete due to impediment (use impediment protocol)
+- [ ] ❌ FAILED - Attempted but unable to satisfy requirements
+
+**IF NOT COMPLETE:** Task remains marked as [ ] and impediment is reported
+**IF COMPLETE:** Task can be marked as [x] and logged with evidence
+```
+
+### **Impediment Reporting Protocol**
+
+#### **When Tasks Cannot Be Completed:**
+
+```markdown
+## 🚫 Task Impediment Report
+
+**Task ID:** [X.Y]
+**Task Description:** [Brief description]
+**Impediment Discovered:** [Timestamp]
+
+### Impediment Details
+**Type:** [Technical/Dependency/Resource/Knowledge]
+**Description:** [Detailed explanation of what's blocking completion]
+**Impact:** [How this affects the project timeline]
+
+### Attempted Solutions
+1. [Solution attempt 1] - Result: [Failed/Partial/Needs more time]
+2. [Solution attempt 2] - Result: [Failed/Partial/Needs more time]
+
+### Escalation Required
+**Assistance Needed:** [What help is required to resolve]
+**Estimated Resolution Time:** [If known]
+**Workaround Available:** [Yes/No - if yes, describe]
+
+### Status Update
+**Current Status:** BLOCKED - Cannot proceed until resolved
+**Next Actions:** [Specific steps to take]
+```
+
+### **Assistant Behavior Enforcement**
+
+#### **NEVER Allow These Actions:**
+1. ❌ Marking task complete without DoD validation
+2. ❌ Moving to next task while previous task blocked
+3. ❌ Reporting "attempted" as "completed"
+4. ❌ Skipping impediment reporting when blocked
+5. ❌ Making assumptions about task success without evidence
+
+#### **ALWAYS Require These Actions:**
+1. ✅ Complete DoD checklist before marking any task done
+2. ✅ Document evidence of successful completion
+3. ✅ Report impediments immediately when discovered
+4. ✅ Verify dependencies are satisfied before advancing
+5. ✅ Update execution report with accurate status only
+
+### **Quality Gates**
+- **No task marked complete** without passing DoD validation
+- **No phase advancement** with any blocked tasks unresolved
+- **No session completion** with any false completions
+- **Mandatory impediment review** before any workarounds
+
+---
+
 ## 🧠 Error Memory System
 
 ### Framework Learning & Continuous Improvement
@@ -730,6 +866,7 @@ Every discovered issue MUST result in:
 10. **Git workflow integration** - Follow conventional commits with session-id traceability
 11. **Error memory system** - Always check KNOWN_ISSUES.md first and document new issues immediately
 12. **Execution tracking mandatory** - Create and maintain 03_report_{session-id}_{project-name}.md with real-time task completion updates
+13. **DoD validation required** - NEVER mark any task complete without executing full Definition of Done validation protocol
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`

@@ -89,6 +89,30 @@ This file serves as the framework's memory system to:
 
 ---
 
+### **ISSUE-005: AI Assistants Marking Incomplete Tasks as Complete**
+**Status:** 🔄 CRITICAL - INVESTIGATING  
+**Discovered:** 2025-01-20 during real-world Gemini CLI testing  
+**Problem:** AI assistants mark tasks as "completed" when they couldn't actually finish them  
+**Symptoms:**
+- Tasks marked with [x] in execution report despite not being finished
+- Assistant moves to next task without resolving blockers
+- False progress reporting leading to broken project dependencies
+- Accumulation of invisible technical debt
+- Project quality degradation due to skipped requirements
+
+**Root Causes Identified:**
+- Lack of specific "Definition of Done" criteria for each task type
+- No validation protocol before marking tasks complete
+- Missing impediment reporting system for blocked tasks
+- AI optimism bias toward reporting positive progress
+- Ambiguous interpretation of "attempting" vs "completing"
+
+**Current Impact:** HIGH - Compromises entire framework reliability  
+**Investigation Status:** Developing multi-level validation system  
+**Next Steps:** Implement DoD criteria, validation protocol, and impediment tracking
+
+---
+
 ## 📝 Error Reporting Template
 
 When discovering new issues, use this format:
@@ -132,10 +156,10 @@ Before starting any framework operation:
 
 ## 📊 Issue Statistics
 
-**Total Issues Discovered:** 4  
+**Total Issues Discovered:** 5  
 **Resolved Issues:** 3  
-**Active Issues:** 1  
-**Framework Reliability:** 75% → Improving with each discovery
+**Active Issues:** 2 (1 Critical)  
+**Framework Reliability:** 60% → Critical reliability issue under investigation
 
 ---
 
