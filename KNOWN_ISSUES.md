@@ -160,6 +160,32 @@ This file serves as the framework's memory system to:
 
 ---
 
+### **ISSUE-008: AI Assistant Creates Impediment Reports But Doesn't Resolve Issues**
+**Status:** 🔄 CRITICAL - ACTIVE  
+**Discovered:** 2025-01-20 during real-world Gemini CLI testing  
+**Problem:** AI assistant properly documents impediments but fails to follow through with resolution attempts  
+**Symptoms:**
+- Impediment reports created correctly following protocol
+- Issues documented with proper format and analysis
+- Assistant moves on without attempting resolution
+- Blocked tasks remain blocked indefinitely
+- No systematic approach to resolving documented problems
+- Project progress stalls due to unresolved impediments
+
+**Root Causes Identified:**
+- Lack of mandatory resolution protocol after impediment creation
+- Missing follow-through enforcement in assistant behavior
+- No escalation path for impediments requiring external help
+- Gap between "reporting" and "resolving" responsibilities
+- Assistant treats impediment reporting as completion rather than first step
+- No time-bound resolution requirements
+
+**Current Impact:** HIGH - Projects get stuck permanently on solvable issues  
+**Investigation Status:** Need mandatory resolution protocol with follow-through  
+**Next Steps:** Create resolution tracking and escalation system
+
+---
+
 ## 📝 Error Reporting Template
 
 When discovering new issues, use this format:
@@ -203,10 +229,10 @@ Before starting any framework operation:
 
 ## 📊 Issue Statistics
 
-**Total Issues Discovered:** 7  
+**Total Issues Discovered:** 8  
 **Resolved Issues:** 3  
-**Active Issues:** 4 (3 Critical)  
-**Framework Reliability:** 43% → Critical tracking and compatibility gaps affecting framework completeness
+**Active Issues:** 5 (4 Critical)  
+**Framework Reliability:** 38% → Critical systemic issues affecting AI assistant behavior and project completion
 
 ---
 

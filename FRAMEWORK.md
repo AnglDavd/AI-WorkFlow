@@ -744,7 +744,9 @@ Every execution session MUST maintain real-time progress tracking through the ex
 **IF COMPLETE:** Task can be marked as [x] and logged with evidence
 ```
 
-### **Impediment Reporting Protocol**
+### **Impediment Resolution Protocol - Flexible Approach (ISSUE-008 Resolution)**
+
+#### **Core Principle: Always Try Before Escalating**
 
 #### **When Tasks Cannot Be Completed:**
 
@@ -755,23 +757,83 @@ Every execution session MUST maintain real-time progress tracking through the ex
 **Task Description:** [Brief description]
 **Impediment Discovered:** [Timestamp]
 
-### Impediment Details
+### Impediment Classification
 **Type:** [Technical/Dependency/Resource/Knowledge]
 **Description:** [Detailed explanation of what's blocking completion]
+**Complexity Assessment:** [Simple/Moderate/Complex/Expert-Level]
 **Impact:** [How this affects the project timeline]
 
-### Attempted Solutions
-1. [Solution attempt 1] - Result: [Failed/Partial/Needs more time]
-2. [Solution attempt 2] - Result: [Failed/Partial/Needs more time]
+### Resolution Attempts (Adaptive Approach)
+**Minimum Required:** Try at least 2 different approaches before escalating
 
-### Escalation Required
-**Assistance Needed:** [What help is required to resolve]
-**Estimated Resolution Time:** [If known]
-**Workaround Available:** [Yes/No - if yes, describe]
+**Attempt 1:** [Approach description] - Result: [Success/Partial/Failed - explain]
+**Attempt 2:** [Different approach] - Result: [Success/Partial/Failed - explain]
+**Attempt 3:** [If needed] - Result: [Success/Partial/Failed - explain]
 
-### Status Update
-**Current Status:** BLOCKED - Cannot proceed until resolved
-**Next Actions:** [Specific steps to take]
+### Adaptive Resolution Strategy
+**For Simple Issues (5-15 min effort):**
+- [ ] Quick research: Check docs/common solutions
+- [ ] Try obvious alternative approach
+- [ ] If no progress → escalate with clear description
+
+**For Moderate Issues (15-30 min effort):**
+- [ ] Research multiple approaches online
+- [ ] Try 2-3 different implementation methods
+- [ ] Break down into smaller sub-problems
+- [ ] If significant progress → continue; if stuck → escalate
+
+**For Complex Issues (30+ min potential):**
+- [ ] Assess if this is core to project success
+- [ ] If YES: Invest more time with systematic approaches
+- [ ] If NO: Look for simpler alternatives or workarounds
+- [ ] Document findings and escalate with research done
+
+### Smart Escalation
+**When to Escalate (ANY of these conditions):**
+- [ ] No progress after reasonable attempts (15-30 min typically)
+- [ ] Issue requires expertise clearly outside AI knowledge
+- [ ] Problem is environmental/access-related
+- [ ] Multiple similar approaches all fail for same reason
+- [ ] Solution would take longer than implementing different approach
+
+**Escalation Information:**
+**Specific Help Needed:** [Be very clear about what's needed]
+**What Was Tried:** [Brief summary of attempts]
+**Why It's Blocked:** [Root cause if identified]
+**Suggested Next Steps:** [What human should try]
+
+### Resolution Outcome
+**Final Status:** 
+- [ ] ✅ RESOLVED - [How it was solved]
+- [ ] 🔄 WORKAROUND - [Alternative approach used]
+- [ ] 🆘 ESCALATED - [Awaiting human help]
+- [ ] 🔀 DEFERRED - [Will revisit later]
+
+**If Resolved:**
+**Solution:** [What actually worked]
+**Time Invested:** [Rough time spent]
+**Key Insight:** [What made the difference]
+```
+
+#### **Flexible Assistant Behavior Guidelines**
+
+##### **Smart Decision Making:**
+1. **Assess impediment complexity** realistically
+2. **Match effort to importance** - core features get more time
+3. **Know when to pivot** - try alternatives vs banging head on wall
+4. **Escalate intelligently** - with useful context, not just "it's broken"
+
+##### **Effort Guidelines (Not Strict Rules):**
+- **Quick fixes:** 5-10 minutes of attempts
+- **Standard issues:** 15-30 minutes before considering escalation
+- **Critical path items:** Up to 45 minutes if making progress
+- **Nice-to-have features:** 15 minutes max, then find alternatives
+
+##### **Resolution Mindset:**
+- **Goal:** Make project progress, not perfect solutions
+- **Acceptable:** Working alternatives that meet core requirements
+- **Preferred:** Document learnings for future similar issues
+- **Smart:** Balance time investment with project priorities
 ```
 
 ### **Assistant Behavior Enforcement**
@@ -1035,6 +1097,7 @@ Every discovered issue MUST result in:
 11. **Error memory system** - Always check KNOWN_ISSUES.md first and document new issues immediately
 12. **Execution tracking mandatory** - Create and maintain 03_report_{session-id}_{project-name}.md with real-time task completion updates
 13. **DoD validation required** - NEVER mark any task complete without executing full Definition of Done validation protocol
+14. **Try before escalating** - NEVER create impediment report without attempting at least 2 different solution approaches first
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
