@@ -520,7 +520,7 @@ Every execution session MUST maintain real-time progress tracking through the ex
 **When to update:** After EVERY single task completion  
 **Format:** Structured markdown with checkboxes and progress tracking
 
-### **Required Report Structure**
+### **Required Report Structure (ISSUE-007 Resolution)**
 ```markdown
 # Project Execution Report
 **Project:** {project-name}
@@ -529,7 +529,7 @@ Every execution session MUST maintain real-time progress tracking through the ex
 **Last Updated:** {timestamp actual}
 **Framework:** AI Development Framework v3.1.1
 
-## 📋 Task Execution Progress
+## 📋 Development Phase Progress
 
 ### Phase 1: Foundation & Setup
 - [ ] Task 1.1: Description - Status: Pending
@@ -539,18 +539,67 @@ Every execution session MUST maintain real-time progress tracking through the ex
 - [ ] Task 2.1: Description - Status: In Progress 🔄
 - [ ] Task 2.2: Description - Status: Pending
 
-(Continue for all phases)
+### Phase 3: Testing & Integration
+- [ ] Task 3.1: Description - Status: Pending
+- [ ] Task 3.2: Description - Status: Pending
+
+### Phase 4: Deployment Preparation
+- [ ] Task 4.1: Description - Status: Pending
+- [ ] Task 4.2: Description - Status: Pending
+
+### Phase 5: Production Deployment
+- [ ] Task 5.1: Description - Status: Pending
+- [ ] Task 5.2: Description - Status: Pending
+
+## 🔄 MANDATORY Quality Assurance & Healing Phase
+
+### Phase 6: Iterative Quality Loop (REQUIRED)
+- [ ] **QA-1:** Initial quality analysis with MCP Playwright
+- [ ] **QA-2:** Context7 research for current best practices  
+- [ ] **QA-3:** 6-dimension scoring (all must be >= 8/10)
+  - [ ] QA-3.1: Visual Consistency (20% weight) - Score: __/10
+  - [ ] QA-3.2: CRO Optimization (25% weight) - Score: __/10  
+  - [ ] QA-3.3: Accessibility (20% weight) - Score: __/10
+  - [ ] QA-3.4: Architecture Quality (15% weight) - Score: __/10
+  - [ ] QA-3.5: Performance (10% weight) - Score: __/10
+  - [ ] QA-3.6: Responsive Design (10% weight) - Score: __/10
+- [ ] **QA-4:** Threshold validation (ALL >= 8/10?)
+- [ ] **QA-5:** Generate improvement recommendations (if needed)
+- [ ] **QA-6:** Apply automatic improvements (Iteration 1)
+- [ ] **QA-7:** Re-analyze and re-score (Iteration 1)
+- [ ] **QA-8:** Apply improvements (Iteration 2, if needed)
+- [ ] **QA-9:** Final quality certification (Max 5 iterations)
+- [ ] **QA-10:** Generate 03_quality_{session-id}_{project-name}.md
+
+### 🏆 Quality Certification Status
+**Current Iteration:** 0 (Not Started)  
+**Highest Scores Achieved:**
+- Visual Consistency: __/10
+- CRO Optimization: __/10  
+- Accessibility: __/10
+- Architecture Quality: __/10
+- Performance: __/10
+- Responsive Design: __/10
+
+**Certification Status:** ❌ PENDING - Quality loop not completed
+**Can Deploy to Production:** ❌ NO - Must achieve 8/10+ in ALL dimensions
 
 ## ✅ Completed Tasks Log
 **[2025-01-20 14:30]** - Task 1.2: Setup development environment - COMPLETED
 **[2025-01-20 15:45]** - Task 2.1: Create database models - COMPLETED
 
-## 📊 Progress Summary
-- **Total Tasks:** 24
-- **Completed:** 2  
-- **In Progress:** 1
-- **Pending:** 21
-- **Completion Rate:** 2/24 (8.3%)
+## ✅ Quality Loop Log
+**[Timestamp]** - QA-X: Description of quality step - COMPLETED
+**[Timestamp]** - Iteration 1 Analysis: Scores [8,7,9,8,8,9] - 1 dimension below threshold
+**[Timestamp]** - Iteration 1 Improvements: Applied CRO optimizations
+**[Timestamp]** - Iteration 2 Analysis: Scores [8,8,9,8,8,9] - ALL PASS ✅
+
+## 📊 Overall Progress Summary
+- **Development Tasks:** X/Y completed (Z%)
+- **Quality Assurance:** X/10 steps completed (Z%)
+- **Overall Project:** X/Y total items completed (Z%)
+- **Quality Certification:** ✅ ACHIEVED / ❌ PENDING / 🔄 IN PROGRESS
+- **Production Ready:** ✅ YES / ❌ NO
 ```
 
 ### **Assistant Behavior Requirements**
@@ -562,30 +611,48 @@ Every execution session MUST maintain real-time progress tracking through the ex
 - Create timestamp for session start
 
 #### **2. Real-Time Updates (CRITICAL)**
-- **After completing ANY task:** Update report file immediately
+- **After completing ANY development task:** Update report file immediately
+- **After completing ANY quality task:** Update both development and quality sections
 - Change task status from [ ] to [x] 
-- Add entry to Completed Tasks Log with timestamp
-- Update Progress Summary percentages
+- Add entry to appropriate Log (Completed Tasks or Quality Loop)
+- Update Progress Summary percentages for BOTH development and quality
 - **NEVER forget** to update the report
+- **NEVER skip** quality phase tracking - it's mandatory
 
 #### **3. Progress Communication**
 ```bash
-# After each task completion:
+# After each development task completion:
 "✅ Task X.Y completed! Updating execution report..."
-"📊 Progress: X/Y tasks completed (Z%)"
+"📊 Development Progress: X/Y tasks completed (Z%)"
 "💾 Report updated: 03_report_{session-id}_{project-name}.md"
 "🔄 Next task: Task X.Z - [description]"
+
+# After each quality task completion:
+"✅ QA-X completed! Updating quality tracking..."
+"🎯 Quality Progress: X/10 QA steps completed (Z%)"
+"📊 Current Scores: [Visual:X, CRO:Y, Access:Z, Arch:A, Perf:B, Resp:C]"
+"🔄 Next quality step: QA-X - [description]"
+
+# When all development done but quality pending:
+"🎉 Development phase complete! Starting mandatory quality loop..."
+"⚠️  Project NOT production-ready until quality certification achieved"
+"🔄 Beginning Phase 6: Quality Assurance & Healing"
 ```
 
 #### **4. Commit Integration**
-- Include report updates in commit messages
-- Example: `feat: complete task 1.2 and update execution tracking for {session-id}`
+- Include report updates in commit messages for BOTH development and quality
+- Development example: `feat: complete task 1.2 and update execution tracking for {session-id}`
+- Quality example: `feat: complete QA-3 scoring and update quality tracking for {session-id}`
+- Final example: `feat: achieve quality certification and finalize project {session-id}`
 
-### **Quality Gates for Execution Tracking**
-- **No task completion** without report update
-- **No phase advancement** without updated progress summary  
-- **No session completion** without 100% completion rate in report
-- **Mandatory final commit** including complete execution report
+### **Quality Gates for Execution Tracking (ISSUE-007 Resolution)**
+- **No development task completion** without report update
+- **No quality task completion** without quality section update
+- **No phase advancement** without updated progress summary for ALL phases
+- **No development completion** without starting Phase 6 (Quality Loop)
+- **No session completion** without 100% development AND quality completion
+- **No production deployment** without quality certification achieved (8/10+ all dimensions)
+- **Mandatory final commit** including complete execution report with quality certification
 
 ### **Error Prevention**
 - Validate report file exists before starting any task
