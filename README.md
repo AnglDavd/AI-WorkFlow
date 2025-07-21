@@ -171,6 +171,12 @@
 
 **Result:** `03_quality_{session-id}_{project-name}.md` with quality certification OR manual improvement plan
 
+**NEW: Execution Tracking (Mandatory)**
+- **Real-time task tracking** - `03_report_{session-id}_{project-name}.md` created immediately
+- **Live progress updates** - Each task completion automatically logged
+- **Completion timestamps** - Perfect traceability of development progress
+- **Progress percentages** - Visual tracking of project advancement
+
 ---
 
 ## 📊 Enhanced Project Complexity Detection
@@ -213,6 +219,17 @@ Enterprise  | 40+ tasks    | $60K+      | 24+ weeks   | 5+ devs
 - Automatic complexity classification
 - Cross-PRD consistency validation
 
+### 📊 **Real-Time Execution Tracking** (NEW)
+```
+03_report_{session-id}_{project-name}.md
+```
+**What's included:**
+- Live task completion status with checkboxes
+- Timestamp log of all completed tasks
+- Progress percentages and completion rates
+- Phase-by-phase advancement tracking
+- Perfect session traceability
+
 ### 🏆 **Quality Certification Report**
 ```
 03_quality_{session-id}_{project-name}.md
@@ -222,6 +239,16 @@ Enterprise  | 40+ tasks    | $60K+      | 24+ weeks   | 5+ devs
 - 6-dimension quality scores
 - Professional certification seal
 - Production deployment approval
+
+### 🧠 **Error Memory System** (NEW)
+```
+KNOWN_ISSUES.md
+```
+**What's included:**
+- Database of discovered bugs and solutions
+- Prevention measures for recurring issues
+- Real-world testing lessons learned
+- Continuous framework improvement tracking
 
 ---
 
@@ -341,12 +368,15 @@ chmod +x ai-dev
 ## 🔄 Framework Memory System
 
 ### **Persistent Learning (FRAMEWORK.md)**
-The framework now includes persistent memory that remembers:
+The framework now includes comprehensive memory and tracking systems:
 - ✅ All documentation must be in English
 - ✅ Session-based workflow requirements
 - ✅ Quality threshold enforcement (8/10+ mandatory)
 - ✅ Context7 integration protocols
 - ✅ Explain-before-implementing policy
+- ✅ **NEW:** Error memory system (KNOWN_ISSUES.md)
+- ✅ **NEW:** Mandatory execution tracking with real-time updates
+- ✅ **NEW:** Proactive commit reminders and Git workflow integration
 
 ### **Smart Context Management**
 ```bash
@@ -468,5 +498,8 @@ Watch as the framework:
 - Market-validated estimates
 - Ultra-flat repository structure for simplified maintenance
 - Removed complex GitHub workflows for easier contribution
+- **NEW:** Comprehensive error memory system (KNOWN_ISSUES.md)
+- **NEW:** Mandatory real-time execution tracking
+- **NEW:** Proactive Git workflow integration with commit reminders
 
 **Problems or suggestions?** Open an issue on GitHub or contact us.
