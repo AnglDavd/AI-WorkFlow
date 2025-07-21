@@ -731,6 +731,107 @@ Every execution session MUST maintain real-time progress tracking through the ex
 
 ---
 
+## 🤖 AI Model Compatibility Guidelines
+
+### Cross-Platform Tool Usage (ISSUE-006 Resolution)
+Different AI models have different tool interfaces. The framework must accommodate these differences.
+
+### **Claude Code Specific Tools**
+- **Edit/Replace Commands:** Native support for find-and-replace operations
+- **MultiEdit:** Batch editing capabilities
+- **Tool Integration:** Full MCP integration available
+
+### **Gemini CLI Compatibility Issues**
+- **Replace Command FAILS:** Gemini does not support Claude Code's `replace` command
+- **Alternative Required:** Must use different file editing approach
+- **Tool Limitations:** Some Claude Code tools may not be available
+
+### **Gemini CLI Workarounds**
+
+#### **For File Editing (Replace replace command):**
+```markdown
+**INSTEAD OF:** Using replace command
+**USE:** Manual file recreation approach
+
+1. Read entire file content
+2. Create new version with modifications  
+3. Write complete new file content
+4. Verify changes applied correctly
+
+**Example Process:**
+- Read current file: "Show me the current content of file.js"
+- Manual editing: "Create new version with X changed to Y"
+- Write new file: "Create file.js with this new content: [full content]"
+```
+
+#### **For Multi-File Operations:**
+```markdown
+**INSTEAD OF:** Batch operations
+**USE:** Sequential individual file operations
+
+1. Process one file at a time
+2. Verify each change before proceeding
+3. Commit changes incrementally
+4. Maintain detailed log of modifications
+```
+
+### **AI Model Detection Protocol**
+```markdown
+**At Session Start - ALWAYS identify AI model being used:**
+
+**For Claude:** 
+- "I'm using Claude Code with full tool support"
+- Use standard Edit/MultiEdit/Replace commands
+- Full MCP integration available
+
+**For Gemini:**
+- "I'm using Gemini CLI with limited tool support"  
+- Use manual file recreation for editing
+- Alternative approaches for file operations
+- Extra validation steps required
+
+**For Other Models:**
+- Identify tool capabilities early
+- Test critical operations before proceeding
+- Document working alternatives
+- Add new compatibility guidelines
+```
+
+### **Mandatory Tool Compatibility Checks**
+```markdown
+**Before Starting Any File Operations:**
+
+1. **Test Edit Capability**
+   - Claude: Use Edit tool on test file
+   - Gemini: Use manual file recreation test
+   - Others: Identify working method
+
+2. **Verify MCP Access**
+   - Test Context7 research capability
+   - Test Playwright integration
+   - Document any limitations
+
+3. **Establish Workflow**
+   - Define file editing approach
+   - Set validation procedures
+   - Create fallback methods
+```
+
+### **Error Prevention for Tool Incompatibility**
+- **Always identify AI model** at session start
+- **Test critical tools** before beginning project work
+- **Use model-appropriate** editing methods
+- **Document workarounds** for future reference
+- **Validate all changes** regardless of editing method used
+
+### **Quality Assurance Regardless of AI Model**
+- **Same DoD validation** applies to all models
+- **Same tracking requirements** for all assistants
+- **Same quality thresholds** (8/10+) for all projects
+- **Tool differences don't affect** final quality standards
+
+---
+
 ## 🧠 Error Memory System
 
 ### Framework Learning & Continuous Improvement

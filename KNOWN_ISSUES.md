@@ -113,6 +113,29 @@ This file serves as the framework's memory system to:
 
 ---
 
+### **ISSUE-006: Gemini CLI Failing with Replace Command**
+**Status:** 🔄 CRITICAL - ACTIVE  
+**Discovered:** 2025-01-20 during real-world Gemini CLI testing  
+**Problem:** Gemini consistently fails when using Claude Code's `replace` command  
+**Symptoms:**
+- `replace` command not recognized or executed properly by Gemini
+- Gemini attempts to use replace but receives errors
+- File editing operations fail due to replace command incompatibility
+- Assistant cannot modify existing files effectively
+
+**Root Causes Identified:**
+- Gemini CLI may not support Claude Code's specific `replace` command syntax
+- Different AI models may have different tool command interfaces
+- Framework assumes universal tool compatibility across AI models
+- Lack of alternative editing methods for non-Claude AI models
+
+**Current Impact:** HIGH - Blocks file editing and project development  
+**Workaround Needed:** Alternative file editing approach for Gemini  
+**Investigation Status:** Need to identify Gemini-compatible editing methods  
+**Next Steps:** Create AI-model-specific tool usage guidelines
+
+---
+
 ## 📝 Error Reporting Template
 
 When discovering new issues, use this format:
@@ -156,10 +179,10 @@ Before starting any framework operation:
 
 ## 📊 Issue Statistics
 
-**Total Issues Discovered:** 5  
+**Total Issues Discovered:** 6  
 **Resolved Issues:** 3  
-**Active Issues:** 2 (1 Critical)  
-**Framework Reliability:** 60% → Critical reliability issue under investigation
+**Active Issues:** 3 (2 Critical)  
+**Framework Reliability:** 50% → Multiple critical compatibility issues affecting cross-platform usage
 
 ---
 
