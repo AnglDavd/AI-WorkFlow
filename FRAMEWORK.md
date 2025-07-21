@@ -451,6 +451,61 @@ Enterprise  | 40+ tasks    | $60K+      | 24+ weeks  | 5+ devs
 
 ---
 
+## 🔄 Git Workflow Guidelines
+
+### Mandatory Git Practices (ALWAYS follow)
+1. **Commit after each major milestone** - PRD creation, task generation, phase completion
+2. **Proactive commit reminders** - Assistant MUST remind user to commit after completing significant work
+3. **Conventional commit format** - Use: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+4. **Session traceability** - Include session-id in commit messages for perfect tracking
+5. **Backup frequency** - Push to remote after each completed workflow phase
+
+### Commit Timing Requirements
+- **After PRD creation** - `feat: add PRD for {session-id} {project-name}`
+- **After task generation** - `feat: add task breakdown for {session-id} {project-name}`
+- **After each implementation phase** - `feat: complete phase {N} for {session-id}`
+- **After quality certification** - `feat: achieve quality certification for {session-id}`
+- **Before session end** - `docs: finalize session {session-id} documentation`
+
+### Assistant Behavior Rules
+1. **ALWAYS remind** user to commit after completing any file generation
+2. **Suggest specific** commit messages following conventional format
+3. **Include session-id** in all suggested commit messages
+4. **Recommend push** to remote after major milestones
+5. **Never assume** Git is configured - always check and guide setup if needed
+
+### Git Setup Validation
+```bash
+# Check if Git is initialized
+git status
+
+# If not initialized, guide user through:
+git init
+git add .
+git commit -m "feat: initialize project with framework files"
+
+# For remote backup (optional but recommended):
+git remote add origin <repository-url>
+git push -u origin main
+```
+
+### Example Workflow Integration
+```bash
+# 1. Create PRD
+./ai-dev create
+# → Assistant: "Great! Now let's commit this PRD: git add . && git commit -m 'feat: add PRD for {session-id} {project-name}'"
+
+# 2. Generate tasks  
+./ai-dev generate 01_prd_{session-id}_{project-name}.md
+# → Assistant: "Task generation complete! Let's save this progress: git add . && git commit -m 'feat: add task breakdown for {session-id} {project-name}'"
+
+# 3. Execute phases
+./ai-dev execute 02_tasks_{session-id}_{project-name}.md
+# → Assistant: "Phase 1 complete! Time to commit: git add . && git commit -m 'feat: complete phase 1 foundation for {session-id}'"
+```
+
+---
+
 ## 📈 Success Metrics
 
 ### Framework Efficiency
@@ -505,6 +560,8 @@ Enterprise  | 40+ tasks    | $60K+      | 24+ weeks  | 5+ devs
 6. **Explain before implementing** - Always provide short, concise explanation before proposing code changes
 7. **Ultra-flat structure** - Maintain simplified repository architecture
 8. **No complex automation** - Focus on core framework functionality
+9. **Proactive commit reminders** - ALWAYS remind user to commit after completing any file generation or major milestone
+10. **Git workflow integration** - Follow conventional commits with session-id traceability
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
