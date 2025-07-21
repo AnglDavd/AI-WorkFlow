@@ -860,6 +860,173 @@ Every execution session MUST maintain real-time progress tracking through the ex
 
 ---
 
+## 🎨 UI/UX Task Specification System (ISSUE-009 Resolution)
+
+### CRITICAL: UI/UX Tasks Must Be Detailed and Specific
+
+### **Problem with Vague UI/UX Tasks:**
+❌ "Design homepage"  
+❌ "Create user interface"  
+❌ "Style the application"  
+
+### **Required: Detailed UI/UX Task Breakdown**
+
+#### **UI/UX Task Template (MANDATORY)**
+```markdown
+## UI Task: [Specific Component/Page/Feature]
+
+### Design Deliverables Required
+- [ ] **Wireframes** - Low-fidelity layout and structure
+- [ ] **Visual Design** - High-fidelity mockups with colors, typography, spacing
+- [ ] **Component Specifications** - Detailed specs for each UI element
+- [ ] **Responsive Breakpoints** - Mobile, tablet, desktop variants
+- [ ] **Interaction Design** - Hover states, animations, transitions
+- [ ] **Accessibility Specs** - Color contrast, keyboard navigation, ARIA labels
+
+### Component-Level Breakdown
+**For each UI component, specify:**
+1. **Purpose** - What this component does
+2. **States** - Default, hover, active, disabled, loading
+3. **Variants** - Size options, color schemes, layout variations
+4. **Content** - Text, images, icons, data requirements
+5. **Behavior** - Interactions, animations, responsive behavior
+6. **Dependencies** - What other components it connects to
+
+### Detailed Specifications Required
+
+#### **Visual Design Specs:**
+- **Typography** - Font families, sizes, weights, line heights
+- **Color Palette** - Primary, secondary, accent, neutral colors
+- **Spacing System** - Margins, paddings, gaps (8px grid recommended)
+- **Border Radius** - Consistent rounding values
+- **Shadows/Effects** - Drop shadows, gradients, overlays
+- **Icons** - Style, size, usage guidelines
+
+#### **Layout Specifications:**
+- **Grid System** - Column layout, breakpoints, container widths
+- **Component Hierarchy** - Header, main content, sidebar, footer
+- **Navigation Structure** - Menu items, breadcrumbs, pagination
+- **Content Sections** - Hero, features, testimonials, etc.
+- **Spacing Rules** - Consistent vertical rhythm, component gaps
+
+#### **Responsive Behavior:**
+- **Mobile (320-768px)** - Single column, stacked elements, touch-friendly
+- **Tablet (768-1024px)** - Two-column layout, medium spacing
+- **Desktop (1024px+)** - Multi-column, optimal spacing, hover effects
+
+#### **Interaction Design:**
+- **Micro-interactions** - Button clicks, form submissions, loading states
+- **Transitions** - Page changes, modal appearances, content reveals
+- **Feedback** - Success messages, error states, progress indicators
+- **Navigation** - Menu animations, scroll behaviors, breadcrumb updates
+```
+
+### **UI/UX Task Examples - Before vs After**
+
+#### **❌ WRONG - Vague Task:**
+```
+Task 2.3: Design homepage
+Acceptance Criteria: Homepage should look professional
+Time Estimate: 8 hours
+```
+
+#### **✅ CORRECT - Detailed Task:**
+```
+Task 2.3: Design Homepage Layout and Components
+Time Estimate: 16 hours (broken into sub-tasks)
+
+Sub-task 2.3.1: Homepage Wireframe Design (4 hours)
+- [ ] Define page structure: Header, Hero, Features, Testimonials, Footer  
+- [ ] Create low-fidelity wireframes for all breakpoints
+- [ ] Specify content hierarchy and information architecture
+- [ ] Define navigation flow and user journey
+- [ ] Document component placement and relationships
+
+Sub-task 2.3.2: Visual Design System (6 hours)
+- [ ] Define color palette: Primary #2563EB, Secondary #64748B, Success #10B981
+- [ ] Typography system: Headers (Inter Bold), Body (Inter Regular), sizes 14-48px
+- [ ] Spacing system: 8px base grid (8, 16, 24, 32, 48, 64px)
+- [ ] Component styles: Buttons, forms, cards, modals
+- [ ] Icon set selection and customization
+
+Sub-task 2.3.3: Homepage Component Design (6 hours)
+- [ ] Hero Section: Background image, headline, CTA button, value proposition
+- [ ] Navigation: Logo, menu items, mobile hamburger, search icon
+- [ ] Features Grid: 3-column layout, icon+text cards, hover effects
+- [ ] Testimonials Carousel: Customer photos, quotes, star ratings
+- [ ] Footer: Links, social media, contact info, newsletter signup
+
+Acceptance Criteria:
+- [ ] All components have hover/active states defined
+- [ ] Color contrast meets WCAG AA standards (4.5:1 minimum)
+- [ ] Mobile-first responsive design implemented
+- [ ] Typography hierarchy is clear and consistent
+- [ ] Spacing follows 8px grid system throughout
+- [ ] All interactive elements have defined states
+```
+
+### **Mandatory UI/UX Deliverables**
+
+#### **For Every UI/UX Task - Must Include:**
+1. **Design System Documentation**
+   - Color palette with hex codes
+   - Typography scale with font sizes
+   - Spacing values and grid system
+   - Component library specifications
+
+2. **Component Specifications**
+   - Visual appearance in all states
+   - Responsive behavior at each breakpoint
+   - Accessibility requirements (ARIA, contrast, keyboard)
+   - Animation/interaction details
+
+3. **User Experience Flow**
+   - User journey mapping
+   - Information architecture
+   - Navigation patterns
+   - Error and success states
+
+4. **Implementation Guidelines**
+   - CSS class naming conventions
+   - HTML structure requirements
+   - JavaScript interaction needs
+   - Performance considerations
+
+### **UI/UX Task Granularity Rules**
+
+#### **Large UI Tasks → Multiple Focused Tasks**
+```
+❌ "Design complete dashboard"
+✅ "Design dashboard navigation sidebar"
+✅ "Design dashboard main content area"
+✅ "Design dashboard statistics widgets"
+✅ "Design dashboard user profile section"
+```
+
+#### **Each Task Should Be 4-8 Hours Max**
+- Focused on specific components or pages
+- Clear, measurable deliverables
+- Specific acceptance criteria
+- Detailed visual and interaction specifications
+
+### **Design Methodology Integration**
+
+#### **Atomic Design Approach - Mandatory Structure:**
+1. **Atoms** - Basic elements (buttons, inputs, labels)
+2. **Molecules** - Component combinations (search bar, form groups)
+3. **Organisms** - Complex components (header, product grid)
+4. **Templates** - Page layouts and structures
+5. **Pages** - Specific instances with real content
+
+#### **Each Level Must Be Specified Separately:**
+- Design atoms first with all states and variants
+- Combine into molecules with interaction patterns
+- Build organisms with responsive behavior
+- Create templates with content guidelines
+- Implement pages with real data and content
+
+---
+
 ## 🤖 AI Model Compatibility Guidelines
 
 ### Cross-Platform Tool Usage (ISSUE-006 Resolution)
@@ -1098,6 +1265,7 @@ Every discovered issue MUST result in:
 12. **Execution tracking mandatory** - Create and maintain 03_report_{session-id}_{project-name}.md with real-time task completion updates
 13. **DoD validation required** - NEVER mark any task complete without executing full Definition of Done validation protocol
 14. **Try before escalating** - NEVER create impediment report without attempting at least 2 different solution approaches first
+15. **Detailed UI/UX specification** - NEVER create vague UI/UX tasks, always break down into specific components with detailed deliverables
 
 ### Output Standards
 - **File naming:** Follow exact pattern `{step}_{session-id}_{project-name}.md`
